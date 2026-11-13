@@ -15,19 +15,27 @@ export function dayDiff(a, b) {
 }
 
 let cache = { city: null, days: {}, live: false, fetchedAt: 0 };
+const HOSTS = ['api.open-meteo.com', 'historical-forecast-api.open-meteo.com'];
 
 export async function fetchForecast(cityId) {
   const c = CITIES.find((x) => x.id === cityId) || CITIES[0];
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.lat}&longitude=${c.lon}` +
+  const q = `/v1/forecast?latitude=${c.lat}&longitude=${c.lon}` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max` +
     `&wind_speed_unit=ms&timezone=Asia%2FSeoul&forecast_days=16&past_days=92`;
-  try {
-    const ctl = new AbortController();
-    const to = setTimeout(() => ctl.abort(), 7000);
-    const r = await fetch(url, { signal: ctl.signal });
-    clearTimeout(to);
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+  // 기본 서버(api.open-meteo.com)가 일부 통신망에서 응답하지 않아 "예보 연결 실패"가 났다.
+  // 같은 형식을 주는 Open-Meteo 예비 서버에도 동시에 요청하고 먼저 온 응답을 쓴다.
+  const ctl = new AbortController();
+  const get = async (host) => {
+    const r = await fetch(`https://${host}${q}`, { signal: ctl.signal });
+    if (!r.ok) throw new Error(host + ' HTTP ' + r.status);
     const j = await r.json();
+    if (!j.daily?.time?.length) throw new Error(host + ' no data');
+    return j;
+  };
+  const to = setTimeout(() => ctl.abort(), 9000);
+  try {
+    const j = await Promise.any(HOSTS.map(get));
+    clearTimeout(to); ctl.abort(); // 늦게 오는 쪽은 취소
     const d = j.daily, days = {};
     d.time.forEach((t, i) => {
       days[t] = { code: d.weather_code[i] ?? 0, tmax: d.temperature_2m_max[i], tmin: d.temperature_2m_min[i],
@@ -37,6 +45,7 @@ export async function fetchForecast(cityId) {
     try { localStorage.setItem('cheotsap.wx', JSON.stringify(cache)); } catch {}
     return true;
   } catch (e) {
+    clearTimeout(to);
     console.warn('weather fetch failed', e);
     try {
       const old = JSON.parse(localStorage.getItem('cheotsap.wx') || 'null');

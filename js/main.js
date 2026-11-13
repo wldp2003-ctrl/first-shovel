@@ -1021,7 +1021,7 @@ async function boot() {
   document.body.classList.add('intro-on');
   S.initScene($('#gl'), $('#labels'));
   S.playIntro();
-  setTimeout(() => $('.logo').classList.add('show'), 2600);
+  setTimeout(() => $('.logo')?.classList.add('show'), 2600);
   refreshTop();
   fetchForecast(st.city).then(() => { refreshAll(); if (!$('#intro')) S.setWeather(describe(todayWx()).kind); });
   if (saved && saved.track) {
