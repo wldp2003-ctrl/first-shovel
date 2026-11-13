@@ -1,5 +1,7 @@
 // 야간 당직 순찰 — 손전등, 당직 동료, 체크리스트, 최상층 확인, 새벽 연출, 당직 일지
 import * as THREE from 'three';
+import { localize, koOn , lang as curLang } from './lang.js';
+import { t as $t } from './lang.js';
 import { NIGHT_ITEMS, NIGHT_TALK } from './data2.js';
 import { openWalk, props } from './walk.js';
 import { h, openModal, shuffle, sleep, $, toast, won } from './ui.js';
@@ -26,14 +28,14 @@ export function shouldNight(ctx) {
 export function nightCard(ctx, then) {
   const { st } = ctx; const tw = ctx.tomorrowWx();
   st.nightDay = st.day; ctx.save();
-  const why = tw.rain >= 1 || tw.wind >= 8 ? `내일 ${tw.rain >= 1 ? `비 ${tw.rain}mm` : ''}${tw.rain >= 1 && tw.wind >= 8 ? ' · ' : ''}${tw.wind >= 8 ? `강풍 ${tw.wind}m/s` : ''} 예보가 있어요.` : '3일에 한 번 돌아오는 당직 순번이에요.';
-  const m = openModal({ title: '🌙 오늘 밤 당직이에요', body: h('div', { class: 'col' },
+  const why = tw.rain >= 1 || tw.wind >= 8 ? $t('night.nightCard.9', { v1: tw.rain >= 1 ? $t('night.nightCard.7', { rain: tw.rain }) : '', v2: tw.rain >= 1 && tw.wind >= 8 ? ' · ' : '', v3: tw.wind >= 8 ? $t('night.nightCard.8', { wind: tw.wind }) : '' }) : $t('night.nightCard.6');
+  const m = openModal({ title: $t('night.nightCard.5'), body: h('div', { class: 'col' },
     h('div', { class: 'night-art' }, '🌙 ✨ 🏗️ 🔦'),
-    h('div', {}, `퇴근 뒤 박기사와 현장을 한 바퀴 돌며 이상이 없는지 확인해요. ${why}`),
-    h('div', { class: 'tiny muted' }, '잘 하면 수고비 + 사기 상승 + 내일 문제 하나 예방. 건너뛰면 내일 그와 연결된 문제가 생길 수 있어요.'),
+    h('div', {}, $t('night.nightCard.4', { why })),
+    h('div', { class: 'tiny muted' }, $t('night.nightCard.3')),
     h('div', { class: 'grid2' },
-      h('button', { class: 'btn', onclick: () => { m.close(); skip(); } }, '건너뛰기'),
-      h('button', { class: 'btn primary', onclick: () => { m.close(); runNight(ctx, then); } }, '🔦 당직 서기'))) });
+      h('button', { class: 'btn', onclick: () => { m.close(); skip(); } }, $t('night.nightCard.2')),
+      h('button', { class: 'btn primary', onclick: () => { m.close(); runNight(ctx, then); } }, $t('night.nightCard.1')))) });
   const skip = () => {
     const items = itemsFor(ctx);
     st.night = { day: st.day, skipped: true, checked: [], fixed: [], missed: items };
@@ -60,11 +62,11 @@ export function runNight(ctx, then) {
   const pos = { gate: [0, 12], panel: [-13, 8], fire: [-8, -8], bind: [10, -9], cover: [5, 6], pump: [-13, -10], crane: [12, 2] };
   const stair = [3, -1];
   let mate, cat = null, talkT = 3;
-  const tLabel = (id) => NIGHT_ITEMS[id].t[lang] + (lang !== 'ko' ? ` · ${NIGHT_ITEMS[id].t.ko}` : '');
+  const tLabel = (id) => NIGHT_ITEMS[id].t[lang] + (koOn() ? ` · ${NIGHT_ITEMS[id].t.ko}` : '');
   const w = openWalk({
-    title: '🌙 야간 당직 순찰', night: true, timeLimit: field ? 75 : 95,
-    info: field ? '🔦 아이콘이 있는 곳에 가서 "확인" — 다 보면 🧗 계단으로 옥상!' : `체크리스트 ${items.length}개 확인 → 🧗 계단으로 최상층 확인`,
-    bounds: B, start: { x: 0, z: 9 }, ground: 0x4a4740, actionLabel: '확인',
+    title: $t('night.tLabel.9'), night: true, timeLimit: field ? 75 : 95,
+    info: field ? $t('night.tLabel.8') : $t('night.tLabel.7', { length: items.length }),
+    bounds: B, start: { x: 0, z: 9 }, ground: 0x4a4740, actionLabel: $t('night.tLabel.6'),
     build(api) {
       props.fence(api, B);
       api.box(6, 0.12, 2, 0x5a5a5a, 0, 0, 12.2); api.box(6, 0.14, 0.3, 0xffd400, 0, 0, 11.2); // 출입구
@@ -81,8 +83,8 @@ export function runNight(ctx, then) {
       api.box(1.4, 0.8, 1, 0x3366aa, pos.pump[0], 0, pos.pump[1], true);
       api.box(1, 0.6, 1, 0x555555, pos.fire[0], 0, pos.fire[1]); api.box(0.4, 0.8, 0.4, 0xd83a2a, pos.fire[0] + 1.3, 0, pos.fire[1]);
       if (ctx.hasCrane()) props.crane(api, pos.crane[0], pos.crane[1] - 1, pos.crane[0] - 6, pos.crane[1] - 1);
-      items.forEach((id) => api.addSpot({ x: pos[id][0], z: pos[id][1] - (id === 'gate' ? 1.5 : 0), r: 2.6, icon: NIGHT_ITEMS[id].ic, id, act: '확인' }));
-      api.addSpot({ x: stair[0], z: stair[1] + 3, r: 2.4, icon: '🧗', id: 'stairs', act: '옥상으로' });
+      items.forEach((id) => api.addSpot({ x: pos[id][0], z: pos[id][1] - (id === 'gate' ? 1.5 : 0), r: 2.6, icon: NIGHT_ITEMS[id].ic, id, act: $t('night.tLabel.5') }));
+      api.addSpot({ x: stair[0], z: stair[1] + 3, r: 2.4, icon: '🧗', id: 'stairs', act: $t('night.tLabel.4') });
       mate = api.person(1.5, 10.5, { vest: 0x3a7bd5 });
       if (Math.random() < 0.6) { cat = api.group(-12, 4); api.addBox(cat, 0.6, 0.35, 0.3, 0xe08a3a, 0, 0, 0); api.addBox(cat, 0.3, 0.3, 0.3, 0xe08a3a, 0.4, 0.3, 0); }
     },
@@ -93,7 +95,7 @@ export function runNight(ctx, then) {
       mate.g.lookAt(p.x, 0, p.z);
       talkT -= dt;
       if (talkT <= 0) { talkT = 7 + Math.random() * 5; api.say(mate, NIGHT_TALK[Math.floor(Math.random() * NIGHT_TALK.length)], 3); }
-      if (cat) { cat.position.x += Math.sin(api.elapsed * 0.7) * dt * 1.5; if (!api.data.meow && api.dist(cat.position.x, cat.position.z) < 4) { api.data.meow = true; const c = { g: cat }; api.say(mate, '어? 현장 고양이다! 🐈', 3); sfx('pop'); } }
+      if (cat) { cat.position.x += Math.sin(api.elapsed * 0.7) * dt * 1.5; if (!api.data.meow && api.dist(cat.position.x, cat.position.z) < 4) { api.data.meow = true; const c = { g: cat }; api.say(mate, $t('night.tLabel.3'), 3); sfx('pop'); } }
     },
     onAction(spot, api) {
       if (!spot) return;
@@ -104,9 +106,9 @@ export function runNight(ctx, then) {
       sfx(isBad ? 'tamp' : 'good');
       api.setInfo(`${NIGHT_ITEMS[id].ic} ${tLabel(id)} — ${FIX[id][isBad ? 0 : 1]}`);
       if (!field) setTimeout(() => !api.ended && api.setInfo(`💡 ${NIGHT_ITEMS[id].why}`), 2600);
-      if (checked.length === items.length) api.say(mate, '다 봤네요! 이제 계단으로 꼭대기 가 봐요', 3.5);
+      if (checked.length === items.length) api.say(mate, $t('night.tLabel.2'), 3.5);
     },
-    onTimeUp: (api) => { api.setInfo('⏱ 순찰 시간이 지났어요. 계단으로 옥상만 확인하고 마칠게요'); setTimeout(() => goRoof(api), 1200); },
+    onTimeUp: (api) => { api.setInfo($t('night.tLabel.1')); setTimeout(() => goRoof(api), 1200); },
     onQuit: (api) => goRoof(api, true),
   });
   let roofDone = false, roofChecked = false, went = false;
@@ -114,22 +116,22 @@ export function runNight(ctx, then) {
     if (went) return; went = true;
     api.end(true);
     if (quit) return finish();
-    const el = h('div', { class: 'stairs night' }, h('div', { class: 'big-ic' }, '🔦🧗'), h('b', {}, '밤에는 호이스트 운행 끝 — 계단으로 최상층까지…'), h('div', { class: 'pbar' }, h('i')));
+    const el = h('div', { class: 'stairs night' }, h('div', { class: 'big-ic' }, '🔦🧗'), h('b', {}, $t('night.goRoof.5')), h('div', { class: 'pbar' }, h('i')));
     $('#app').append(el);
     for (let k = 0; k <= 10; k++) { el.querySelector('.pbar i').style.width = k * 10 + '%'; await sleep(140); }
     el.remove();
     const RB = { x0: -8, x1: 8, z0: -6, z1: 6 };
     const roofBad = Math.random() < 0.5;
     openWalk({
-      title: '🏢 최상층 확인', night: true, bounds: RB, start: { x: 6, z: 4 }, ground: 0x6a6760, actionLabel: '확인', timeLimit: 30,
-      info: '최상층 개구부와 난간을 확인해요',
+      title: $t('night.goRoof.4'), night: true, bounds: RB, start: { x: 6, z: 4 }, ground: 0x6a6760, actionLabel: $t('night.goRoof.3'), timeLimit: 30,
+      info: $t('night.goRoof.2'),
       build(api2) {
         props.rail(api2, RB.x0 + 0.3, RB.z0 + 0.3, RB.x1 - 0.3, RB.z0 + 0.3);
         props.rail(api2, RB.x0 + 0.3, RB.z0 + 0.3, RB.x0 + 0.3, RB.z1 - 0.3);
         if (!roofBad) props.rail(api2, RB.x0 + 0.3, RB.z1 - 0.3, RB.x1 - 0.3, RB.z1 - 0.3); else props.rail(api2, RB.x0 + 0.3, RB.z1 - 0.3, -2, RB.z1 - 0.3);
         props.hole(api2, -3, -2, 2, 2, true);
         api2.lamp(-7, -5);
-        api2.addSpot({ x: -3, z: 2, r: 4, icon: NIGHT_ITEMS.roof.ic, id: 'roof', act: '확인' });
+        api2.addSpot({ x: -3, z: 2, r: 4, icon: NIGHT_ITEMS.roof.ic, id: 'roof', act: $t('night.goRoof.1') });
       },
       onAction(spot, api2) {
         if (!spot) return;
@@ -144,7 +146,7 @@ export function runNight(ctx, then) {
   }
   async function dawn(api2) {
     if (roofDone) return; roofDone = true;
-    api2.setTitle('🌅 새벽 — 순찰 끝!');
+    api2.setTitle($t('night.dawn.1'));
     const from = new THREE.Color(0x0b1430), to = new THREE.Color(0xffb27a);
     for (let k = 0; k <= 30; k++) {
       if (api2.ended) break;
@@ -168,15 +170,15 @@ export function runNight(ctx, then) {
     st.morale = Math.min(100, st.morale + (allOk ? 6 : 2));
     if (allOk) st.evShield = (st.evShield || 0) + 1;
     ctx.note('night');
-    ctx.earn(reward, '야간 당직 수고비');
-    const row = (id) => h('tr', {}, h('td', {}, `${NIGHT_ITEMS[id].ic} ${NIGHT_ITEMS[id].t.ko}`),
-      h('td', { class: done.includes(id) ? 'ok' : 'ng' }, done.includes(id) ? (fixed.includes(id) ? '이상 → 조치' : '확인') : '미확인'));
-    const m = openModal({ title: '📓 당직 일지', body: h('div', { class: 'col' },
-      h('div', { class: 'tiny muted' }, `${st.day}일차 밤 · 당직: ${st.nick}, 박기사`),
-      h('table', { class: 'tbl' }, h('tr', {}, h('th', {}, '항목'), h('th', {}, '결과')), all.map(row)),
-      h('div', { class: 'fb ' + (allOk ? 'good' : 'bad') }, allOk ? '모든 항목 확인! 내일 생길 문제 하나를 미리 막아요. 사기 +6' : `미확인 ${missed.length}건 — 내일 관련 문제가 생길 수 있어요.`),
-      h('div', { class: 'reward' }, `수고비 +${reward}만원`),
-      h('button', { class: 'btn primary big', onclick: () => m.close() }, '퇴근하고 아침 맞기 ☀️')) });
+    ctx.earn(reward, $t('night.finish.1'));
+    const row = (id) => h('tr', {}, h('td', {}, `${NIGHT_ITEMS[id].ic} ${NIGHT_ITEMS[id].t[curLang()]}`),
+      h('td', { class: done.includes(id) ? 'ok' : 'ng' }, done.includes(id) ? (fixed.includes(id) ? $t('night.row.11') : $t('night.row.10')) : $t('night.row.9')));
+    const m = openModal({ title: $t('night.row.8'), body: h('div', { class: 'col' },
+      h('div', { class: 'tiny muted' }, $t('night.row.7', { day: st.day, nick: st.nick })),
+      h('table', { class: 'tbl' }, h('tr', {}, h('th', {}, $t('night.row.6')), h('th', {}, $t('night.row.5'))), all.map(row)),
+      h('div', { class: 'fb ' + (allOk ? 'good' : 'bad') }, allOk ? $t('night.row.4') : $t('night.row.3', { length: missed.length })),
+      h('div', { class: 'reward' }, $t('night.row.2', { reward: won(reward) })),
+      h('button', { class: 'btn primary big', onclick: () => m.close() }, $t('night.row.1'))) });
     m.onClose = then;
   }
   return w;
@@ -189,17 +191,20 @@ export function applyNightConsequences(ctx) {
   n.applied = true;
   const out = [], w = ctx.todayWx();
   const p = n.skipped ? 0.5 : 0.8;
-  if (n.missed.includes('bind') && (w.wind >= 7 || Math.random() < p * 0.5)) { st.actionsLeft = Math.max(0, st.actionsLeft - 1); out.push('결속 안 한 자재가 밤바람에 흩어져 정리하느라 작업 1회 감소'); }
-  if (n.missed.includes('pump') && w.rain >= 1) { st.actionsLeft = Math.max(0, st.actionsLeft - 1); out.push('배수로가 막혀 고인 물을 퍼내느라 작업 1회 감소'); }
+  if (n.missed.includes('bind') && (w.wind >= 7 || Math.random() < p * 0.5)) { st.actionsLeft = Math.max(0, st.actionsLeft - 1); out.push($t('night.applyNightConsequences.3')); }
+  if (n.missed.includes('pump') && w.rain >= 1) { st.actionsLeft = Math.max(0, st.actionsLeft - 1); out.push($t('night.applyNightConsequences.2')); }
   if (n.missed.includes('fire') && Math.random() < p * 0.5) out.push('fireAlarm');
-  if (n.missed.includes('gate') && Math.random() < p * 0.3) { st.money = Math.max(0, st.money - 5); out.push('출입문이 열려 있어 공구 몇 개가 사라졌어요 (-5만원)'); }
+  if (n.missed.includes('gate') && Math.random() < p * 0.3) { st.money = Math.max(0, st.money - 5); out.push($t('night.applyNightConsequences.1', { amt: won(5) })); }
   return out;
 }
 
 export function nightReportLine(st) {
   const n = st.night;
   if (!n || n.day !== st.day - 1) return null;
-  if (n.skipped) return '🌙 어젯밤 당직: 건너뜀 — 점검하지 못한 항목이 있어요';
+  if (n.skipped) return $t('night.nightReportLine.4');
   const fx = n.fixed.length;
-  return `🌙 어젯밤 당직 보고: ${n.checked.length}/${n.checked.length + n.missed.length}개 확인 · 이상 ${fx}건 조치${n.missed.length ? ` · 미확인: ${n.missed.map((id) => NIGHT_ITEMS[id].t.ko).join(', ')}` : ' · 미확인 없음 ✔'}`;
+  return $t('night.nightReportLine.3', { length: n.checked.length, v2: n.checked.length + n.missed.length, fx, v4: n.missed.length ? $t('night.nightReportLine.2', { v1: n.missed.map((id) => NIGHT_ITEMS[id].t[curLang()]).join(', ') }) : $t('night.nightReportLine.1') });
 }
+
+// 언어에 따라 바뀌는 문장으로 감싸기 (lang.js)
+localize(FIX, 'night.fix');

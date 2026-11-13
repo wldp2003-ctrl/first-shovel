@@ -1,5 +1,6 @@
 // 실시간 날씨 — Open-Meteo (키 불필요). 실패하면 계절 기반 가상 예보
 import { CITIES } from './data.js';
+import { t as $t } from './lang.js';
 
 export const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 export function addDays(dateStr, n) {
@@ -7,12 +8,7 @@ export function addDays(dateStr, n) {
   const dt = new Date(y, m - 1, d + n);
   return ymd(dt);
 }
-const DOW = ['일', '월', '화', '수', '목', '금', '토'];
-export function fmtDate(dateStr, withDow = true) {
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const dt = new Date(y, m - 1, d);
-  return `${m}/${d}` + (withDow ? `(${DOW[dt.getDay()]})` : '');
-}
+export { fmtDate } from './lang.js';
 export function dayDiff(a, b) {
   const [y1, m1, d1] = a.split('-').map(Number), [y2, m2, d2] = b.split('-').map(Number);
   return Math.round((new Date(y2, m2 - 1, d2) - new Date(y1, m1 - 1, d1)) / 86400000);
@@ -80,13 +76,13 @@ export const isLive = () => cache.live;
 
 export function describe(w) {
   const c = w.code;
-  let icon = '☀️', name = '맑음', kind = 'clear';
-  if (c === 1 || c === 2) { icon = '⛅'; name = '구름 조금'; kind = 'cloud'; }
-  else if (c === 3) { icon = '☁️'; name = '흐림'; kind = 'cloud'; }
-  else if (c === 45 || c === 48) { icon = '🌫️'; name = '안개'; kind = 'fog'; }
-  else if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) { icon = '🌧️'; name = c < 60 ? '이슬비' : '비'; kind = 'rain'; }
-  else if ((c >= 71 && c <= 77) || c === 85 || c === 86) { icon = '❄️'; name = '눈'; kind = 'snow'; }
-  else if (c >= 95) { icon = '⛈️'; name = '뇌우'; kind = 'storm'; }
+  let icon = '☀️', name = $t('weather.describe.8'), kind = 'clear';
+  if (c === 1 || c === 2) { icon = '⛅'; name = $t('weather.describe.7'); kind = 'cloud'; }
+  else if (c === 3) { icon = '☁️'; name = $t('weather.describe.6'); kind = 'cloud'; }
+  else if (c === 45 || c === 48) { icon = '🌫️'; name = $t('weather.describe.5'); kind = 'fog'; }
+  else if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) { icon = '🌧️'; name = c < 60 ? $t('weather.describe.4') : $t('weather.describe.3'); kind = 'rain'; }
+  else if ((c >= 71 && c <= 77) || c === 85 || c === 86) { icon = '❄️'; name = $t('weather.describe.2'); kind = 'snow'; }
+  else if (c >= 95) { icon = '⛈️'; name = $t('weather.describe.1'); kind = 'storm'; }
   return { icon, name, kind };
 }
 
@@ -96,14 +92,14 @@ export function effect(w) {
   const out = { stop: false, mult: 1, craneStop: false, notes: [] };
   if (w.rain >= 5 || d.kind === 'snow' || d.kind === 'storm') {
     out.stop = true; out.mult = 0;
-    out.notes.push(d.kind === 'snow' ? '눈 → 공사 중지 (공기 1일 연장 인정)' : d.kind === 'storm' ? '뇌우 → 공사 중지 (공기 1일 연장 인정)' : `비 ${w.rain}mm → 공사 중지 (공기 1일 연장 인정)`);
+    out.notes.push(d.kind === 'snow' ? $t('weather.effect.9') : d.kind === 'storm' ? $t('weather.effect.8') : $t('weather.effect.7', { rain: w.rain }));
     return out;
   }
-  if (d.kind === 'rain') { out.mult *= 0.5; out.notes.push('약한 비 → 작업량 50% (타설 금지)'); }
-  if (d.kind === 'fog') { out.mult *= 0.8; out.notes.push('안개 → 작업량 80%'); }
-  if (w.wind >= 10) { out.craneStop = true; out.mult *= 0.85; out.notes.push(`풍속 ${w.wind}m/s → 타워크레인 운행 중지, 85%`); }
-  if (w.tmin <= 0) { out.mult *= 0.8; out.notes.push(`최저 ${w.tmin}°C → 한중 콘크리트 보양, 80%`); }
-  if (w.tmax >= 33) { out.mult *= 0.7; out.notes.push(`최고 ${w.tmax}°C → 폭염 휴식, 70%`); }
-  if (!out.notes.length) out.notes.push('작업하기 좋은 날 · 작업량 100%');
+  if (d.kind === 'rain') { out.mult *= 0.5; out.notes.push($t('weather.effect.6')); }
+  if (d.kind === 'fog') { out.mult *= 0.8; out.notes.push($t('weather.effect.5')); }
+  if (w.wind >= 10) { out.craneStop = true; out.mult *= 0.85; out.notes.push($t('weather.effect.4', { wind: w.wind })); }
+  if (w.tmin <= 0) { out.mult *= 0.8; out.notes.push($t('weather.effect.3', { tmin: w.tmin })); }
+  if (w.tmax >= 33) { out.mult *= 0.7; out.notes.push($t('weather.effect.2', { tmax: w.tmax })); }
+  if (!out.notes.length) out.notes.push($t('weather.effect.1'));
   return out;
 }

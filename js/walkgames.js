@@ -1,5 +1,7 @@
 // 직접 움직이는 미니게임 — 학생: 현장 안전 순찰 / 현장 첫 출근: 유리창 안전하게 옮기기
 import * as THREE from 'three';
+import { localize } from './lang.js';
+import { t as $t } from './lang.js';
 import { openWalk, props, mat } from './walk.js';
 import { h, openModal, shuffle } from './ui.js';
 import { sfx } from './audio.js';
@@ -22,7 +24,7 @@ export function runPatrol({ stageMult = 1, onFinish }) {
   let found = 0, wrong = 0, steps = 0, lastStep = 0;
   const foundList = [];
   const w = openWalk({
-    title: '🔦 현장 안전 순찰', info: '위험요소에 다가가 "지적!" — 60초, 너무 가까이 밟으면 감점', actionLabel: '지적!', timeLimit: 60,
+    title: $t('walkgames.runPatrol.3'), info: $t('walkgames.runPatrol.2'), actionLabel: $t('walkgames.runPatrol.1'), timeLimit: 60,
     bounds: B, start: { x: 0, z: 9 }, ground: 0xa49a84,
     build(api) {
       props.fence(api, B);
@@ -37,7 +39,7 @@ export function runPatrol({ stageMult = 1, onFinish }) {
         if (kind === 'messy') props.pile(api, x, z, hazard);
         if (kind === 'load') { props.crane(api, x + 6 > B.x1 ? x - 6 : x + 6, z - 2, x, z); api.person(x + 0.6, z + 0.3, { rot: 2 }); }
         if (kind === 'wire') { api.box(4, 0.08, 0.1, 0x222222, x, 0, z); api.box(0.5, 0.1, 0.12, 0xd08a3a, x + 0.6, 0, z); api.box(1, 1, 0.6, 0x666666, x - 2.4, 0, z); }
-        api.addSpot({ x, z, r: 2.8, icon: null, kind, hazard, act: '지적!' });
+        api.addSpot({ x, z, r: 2.8, icon: null, kind, hazard, act: $t('walkgames.make.5') });
       };
       kinds.forEach((k, i) => make(k, slots[i], true));
       decoys.forEach((k, i) => make(k, slots[5 + i], false));
@@ -48,12 +50,12 @@ export function runPatrol({ stageMult = 1, onFinish }) {
       if (spot.hazard) {
         found++; foundList.push(spot.kind); sfx('good');
         api.doneSpot(spot); spot.mark = api.label(`✅ ${HAZ[spot.kind].name}`, spot.x, 2.8, spot.z, 'mark done');
-        api.setInfo(`지적! ${HAZ[spot.kind].name} → ${HAZ[spot.kind].fix}  (${found}/5)`);
+        api.setInfo($t('walkgames.make.4', { v1: HAZ[spot.kind].name, v2: HAZ[spot.kind].fix, found }));
         if (found >= 5) setTimeout(() => finish(api), 500);
       } else {
         wrong++; sfx('bad'); spot.done = true;
-        api.label('🙆 이상 없음', spot.x, 2.8, spot.z, 'mark ok');
-        api.setInfo('여긴 안전하게 잘 되어 있어요. 진짜 위험요소를 찾아요! (감점)');
+        api.label($t('walkgames.make.3'), spot.x, 2.8, spot.z, 'mark ok');
+        api.setInfo($t('walkgames.make.2'));
       }
     },
     onTick(dt, api) {
@@ -61,7 +63,7 @@ export function runPatrol({ stageMult = 1, onFinish }) {
         if (!s.hazard || s.done || !HAZ[s.kind].stepR) continue;
         if (api.dist(s.x, s.z) < HAZ[s.kind].stepR && api.elapsed - lastStep > 1.5) {
           lastStep = api.elapsed; steps++; sfx('bad');
-          api.setInfo(`⚠️ 위험해요! ${HAZ[s.kind].name}에 너무 가까이 갔어요 (감점)`);
+          api.setInfo($t('walkgames.make.1', { v1: HAZ[s.kind].name }));
           const dx = api.player.pos.x - s.x, dz = api.player.pos.z - s.z, d = Math.hypot(dx, dz) || 1;
           api.player.pos.x += dx / d * 1.2; api.player.pos.z += dz / d * 1.2;
         }
@@ -77,13 +79,13 @@ export function runPatrol({ stageMult = 1, onFinish }) {
     api.end(true);
     const pts = Math.max(0, found * 10 + Math.floor(timeLeft / 3) - steps * 5 - wrong * 3);
     const reward = Math.round((1 + found * 1.6 + timeLeft / 30) * stageMult);
-    const m = openModal({ title: '🔦 안전 순찰 결과', body: '', cls: 'mg' });
+    const m = openModal({ title: $t('walkgames.finish.11'), body: '', cls: 'mg' });
     const missed = kinds.filter((k) => !foundList.includes(k));
-    resultCard(m, { big: `위험요소 ${found} / 5 · ${pts}점`, reward, good: found >= 4,
+    resultCard(m, { big: $t('walkgames.finish.10', { found, pts }), reward, good: found >= 4, basisKey: 'patrol',
       extra: h('div', { class: 'col gap6' },
-        h('div', { class: 'tiny' }, `남은 시간 ${timeLeft}초 · 위험 구역 밟음 ${steps}회 · 잘못 지적 ${wrong}회`),
-        missed.length ? h('div', { class: 'fb bad' }, '놓친 위험요소: ' + missed.map((k) => `${HAZ[k].name}(${HAZ[k].fix})`).join(', ')) : h('div', { class: 'fb good' }, '모든 위험요소를 찾았어요!')),
-      lesson: '위험성평가의 첫걸음은 "찾기"예요. 유해·위험요인 파악 → 위험성 결정 → 감소대책 → 기록·공유 순서로 해요. 순찰은 매일, 찾은 건 바로 조치!' });
+        h('div', { class: 'tiny' }, $t('walkgames.finish.9', { timeLeft, steps, wrong })),
+        missed.length ? h('div', { class: 'fb bad' }, $t('walkgames.finish.8') + missed.map((k) => `${HAZ[k].name}(${HAZ[k].fix})`).join(', ')) : h('div', { class: 'fb good' }, $t('walkgames.finish.7'))),
+      lesson: $t('walkgames.finish.6') });
     onFinish?.({ reward, found });
     return m;
   }
@@ -98,12 +100,12 @@ export function runGlass({ stageMult = 1, lang = 'ko', onFinish }) {
   const hist = [];
   let mate, glass, fork, forkC;
   const w = openWalk({
-    title: '🔷 유리창 안전하게 옮기기', info: '동료와 2인 1조! 천천히 초록 칸까지 옮겨요', actionLabel: '도착!', timeLimit: 90,
+    title: $t('walkgames.runGlass.6'), info: $t('walkgames.runGlass.5'), actionLabel: $t('walkgames.runGlass.4'), timeLimit: 90,
     bounds: B, start: { x: 0, z: 3 }, ground: 0xb7b2a6, speed: 4.2, camOffset: [0, 12, 9], autoAction: false,
     build(api) {
       api.carrying = true;
       api.box(12, 0.05, 3, 0x7ad36b, 0, 0, -25);
-      api.label('🏁 설치 장소', 0, 1.5, -25, 'mark');
+      api.label($t('walkgames.runGlass.3'), 0, 1.5, -25, 'mark');
       holes.forEach((p) => { props.hole(api, p.x, p.z, 2.4, 2.4, false); api.label('🕳️', p.x, 1.2, p.z, 'mark'); });
       props.pile(api, 3.5, -9); props.pile(api, -3.5, -13); props.pile(api, 1, -21, true);
       api.box(0.3, 3, 33, 0xd8d4c8, -6.1, 0, -10.5); api.box(0.3, 3, 33, 0xd8d4c8, 6.1, 0, -10.5);
@@ -114,9 +116,9 @@ export function runGlass({ stageMult = 1, lang = 'ko', onFinish }) {
       api.addBox(fork, 1.6, 1.2, 2.6, 0xffb020, 0, 0.3, 0); api.addBox(fork, 1.4, 1.4, 1, 0x333333, 0, 1.5, -0.4);
       api.addBox(fork, 0.1, 2.6, 0.1, 0x555555, -0.5, 0.2, 1.4); api.addBox(fork, 0.1, 2.6, 0.1, 0x555555, 0.5, 0.2, 1.4);
       forkC = api.collider(-0.9, -12.4, 0.9, -9.6);
-      api.button('💪 혼자 들기', () => {
+      api.button($t('walkgames.runGlass.2'), () => {
         solo++; soloT = 3; sfx('bad');
-        api.setInfo('⚠️ 허리 다쳐요! 크고 무거운 유리는 꼭 2인 1조로 들어요');
+        api.setInfo($t('walkgames.runGlass.1'));
       }, 'bad');
     },
     onTick(dt, api) {
@@ -138,8 +140,8 @@ export function runGlass({ stageMult = 1, lang = 'ko', onFinish }) {
       forkC.x0 = fx - 1.4; forkC.x1 = fx + 1.4; forkC.z0 = -12; forkC.z1 = -10;
       const near = (x, z, r) => Math.hypot(p.x - x, p.z - z) < r;
       if (api.elapsed - lastHit > 1.5) {
-        if (Math.abs(p.x - fx) < 2.2 && Math.abs(p.z + 11) < 1.9) { hit(api, '🚜 지게차! 멈춰서 지나가길 기다려요'); p.z = p.z > -11 ? -8.2 : -13.8; }
-        for (const ho of holes) if (near(ho.x, ho.z, 1.5)) { hit(api, '🕳️ 개구부! 옮기기 전에 통로를 확인해요'); p.z += 1.6; }
+        if (Math.abs(p.x - fx) < 2.2 && Math.abs(p.z + 11) < 1.9) { hit(api, $t('walkgames.near.4')); p.z = p.z > -11 ? -8.2 : -13.8; }
+        for (const ho of holes) if (near(ho.x, ho.z, 1.5)) { hit(api, $t('walkgames.near.3')); p.z += 1.6; }
       }
       soloT = Math.max(0, soloT - dt);
       api.speedMul = soloT > 0 ? 0.4 : 1;
@@ -147,10 +149,10 @@ export function runGlass({ stageMult = 1, lang = 'ko', onFinish }) {
       wobble = Math.max(0, Math.min(1.2, wobble + (fast > 0.8 ? dt * 0.9 : -dt * 0.6)));
       if (wobble >= 1.2) {
         breaks++; wobble = 0; fast = 0; sfx('bad');
-        api.setInfo('💥 너무 빨라서 유리가 흔들리다 깨졌어요! 처음부터 천천히');
+        api.setInfo($t('walkgames.near.2'));
         p.set(0, 0, 3); mate.g.position.set(0, 0, 5.2); hist.length = 0;
       }
-      if (api.elapsed % 1 < dt) api.setInfo(`흔들림 ${'■'.repeat(Math.round(wobble * 5))}${'□'.repeat(Math.max(0, 6 - Math.round(wobble * 5)))} · 부딪힘 ${hits} · 깨짐 ${breaks}`);
+      if (api.elapsed % 1 < dt) api.setInfo($t('walkgames.near.1', { v1: '■'.repeat(Math.round(wobble * 5)), v2: '□'.repeat(Math.max(0, 6 - Math.round(wobble * 5))), hits, breaks }));
       if (p.z < -23.5) { reached = true; finish(api); }
     },
     onTimeUp: (api) => finish(api),
@@ -163,10 +165,13 @@ export function runGlass({ stageMult = 1, lang = 'ko', onFinish }) {
     api.end(true);
     const ok = reached && breaks === 0;
     const reward = Math.round((2 + (reached ? 5 : 0) + Math.max(0, 3 - hits) - Math.min(2, solo)) * stageMult);
-    const m = openModal({ title: '🔷 유리 옮기기 결과', body: '', cls: 'mg' });
-    resultCard(m, { big: reached ? (breaks ? `도착! (깨짐 ${breaks}번)` : '🎉 안전하게 도착!') : '시간 초과', reward: Math.max(1, reward), lessonId: 'glass', lang, good: ok,
-      extra: h('div', { class: 'tiny' }, `남은 시간 ${timeLeft}초 · 부딪힘 ${hits} · 깨짐 ${breaks} · 혼자 들기 ${solo}번`) });
+    const m = openModal({ title: $t('walkgames.finish.5'), body: '', cls: 'mg' });
+    resultCard(m, { big: reached ? (breaks ? $t('walkgames.finish.4', { breaks }) : $t('walkgames.finish.3')) : $t('walkgames.finish.2'), reward: Math.max(1, reward), lessonId: 'glass', lang, good: ok,
+      extra: h('div', { class: 'tiny' }, $t('walkgames.finish.1', { timeLeft, hits, breaks, solo })) });
     onFinish?.({ reward: Math.max(1, reward), ok });
   }
   return w;
 }
+
+// 언어에 따라 바뀌는 문장으로 감싸기 (lang.js)
+localize(HAZ, 'walkgames.haz');

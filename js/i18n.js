@@ -1,5 +1,9 @@
+import { seedTable } from './lang.js';
 // 첫 출근 안전 코스 문장 — 쉬운 한국어 → 번역 → 다시 한국어(역번역)로 뜻을 점검한 문장
 // ※ 배포 전 각 언어 원어민 검수를 권장합니다 (README 참고)
+// v10: 한국어 버전 먼저 완성·검증. true로 바꾸면 다국어(언어 고르기·게임 언어 설정)가 돌아온다 — 번역 데이터는 그대로 둠
+export const MULTI_LANG = false;
+
 export const LANGS = [
   { id: 'ko', name: '한국어' },
   { id: 'zh', name: '中文' },
@@ -92,3 +96,6 @@ export const T = {
 
 // 문제별 표지 형태 (공식 안전보건표지 색·형태를 단순화)
 export const SIGNS = ['mand-helmet', 'mand-harness', 'warn-opening', 'warn-load', 'stop-weather', 'stop-hand'];
+
+// 언어에 따라 바뀌는 문장으로 감싸기 (lang.js)
+seedTable(T, 'safety');

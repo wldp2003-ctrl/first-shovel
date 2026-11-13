@@ -1,4 +1,11 @@
 // 공용 UI 도우미
+// v10: append(..., 조건 ? 요소 : null)에서 null·false가 "null" 글자로 찍히지 않게 전체에서 건너뛴다
+if (typeof Element !== 'undefined' && !Element.prototype.append.__skipNull) {
+  const orig = Element.prototype.append;
+  Element.prototype.append = function (...nodes) { return orig.apply(this, nodes.filter((n) => n != null && n !== false)); };
+  Element.prototype.append.__skipNull = true;
+}
+import { t as $t, koOn, koOf } from './lang.js';
 export const $ = (s, el = document) => el.querySelector(s);
 
 export function h(tag, attrs = {}, ...kids) {
@@ -11,7 +18,16 @@ export function h(tag, attrs = {}, ...kids) {
     else if (k === 'style' && typeof v === 'object') Object.assign(el.style, v);
     else el.setAttribute(k, v === true ? '' : v);
   }
-  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(String(k)));
+  const noKo = attrs && attrs['data-no-ko'] != null;
+  for (const k of kids.flat()) {
+    if (k == null || k === false) continue;
+    if (k.nodeType) { el.append(k); continue; }
+    const str = String(k);
+    el.append(document.createTextNode(str));
+    // 한국어 함께 보기: 번역된 문장 아래 작은 한국어
+    const ko = !noKo && koOn() && koOf(str);
+    if (ko) { const sm = document.createElement('small'); sm.className = 'tl-ko'; sm.textContent = ko; el.append(sm); }
+  }
   return el;
 }
 
@@ -20,7 +36,7 @@ export function openModal({ title, body, cls = '', closable = true, onClose, wid
   const layer = $('#modals');
   const card = h('div', { class: 'modal ' + cls + (wide ? ' wide' : '') });
   const back = h('div', { class: 'modal-back' }, card);
-  if (title) card.append(h('div', { class: 'modal-title' }, h('span', {}, title), closable ? h('button', { class: 'x', 'aria-label': '닫기', onclick: () => close() }, '✕') : null));
+  if (title) card.append(h('div', { class: 'modal-title' }, h('span', {}, title), closable ? h('button', { class: 'x', 'aria-label': $t('ui.openModal.1'), onclick: () => close() }, '✕') : null));
   const content = h('div', { class: 'modal-body' });
   if (typeof body === 'string') content.innerHTML = body; else if (body) content.append(body);
   card.append(content);
@@ -50,7 +66,7 @@ export function toast(msg, kind = '') {
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const shuffle = (a) => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
-export const won = (n) => `${Math.round(n).toLocaleString('ko-KR')}만원`;
+export { won } from './lang.js';
 
 // 캔버스 고해상도 준비
 export function hiCanvas(w, h) {

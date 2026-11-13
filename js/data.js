@@ -1,3 +1,4 @@
+import { localize } from './lang.js';
 // 첫 삽 — 게임 데이터 (모든 요소는 실제 건설 지식 하나와 연결)
 export const COMPANY = '지예건설';
 export const ACTIONS_PER_DAY = 12;
@@ -195,7 +196,7 @@ export const NOTES = [
   { id: 'strength', tr: 'student', t: '재령 28일 압축강도', d: '지름 100mm 공시체를 28일 양생해 0.6±0.2MPa/s로 눌러요. 강도 = 최대하중 ÷ 단면적(π×50² ≈ 7,854mm²). 1회 시험값은 공시체 3개 평균으로 판정해요.' },
   { id: 'rebar', tr: 'student', t: '피복두께 · 철근 간격 · 스페이서', d: '철근 바깥에서 콘크리트 표면까지가 피복두께(실내 보·기둥 40mm 등). 철근 순간격은 25mm, 철근 지름, 굵은골재 최대치수의 4/3 중 큰 값 이상. 스페이서로 피복을 지켜요.' },
   { id: 'cpm', tr: 'student', t: '네트워크 공정표 · 주공정선 · 전체여유', d: '선후행을 화살표로 잇고, 가장 긴 경로가 주공정선(CP)이에요. TF = LFT − EFT. CP 위 작업은 여유가 0이라 하루 늦으면 공기도 하루 늦어져요.' },
-  { id: 'risk', tr: 'student', t: '위험성평가 · 안전점검', d: '현장을 돌며 위험요소를 찾고(유해·위험요인 파악) → 위험 크기를 정하고 → 대책을 세워 줄여요. 찾는 것이 첫걸음이에요.' },
+  { id: 'risk', tr: 'field', t: '위험성평가 · 안전점검', d: '현장을 돌며 위험요소를 찾고(유해·위험요인 파악) → 위험 크기를 정하고 → 대책을 세워 줄여요. 찾는 것이 첫걸음이에요.' },
   // 현장 첫 출근 트랙 미니게임
   { id: 'window', tr: 'field', t: '고소작업은 안전대 먼저', d: '높은 곳에선 일하기 전에 안전대 고리부터 걸어요. 바람이 세지면 멈추고 내려와요.' },
   { id: 'carry', tr: 'field', t: '중량물은 2인 1조', d: '무겁고 큰 자재는 둘이서, 지나갈 길(구멍·자재·지게차)을 먼저 확인하고 천천히 옮겨요.' },
@@ -342,7 +343,7 @@ export const QUESTS = [
   { id: 'cyl1', tr: 'student', t: '압축강도 시험 바르게 판정', stat: 'cylOk', n: 1, reward: 40 },
   { id: 'rebar1', tr: 'student', t: '철근 배근 퍼즐 완성', stat: 'rebarOk', n: 1, reward: 40 },
   { id: 'cpm1', tr: 'student', t: '주공정선 바르게 찾기', stat: 'cpmOk', n: 1, reward: 45 },
-  { id: 'patrol5', tr: 'student', t: '안전 순찰에서 위험요소 5개 지적', stat: 'patrolFound', n: 5, reward: 45 },
+  { id: 'patrol5', tr: 'field', t: '안전 순찰에서 위험요소 5개 지적', stat: 'patrolFound', n: 5, reward: 45 },
   { id: 'window1', tr: 'field', t: '창문 닦기 안전하게 끝내기', stat: 'windowOk', n: 1, reward: 40 },
   { id: 'glass1', tr: 'field', t: '유리창 깨지 않고 옮기기', stat: 'glassOk', n: 1, reward: 45 },
   { id: 'hide1', tr: 'field', t: '안전한 곳에서만 숨기 성공', stat: 'hideOk', n: 1, reward: 35 },
@@ -358,3 +359,10 @@ export const CITIES = [
   { id: 'daejeon', name: '대전', lat: 36.35, lon: 127.38 },
   { id: 'jeju', name: '제주', lat: 33.5, lon: 126.53 },
 ];
+
+// 언어에 따라 바뀌는 문장으로 감싸기 (lang.js)
+localize(COUNTRIES, 'data.country'); localize(BUILDINGS, 'data.bld'); localize(PHASES, 'data.phase');
+localize(TOOLS, 'data.tool'); localize(EQUIP, 'data.equip'); localize(LATE_ITEMS, 'data.late');
+localize(WORKER_NAMES, 'data.worker'); localize(LINES, 'data.lines'); localize(BRIEF_TALK, 'data.brief');
+localize(QUIZ_LEVELS, 'data.quizlv'); localize(QUIZ, 'data.quiz'); localize(TEST, 'data.test'); localize(NOTES, 'data.note');
+localize(CONFLICTS, 'data.conflict'); localize(TALKS, 'data.talk'); localize(QUESTS, 'data.quest'); localize(QUICK_CHAT, 'data.chat'); localize(CITIES, 'data.city');

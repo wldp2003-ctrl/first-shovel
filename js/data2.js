@@ -1,26 +1,22 @@
+import { t as $t } from './lang.js';
+import { localize, seedTable } from './lang.js';
 // 첫 삽 2차 업그레이드 데이터 — 트랙별 미니게임, 층·호이스트, 층별 이벤트, 야간 당직
 // 다국어 문장은 쉬운 한국어 → 번역 → 역번역으로 뜻을 점검. 배포 전 원어민 검수 권장.
 
 /* ---------- 트랙별 미니게임 (하루 횟수) ---------- */
 export const MG = {
-  student: [
-    { id: 'remicon', icon: '🚛', name: '레미콘 받아들이기 검사', desc: '슬럼프·공기량·염화물·단위수량 → 합격/반송', per: 2 },
-    { id: 'cyl', icon: '🧪', name: '공시체 압축강도 시험', desc: '하중 그래프 → 최대하중 ÷ 단면적 = MPa', per: 1 },
-    { id: 'rebar', icon: '🧱', name: '철근 배근 퍼즐', desc: '피복두께·철근 간격·스페이서', per: 1 },
-    { id: 'cpm', icon: '🗂️', name: '공정표 짜기', desc: '선후행 연결 → 주공정선 찾기', per: 1 },
-    { id: 'patrol', icon: '🔦', name: '현장 안전 순찰', desc: '직접 걸으며 위험요소 지적 (조이스틱)', per: 1, move: true },
-    { id: 'quiz', icon: '📝', name: '건축 용어 퀴즈', desc: '5문제 · 진행할수록 깊어져요', per: 1 },
-  ],
+  // v10: 학생 트랙 삭제 → 신규·초보 근로자 한 트랙 (기존 저장의 track도 'field'로 이어짐)
   field: [
+    { id: 'patrol', icon: '🔦', name: '현장 위험 찾기 순찰', desc: '직접 걸으며 위험요소 지적 (조이스틱)', per: 1, move: true },
     { id: 'remiconLite', icon: '🚛', name: '레미콘 검사 (쉬운 버전)', desc: '슬럼프 콘 들기 → 그림 3장 중 고르기', per: 2 },
     { id: 'window', icon: '🏢', name: '창문 닦기', desc: '안전대 고리 먼저! 강풍엔 멈춤', per: 1 },
     { id: 'glass', icon: '🔷', name: '유리창 안전하게 옮기기', desc: '2인 1조로 장애물 피하기 (조이스틱)', per: 1, move: true },
     { id: 'hide', icon: '🙈', name: '소장님 피해 숨기', desc: '쉬는 시간, 안전한 곳에만 숨기', per: 1 },
     { id: 'lunch', icon: '🍱', name: '맛있는 점심 (함바집)', desc: '주문 기억해서 식판 담기', per: 1 },
-    { id: 'fquiz', icon: '📝', name: '현장 말 퀴즈 (쉬운 버전)', desc: '그림 + 내 언어 + 한국어 용어', per: 1 },
+    { id: 'fquiz', icon: '📝', name: '현장 말 퀴즈', desc: '그림 보고 현장에서 쓰는 말 고르기', per: 1 },
   ],
 };
-export const mgDefaults = (track) => Object.fromEntries((MG[track] || MG.student).map((g) => [g.id, g.per]));
+export const mgDefaults = (track) => Object.fromEntries(MG.field.map((g) => [g.id, g.per]));
 
 /* ---------- 층 · 구간 ---------- */
 // num: 층수, zones: 높이 구간 이름, walk: 낮은 건물(걸어서 이동)
@@ -38,9 +34,9 @@ export const FLOORS = {
 };
 export const floorCount = (id) => { const f = FLOORS[id] || { n: 1 }; return f.zones ? f.zones.length : f.n; };
 export const floorLabel = (id, f) => {
-  if (f === 0) return '지하';
+  if (f === 0) return $t('data2.floorLabel.2');
   const d = FLOORS[id] || { n: 1 };
-  return d.zones ? d.zones[Math.max(0, Math.min(d.zones.length - 1, f - 1))] : `${f}층`;
+  return d.zones ? d.zones[Math.max(0, Math.min(d.zones.length - 1, f - 1))] : $t('data2.floorLabel.1', { f });
 };
 export const needsHoist = (id) => !FLOORS[id]?.walk && floorCount(id) >= 3;
 export const hoistPrice = (bIdx) => 60 + bIdx * 45;
@@ -187,3 +183,9 @@ export const NIGHT_ITEMS = {
   roof: { ic: '🏢', t: { ko: '최상층 개구부·난간 확인', zh: '检查顶层洞口和栏杆', vi: 'Kiểm tra lỗ hở và lan can tầng trên cùng', ru: 'Проверить проёмы и перила на верхнем этаже' }, why: '바람과 비가 오면 최상층 가장자리가 가장 위험해요.' },
 };
 export const NIGHT_TALK = ['오늘 밤 조용하네요', '컵라면 하나 하실래요?', '손전등 배터리 넉넉해요', '분전반은 제가 같이 볼게요', '별이 많이 보이네요', '내일 비 온다던데요…'];
+
+// 언어에 따라 바뀌는 문장으로 감싸기 (lang.js)
+localize(MG, 'data2.mg'); localize(FLOORS, 'data2.floor'); localize(FIELD_ACTS, 'data2.act');
+seedTable(FIELD_UI, 'data2.fieldui');
+localize(EVENTS, 'data2.ev'); localize(FIELD_TERMS, 'data2.term', ['ko']); localize(FIELD_LESSON, 'data2.lesson');
+localize(NIGHT_ITEMS, 'data2.night'); localize(NIGHT_TALK, 'data2.nighttalk');

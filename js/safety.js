@@ -1,5 +1,6 @@
 // 현장 첫 출근 안전 코스 (약 10분) — 4개 언어 + 작은 한국어 병기
-import { T, LANGS, SIGNS } from './i18n.js';
+import { T, LANGS, SIGNS, MULTI_LANG } from './i18n.js';
+import { t as $t, koOn } from './lang.js';
 import { h, openModal, hiCanvas, shuffle } from './ui.js';
 import { sfx } from './audio.js';
 
@@ -79,19 +80,19 @@ function tline(lang, key, sub) {
   // 외국어 + 아래 작은 한국어
   const main = typeof key === 'function' ? key(T[lang]) : T[lang][key];
   const ko = typeof key === 'function' ? key(T.ko) : T.ko[key];
-  return h('div', { class: 'tl' }, h('div', { class: 'tl-main' + (sub ? ' ' + sub : '') }, main), lang !== 'ko' ? h('div', { class: 'tl-ko' }, ko) : null);
+  return h('div', { class: 'tl' }, h('div', { class: 'tl-main' + (sub ? ' ' + sub : '') }, main), koOn() ? h('div', { class: 'tl-ko' }, ko) : null);
 }
 
 export function runSafetyCourse({ nick, lang: initLang, onDone, onNote }) {
   let lang = initLang || 'ko', score = 0;
-  const m = openModal({ title: '🦺 첫 출근 안전 코스', body: '', cls: 'safety', closable: true });
+  const m = openModal({ title: $t('safety.runSafetyCourse.1'), body: '', cls: 'safety', closable: true });
   const set = (el) => m.setBody(el);
 
   function stepLang() {
     set(h('div', { class: 'col' },
-      h('p', { class: 'muted' }, '언어를 고르세요 · 请选择语言 · Hãy chọn ngôn ngữ · Выберите язык'),
+      h('p', { class: 'muted' }, $t('safety.stepLang.2')),
       h('div', { class: 'grid2' }, LANGS.map((L) => h('button', { class: 'btn big' + (L.id === lang ? ' on' : ''), onclick: () => { lang = L.id; sfx('tap'); stepTBM(); } }, L.name))),
-      h('p', { class: 'tiny muted' }, '외국인 건설근로자 국적 1~4위 기준 (건설근로자공제회 2024): 한국계 중국인 83.7%, 중국 5.9%, 베트남 2.2%, 고려인 1.7%')));
+      h('p', { class: 'tiny muted' }, $t('safety.stepLang.1'))));
   }
   function stepTBM() {
     set(h('div', { class: 'col' },
@@ -115,16 +116,16 @@ export function runSafetyCourse({ nick, lang: initLang, onDone, onNote }) {
         sfx('good'); e.currentTarget.classList.add('right');
         btns.forEach((b) => (b.disabled = true));
         fb.innerHTML = ''; fb.append(h('b', {}, T[lang].correct), ' ', tline(lang, (t) => t.q[i].fb));
-        fb.append(h('button', { class: 'btn primary', onclick: () => stepQ(i + 1) }, T[lang].next + (lang !== 'ko' ? ' · 다음' : '')));
+        fb.append(h('button', { class: 'btn primary', onclick: () => stepQ(i + 1) }, T[lang].next + (koOn() ? $t('safety.stepQ.1') : '')));
       } else {
         first = false; sfx('bad'); e.currentTarget.classList.add('wrong'); e.currentTarget.disabled = true;
         fb.innerHTML = ''; fb.append(tline(lang, 'wrong'));
       }
-    } }, h('div', {}, q.o[k]), lang !== 'ko' ? h('div', { class: 'tl-ko' }, qk.o[k]) : null));
+    } }, h('div', {}, q.o[k]), koOn() ? h('div', { class: 'tl-ko' }, qk.o[k]) : null));
     set(h('div', { class: 'col' },
       h('div', { class: 'qhead' }, `${i + 1} / 6`, ' · ', tline(lang, 'quizIntro')),
-      h('div', { class: 'sign-wrap' }, c, h('div', { class: 'sign-kind ' + type }, T[lang][sk] + (lang !== 'ko' ? ` · ${T.ko[sk]}` : ''))),
-      h('div', { class: 'qtext' }, q.q, lang !== 'ko' ? h('div', { class: 'tl-ko' }, qk.q) : null),
+      h('div', { class: 'sign-wrap' }, c, h('div', { class: 'sign-kind ' + type }, T[lang][sk] + (koOn() ? ` · ${T.ko[sk]}` : ''))),
+      h('div', { class: 'qtext' }, q.q, koOn() ? h('div', { class: 'tl-ko' }, qk.q) : null),
       h('div', { class: 'col gap6' }, btns), fb));
   }
   function stepBuild() {
@@ -145,24 +146,25 @@ export function runSafetyCourse({ nick, lang: initLang, onDone, onNote }) {
     const mk = (n, key) => h('button', { class: 'btn big', onclick: () => {
       if (n !== stage + 1) { sfx('bad'); msg.innerHTML = ''; msg.append(tline(lang, 'orderWarn')); return; }
       stage = n; sfx('build'); anim(); msg.innerHTML = '';
-      if (stage === 3) { sfx('fanfare'); msg.append(tline(lang, 'buildDone'), h('button', { class: 'btn primary', onclick: stepCert }, T[lang].next + (lang !== 'ko' ? ' · 다음' : ''))); }
-    } }, h('div', {}, T[lang][key]), lang !== 'ko' ? h('div', { class: 'tl-ko' }, T.ko[key]) : null);
+      if (stage === 3) { sfx('fanfare'); msg.append(tline(lang, 'buildDone'), h('button', { class: 'btn primary', onclick: stepCert }, T[lang].next + (koOn() ? $t('safety.mk.1') : ''))); }
+    } }, h('div', {}, T[lang][key]), koOn() ? h('div', { class: 'tl-ko' }, T.ko[key]) : null);
     set(h('div', { class: 'col' }, tline(lang, 'buildTitle', 'h'), c, h('div', { class: 'grid3' }, mk(1, 'b1'), mk(2, 'b2'), mk(3, 'b3')), msg));
   }
   function stepCert() {
     const now = new Date();
-    const rec = { nick: nick || '익명', date: `${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()}`, lang: LANGS.find((L) => L.id === lang).name, score };
+    const rec = { nick: nick || $t('safety.stepCert.1'), date: `${now.getFullYear()}.${now.getMonth() + 1}.${now.getDate()}`, lang: LANGS.find((L) => L.id === lang).name, score };
     onNote?.('safety');
-    const row = (k, v) => h('div', { class: 'cert-row' }, h('span', {}, T[lang][k] + (lang !== 'ko' ? ` · ${T.ko[k]}` : '')), h('b', {}, v));
+    const row = (k, v) => h('div', { class: 'cert-row' }, h('span', {}, T[lang][k] + (koOn() ? ` · ${T.ko[k]}` : '')), h('b', {}, v));
     set(h('div', { class: 'col' },
       h('div', { class: 'cert' },
         h('div', { class: 'cert-stripe' }),
-        h('div', { class: 'cert-title' }, T[lang].certTitle, lang !== 'ko' ? h('small', {}, ' · 연습 기록') : null),
-        h('div', { class: 'cert-sub' }, `(${T[lang].certSub}${lang !== 'ko' ? ' · 공식 이수증 아님' : ''})`),
+        h('div', { class: 'cert-title' }, T[lang].certTitle, koOn() ? h('small', {}, $t('safety.row.4')) : null),
+        h('div', { class: 'cert-sub' }, `(${T[lang].certSub}${koOn() ? $t('safety.row.3') : ''})`),
         row('nick', rec.nick), row('date', rec.date), row('lang', rec.lang), row('score', `${score} / 6`),
-        h('div', { class: 'cert-co' }, '지예건설 · 첫 삽')),
-      h('button', { class: 'btn primary big', onclick: () => { m.close(); onDone?.(rec, lang); } }, T[lang].finish + (lang !== 'ko' ? ' · 끝내고 현장으로' : ''))));
+        h('div', { class: 'cert-co' }, $t('safety.row.2'))),
+      h('button', { class: 'btn primary big', onclick: () => { m.close(); onDone?.(rec, lang); } }, T[lang].finish + (koOn() ? $t('safety.row.1') : ''))));
   }
-  stepLang();
+  // v10: 다국어가 꺼져 있으면 언어 고르기를 건너뛰고 한국어로 TBM부터
+  if (MULTI_LANG) stepLang(); else { lang = 'ko'; stepTBM(); }
   return m;
 }

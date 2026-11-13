@@ -1,5 +1,6 @@
 // 첫 삽 — 메인 게임 로직
 import * as S from './scene.js';
+import { t as $t, U, num } from './lang.js';
 import { buildModel } from './models.js';
 import {
   COMPANY, ACTIONS_PER_DAY, COUNTRIES, BUILDINGS, PHASES, TOOLS, EQUIP, LATE_ITEMS, hireCost, MAX_WORKERS,
@@ -17,7 +18,8 @@ import { currentFloor, floorText, maybeEvent, tickEvents, goToFloor, addEvent, S
 import { shouldNight, nightCard, applyNightConsequences, nightReportLine } from './night.js';
 import { walkActive } from './walk.js';
 import { runSafetyCourse } from './safety.js';
-import { LANGS } from './i18n.js';
+import { LANGS, MULTI_LANG } from './i18n.js';
+import { setLang, savedLang, setShowKo, onLangChange, LANG_IDS, LANG_NAMES, DEV, checkHangul, missingKeys } from './lang.js';
 import { startNet, onlineFriends, sendTo, netMode, publishNow } from './net.js';
 
 /* ---------------- 상태 ---------------- */
@@ -27,7 +29,7 @@ const freshStats = () => ({ actions: 0, quizCorrect: 0, hires: 0, remiconCorrect
 const defaultState = () => ({
   v: 2, id: rid(), nick: '', track: null, lang: 'ko', music: true, sfx: true, city: 'gwangju',
   startDate: ymd(new Date()), day: 1, money: 30, actionsLeft: ACTIONS_PER_DAY, gifts: 3,
-  mg: mgDefaults('student'), helpsLeft: 10,
+  mg: mgDefaults('field'), helpsLeft: 10,
   bIdx: 0, progress: 0, started: false, startDay: 0, ext: 0, lastPhase: 0,
   workers: 0, tools: [], equip: [], late: [], morale: 60, conflict: null,
   stats: freshStats(), quests: [], notes: {}, test: { pre: null, post: null },
@@ -40,7 +42,10 @@ const defaultState = () => ({
 function migrate(saved) {
   const out = Object.assign(defaultState(), saved, { stats: Object.assign(freshStats(), saved.stats || {}) });
   out.v = 2;
-  const def = mgDefaults(out.track || 'student'), mg = {};
+  // v10: 학생 트랙 삭제 — 예전 저장의 track이 무엇이든 신규 근로자(field) 트랙으로 이어서 한다
+  if (out.track) out.track = 'field';
+  if (!MULTI_LANG) out.lang = 'ko';
+  const def = mgDefaults('field'), mg = {};
   for (const k in def) mg[k] = typeof saved.mg?.[k] === 'number' ? Math.max(0, Math.min(saved.mg[k], def[k])) : def[k];
   out.mg = mg;
   const t = saved.todo || {};
@@ -103,20 +108,20 @@ function nextCost() {
   return Math.max(5, Math.ceil(st.actionsLeft / ACTIONS_PER_DAY * Math.max(1, st.workers) * 10));
 }
 function statusText(startOfDay = false) {
-  if (st.finished) return { t: '모든 현장 준공! 세계 일주 완료 🎉', c: 'ok' };
-  if (!st.started) return { t: '착공 전 · 착공하면 마감일이 정해져요', c: 'info' };
+  if (st.finished) return { t: $t('main.statusText.5'), c: 'ok' };
+  if (!st.started) return { t: $t('main.statusText.4'), c: 'info' };
   const dl = deadlineDay();
-  if (st.day > dl) return { t: `마감일이 ${st.day - dl}일 지났어요`, c: 'late' };
+  if (st.day > dl) return { t: $t('main.statusText.3', { v1: st.day - dl }), c: 'late' };
   const gap = planned(startOfDay) - actual();
-  if (gap >= 0.08) return { t: `공정이 ${Math.round(gap * 100)}% 미뤄지고 있어요!`, c: 'late' };
-  return { t: '계획대로 순항 중', c: 'ok' };
+  if (gap >= 0.08) return { t: $t('main.statusText.2', { v1: Math.round(gap * 100) }), c: 'late' };
+  return { t: $t('main.statusText.1'), c: 'ok' };
 }
 function ddayText() {
   const def = curDef();
-  if (st.finished) return '준공 완료';
-  if (!st.started) return `공기 ${def.days}일`;
+  if (st.finished) return $t('main.ddayText.4');
+  if (!st.started) return $t('main.ddayText.3', { days: def.days });
   const dl = deadlineDay(), d = dl - st.day;
-  return `마감 ${fmtDate(dateOf(dl), false)} · ${d > 0 ? 'D-' + d : d === 0 ? 'D-day' : `${-d}일 지남`}`;
+  return $t('main.ddayText.2', { v1: fmtDate(dateOf(dl), false), v2: d > 0 ? 'D-' + d : d === 0 ? 'D-day' : $t('main.ddayText.1', { v1: -d }) });
 }
 
 /* ---------------- 모듈 연결용 컨텍스트 ---------------- */
@@ -133,7 +138,7 @@ function note(id) {
   st.notes[id] = st.day;
   const n = NOTES.find((x) => x.id === id);
   A.sfx('pop');
-  toast(`📒 배움 노트에 추가: ${n.t}`, 'note');
+  toast($t('main.note.1', { t: n.t }), 'note');
   save();
 }
 
@@ -141,12 +146,12 @@ function note(id) {
 function refreshTop() {
   $('#money').textContent = won(st.money);
   const w = todayWx(), d = describe(w), ef = effect(w);
-  $('#dateTxt').textContent = `${st.day}일차 ${fmtDate(dateOf(st.day))}`;
+  $('#dateTxt').textContent = $t('main.refreshTop.7', { day: st.day, v2: fmtDate(dateOf(st.day)) });
   $('#wxIcon').textContent = d.icon;
   $('#wxTemp').textContent = `${Math.round(w.tmax)}°`;
-  $('#moraleTxt').textContent = `${st.morale >= 70 ? '😄' : st.morale >= 40 ? '🙂' : '😣'} 사기 ${Math.round(st.morale)}`;
-  $('#crewTxt').textContent = `👷 인부 ${st.workers}명`;
-  $('#wxNote').textContent = ef.stop ? '⛔ 공사 중지' : ef.mult < 1 ? `${d.name} · 작업량 ${Math.round(ef.mult * 100)}%` + (ef.craneStop ? ' · 크레인 중지' : '') : `${d.name}${isLive() ? '' : ' (가상 예보)'}`;
+  $('#moraleTxt').textContent = $t('main.refreshTop.6', { v1: st.morale >= 70 ? '😄' : st.morale >= 40 ? '🙂' : '😣', v2: Math.round(st.morale) });
+  $('#crewTxt').textContent = $t('main.refreshTop.5', { workers: st.workers });
+  $('#wxNote').textContent = ef.stop ? $t('main.refreshTop.4') : ef.mult < 1 ? $t('main.refreshTop.3', { name: d.name, v2: Math.round(ef.mult * 100) }) + (ef.craneStop ? $t('main.refreshTop.2') : '') : `${d.name}${isLive() ? '' : $t('main.refreshTop.1')}`;
   $('#conflictTag').classList.toggle('hidden', st.conflict == null);
   $('#musicBtn').classList.toggle('off', !st.music);
   $('#introMusic')?.classList.toggle('off', !st.music);
@@ -154,18 +159,18 @@ function refreshTop() {
 function refreshSite() {
   const def = curDef(), c = COUNTRIES[countryIdxOf(def)];
   $('#scFlag').textContent = c.flag;
-  $('#scName').textContent = st.finished ? '세계 일주 완료' : def.name;
+  $('#scName').textContent = st.finished ? $t('main.refreshSite.24') : def.name;
   const ph = curPhase();
   const fl = st.started && !st.finished ? currentFloor(def, actual()) : 0;
-  $('#scPhase').textContent = st.finished ? '준공' : st.started ? (floorText(def, fl, PHASES[ph]) || PHASES[ph]) : '착공 전';
+  $('#scPhase').textContent = st.finished ? $t('main.refreshSite.23') : st.started ? (floorText(def, fl, PHASES[ph]) || PHASES[ph]) : $t('main.refreshSite.22');
   // 층별 이벤트 · 층 이동 버튼
   const evBox = $('#scEvent'); evBox.innerHTML = '';
-  st.events.forEach((e) => evBox.append(h('button', { class: 'evtag', onclick: () => goToFloor(ctx, e.floor) }, `🚨 ${floorLabel(def.id, e.floor)} ${SHORT[e.id]} · 남은 작업 ${e.left}회`, h('b', {}, '가기 ▶'))));
-  if (st.slowActs > 0) evBox.append(h('div', { class: 'evslow' }, `⏸ 공정 멈춤 여파: 작업 ${st.slowActs}회 동안 작업량 -50%`));
+  st.events.forEach((e) => evBox.append(h('button', { class: 'evtag', onclick: () => goToFloor(ctx, e.floor) }, $t('main.refreshSite.21', { v1: floorLabel(def.id, e.floor), v2: SHORT[e.id], left: e.left }), h('b', {}, $t('main.refreshSite.20')))));
+  if (st.slowActs > 0) evBox.append(h('div', { class: 'evslow' }, $t('main.refreshSite.19', { slowActs: st.slowActs })));
   evBox.classList.toggle('hidden', !evBox.childNodes.length);
   const lb = $('#liftBtn');
   lb.classList.toggle('hidden', !st.started || st.finished);
-  lb.textContent = FLOORS[def.id]?.walk ? '🚶 현장 걷기' : hasHoist() ? '🔼 호이스트' : '🧗 층 이동';
+  lb.textContent = FLOORS[def.id]?.walk ? $t('main.refreshSite.18') : hasHoist() ? $t('main.refreshSite.17') : $t('main.refreshSite.16');
   const dd = $('#scDday'); dd.textContent = ddayText(); dd.classList.toggle('late', st.started && st.day > deadlineDay());
   // 공정표
   const m = buildModel(def.id), tot = m.blocks.length, a = actual();
@@ -183,19 +188,19 @@ function refreshSite() {
   const s = statusText();
   const warn = $('#scWarn');
   warn.classList.toggle('hidden', !(st.started && s.c === 'late'));
-  warn.textContent = '⚠️ ' + (s.c === 'late' ? (st.day > deadlineDay() ? s.t : `공정 지연 — ${s.t}`) : '');
+  warn.textContent = '⚠️ ' + (s.c === 'late' ? (st.day > deadlineDay() ? s.t : $t('main.refreshSite.15', { t: s.t })) : '');
   // 버튼
   const wb = $('#workBtn'), ef = todayEf(), r = rates();
   wb.classList.toggle('start', !st.started && !st.finished);
-  if (st.finished) { wb.disabled = true; wb.querySelector('.lbl').textContent = '🎉 완공'; $('#workSub').textContent = '모든 건물 준공'; }
-  else if (!st.started) { wb.disabled = false; wb.querySelector('.lbl').textContent = '🚧 착공하기'; $('#workSub').textContent = `공기 ${def.days}일 · 마감일 확정`; }
-  else if (ef.stop) { wb.disabled = true; wb.querySelector('.lbl').textContent = '⛔ 공사 중지'; $('#workSub').textContent = '부업·퀘스트로 돈 벌기'; }
-  else if (st.actionsLeft <= 0) { wb.disabled = true; wb.querySelector('.lbl').textContent = '✅ 오늘 작업 끝'; $('#workSub').textContent = '하루 마감을 눌러요'; }
-  else { wb.disabled = false; wb.querySelector('.lbl').textContent = '🔨 작업'; $('#workSub').textContent = `${st.actionsLeft} / ${ACTIONS_PER_DAY} · +${r.total}블록`; }
+  if (st.finished) { wb.disabled = true; wb.querySelector('.lbl').textContent = $t('main.refreshSite.14'); $('#workSub').textContent = $t('main.refreshSite.13'); }
+  else if (!st.started) { wb.disabled = false; wb.querySelector('.lbl').textContent = $t('main.refreshSite.12'); $('#workSub').textContent = $t('main.refreshSite.11', { days: def.days }); }
+  else if (ef.stop) { wb.disabled = true; wb.querySelector('.lbl').textContent = $t('main.refreshSite.10'); $('#workSub').textContent = $t('main.refreshSite.9'); }
+  else if (st.actionsLeft <= 0) { wb.disabled = true; wb.querySelector('.lbl').textContent = $t('main.refreshSite.8'); $('#workSub').textContent = $t('main.refreshSite.7'); }
+  else { wb.disabled = false; wb.querySelector('.lbl').textContent = $t('main.refreshSite.6'); $('#workSub').textContent = $t('main.refreshSite.5', { actionsLeft: st.actionsLeft, ACTIONS_PER_DAY, total: r.total }); }
   const cost = nextCost(), nb = $('#nextBtn');
   nb.classList.toggle('pay', cost > 0);
-  nb.querySelector('.lbl').textContent = cost > 0 ? (st.started ? '⏸ 공사 미루기' : '⏸ 착공 미루기') : '🌙 하루 마감';
-  $('#nextSub').textContent = cost > 0 ? won(cost) : '다음 날 (무료)';
+  nb.querySelector('.lbl').textContent = cost > 0 ? (st.started ? $t('main.refreshSite.4') : $t('main.refreshSite.3')) : $t('main.refreshSite.2');
+  $('#nextSub').textContent = cost > 0 ? won(cost) : $t('main.refreshSite.1');
   // 알림 점
   const sideAvail = Object.values(st.mg).some((v) => v > 0) || st.conflict != null;
   $('#dotSide').classList.toggle('hidden', !sideAvail);
@@ -235,8 +240,8 @@ function startConstruction() {
   st.started = true; st.startDay = st.day; st.ext = 0; st.lastPhase = 0;
   if (todayEf().stop) { st.ext = 1; note('weather'); }
   A.sfx('build');
-  toast(`🚧 ${def.name} 착공! 마감 ${fmtDate(dateOf(deadlineDay()))} · 공기 ${def.days}일`);
-  S.say('착공이다! 안전하게 갑시다!', 0) || S.say('착공이다! 안전하게 갑시다!', 'me');
+  toast($t('main.startConstruction.3', { name: def.name, v2: fmtDate(dateOf(deadlineDay())), days: def.days }));
+  S.say($t('main.startConstruction.2'), 0) || S.say($t('main.startConstruction.1'), 'me');
   save(); refreshAll();
 }
 function floatNum(text) {
@@ -247,21 +252,21 @@ function doWork() {
   if (st.finished || viewing != null) return;
   if (!st.started) return startConstruction();
   const ef = todayEf();
-  if (ef.stop) return toast('오늘은 날씨 때문에 공사 중지예요. 부업과 퀘스트로 돈을 벌어 보세요', 'bad');
-  if (st.actionsLeft <= 0) return toast('오늘 작업 12회를 모두 썼어요. 하루 마감을 눌러요');
+  if (ef.stop) return toast($t('main.doWork.5'), 'bad');
+  if (st.actionsLeft <= 0) return toast($t('main.doWork.4'));
   st.actionsLeft--; st.stats.actions++;
   const r = rates();
   st.progress += r.total;
   if (st.slowActs > 0) st.slowActs--;
   A.sfx('build'); S.workPulse();
-  floatNum(`+${r.total} 블록`);
+  floatNum($t('main.doWork.3', { total: r.total }));
   updateCurrentBlocks(true);
   const ph = curPhase();
   if (ph > st.lastPhase) {
     st.lastPhase = ph;
-    toast(`🏗️ 공정 단계: ${PHASES[ph]} 시작!`);
+    toast($t('main.doWork.2', { v1: PHASES[ph] }));
     note('sequence');
-    S.say(`${PHASES[ph]} 들어갑니다!`);
+    S.say($t('main.doWork.1', { v1: PHASES[ph] }));
   }
   if (st.progress >= curDef().work) { save(); refreshAll(); return complete(); }
   tickEvents(ctx);
@@ -273,14 +278,14 @@ function nextDay() {
   if (viewing != null) return;
   const cost = nextCost();
   if (cost > 0) {
-    if (st.money < cost) return toast(`돈이 부족해요 (${won(cost)} 필요). 남은 작업을 하거나 부업으로 벌어 오세요`, 'bad');
-    const m = openModal({ title: st.started ? '⏸ 공사 미루기' : '⏸ 착공 미루기', body: h('div', { class: 'col' },
+    if (st.money < cost) return toast($t('main.nextDay.7', { v1: won(cost) }), 'bad');
+    const m = openModal({ title: st.started ? $t('main.nextDay.6') : $t('main.nextDay.5'), body: h('div', { class: 'col' },
       h('div', { class: 'fb' }, st.started
-        ? `오늘 작업이 ${st.actionsLeft}회 남았어요. 넘기면 인부 ${st.workers}명의 대기 일당 ${won(cost)}을 내야 하고 현장 사기가 크게 떨어져요.`
-        : `착공 전에 날을 넘기면 현장 유지비 ${won(cost)}이 들어요.`),
+        ? $t('main.nextDay.4', { actionsLeft: st.actionsLeft, workers: st.workers, v3: won(cost) })
+        : $t('main.nextDay.3', { v1: won(cost) })),
       h('div', { class: 'grid2' },
-        h('button', { class: 'btn', onclick: () => m.close() }, '취소'),
-        h('button', { class: 'btn primary', onclick: () => { m.close(); st.money -= cost; if (st.started) st.morale = Math.max(0, st.morale - 12); endOfDay(); } }, `${won(cost)} 내고 넘기기`))) });
+        h('button', { class: 'btn', onclick: () => m.close() }, $t('main.nextDay.2')),
+        h('button', { class: 'btn primary', onclick: () => { m.close(); st.money -= cost; if (st.started) st.morale = Math.max(0, st.morale - 12); endOfDay(); } }, $t('main.nextDay.1', { v1: won(cost) })))) });
     return;
   }
   endOfDay();
@@ -294,7 +299,7 @@ function advanceDay() {
   if (!st.finished && st.started && st.actionsLeft === ACTIONS_PER_DAY && !todayEf().stop) {} // 미룬 날
   st.day++;
   st.actionsLeft = ACTIONS_PER_DAY; st.gifts = 3; st.helpsLeft = 10;
-  st.mg = mgDefaults(st.track || 'student');
+  st.mg = mgDefaults('field');
   st.evToday = 0;
   st.evCap = Math.min(3, 1 + Math.floor(Math.random() * 3) + (getWeather(dateOf(st.day)).wind >= 8 ? 1 : 0));
   st.morale = Math.max(0, st.morale - 3);
@@ -339,23 +344,23 @@ function complete() {
   note('schedule');
   save();
   A.sfx('fanfare');
-  S.say('준공이다~! 수고하셨습니다!');
-  const m = openModal({ title: '📄 준공 정산서', body: h('div', { class: 'col' },
-    h('div', { class: 'conf-title' }, `🎉 ${def.name} 준공!`),
+  S.say($t('main.complete.19'));
+  const m = openModal({ title: $t('main.complete.18'), body: h('div', { class: 'col' },
+    h('div', { class: 'conf-title' }, $t('main.complete.17', { name: def.name })),
     h('div', { class: 'tiny muted' }, def.fact),
     h('div', { class: 'settle' },
-      h('div', { class: 'r' }, h('span', {}, '착공 → 준공'), h('b', {}, `${fmtDate(dateOf(st.day - usedDays + 1), false)} → ${fmtDate(dateOf(st.day), false)} (${usedDays}일)`)),
-      h('div', { class: 'r' }, h('span', {}, '계약 공기'), h('b', {}, `${def.days}일`)),
-      h('div', { class: 'r' }, h('span', {}, '날씨 연장 인정'), h('b', {}, `${ext}일`)),
-      h('div', { class: 'r' }, h('span', {}, '계약금'), h('b', {}, won(def.reward))),
-      late === 0 ? h('div', { class: 'r' }, h('span', {}, '공기 내 준공 보너스 (+10%)'), h('b', { class: 'plus' }, '+' + won(bonus)))
-        : h('div', { class: 'r' }, h('span', {}, `지체상금 (${late}일 × 10%, 최대 50%)`), h('b', { class: 'minus' }, '-' + won(penalty))),
-      h('div', { class: 'r total' }, h('span', {}, '최종 수령액'), h('b', {}, won(total))),
-      h('div', { class: 'r' }, h('span', {}, '아차사고'), h('b', { class: nm ? 'minus' : 'plus' }, nm ? `${nm}건` : '0건 👍'))),
-    h('div', { class: 'tiny muted' }, '※ 실제 공사계약의 지체상금률은 보통 하루 계약금액의 0.05%(1000분의 0.5)예요. 게임에선 공기의 중요성을 느끼도록 크게 잡았어요.'),
-    h('button', { class: 'btn primary big', onclick: () => m.close() }, '확인')) });
+      h('div', { class: 'r' }, h('span', {}, $t('main.complete.16')), h('b', {}, $t('main.complete.15', { v1: fmtDate(dateOf(st.day - usedDays + 1), false), v2: fmtDate(dateOf(st.day), false), usedDays }))),
+      h('div', { class: 'r' }, h('span', {}, $t('main.complete.14')), h('b', {}, $t('main.complete.13', { days: def.days }))),
+      h('div', { class: 'r' }, h('span', {}, $t('main.complete.12')), h('b', {}, $t('main.complete.11', { ext }))),
+      h('div', { class: 'r' }, h('span', {}, $t('main.complete.10')), h('b', {}, won(def.reward))),
+      late === 0 ? h('div', { class: 'r' }, h('span', {}, $t('main.complete.9')), h('b', { class: 'plus' }, '+' + won(bonus)))
+        : h('div', { class: 'r' }, h('span', {}, $t('main.complete.8', { late })), h('b', { class: 'minus' }, '-' + won(penalty))),
+      h('div', { class: 'r total' }, h('span', {}, $t('main.complete.7')), h('b', {}, won(total))),
+      h('div', { class: 'r' }, h('span', {}, $t('main.complete.6')), h('b', { class: nm ? 'minus' : 'plus' }, nm ? $t('main.complete.5', { nm }) : $t('main.complete.4')))),
+    h('div', { class: 'tiny muted' }, $t('main.complete.3')),
+    h('button', { class: 'btn primary big', onclick: () => m.close() }, $t('main.complete.2'))) });
   m.onClose = () => {
-    if (st.completed.length === 1 && st.test.pre && !st.test.post) toast('📋 퀘스트 탭에서 사후 테스트를 풀 수 있어요!');
+    if (st.completed.length === 1 && st.test.pre && !st.test.post) toast($t('main.complete.1'));
     if (st.finished) return showEnding(false);
     if (curDef().c !== prevC) countryComplete(prevC, () => { syncScene(); refreshAll(); queueTalk('complete'); });
     else { syncScene(); refreshAll(); queueTalk('complete'); }
@@ -365,14 +370,12 @@ function complete() {
 function countryComplete(cid, then) {
   const c = COUNTRIES.find((x) => x.id === cid), next = COUNTRIES[countryIdxOf(curDef())];
   A.sfx('fanfare');
-  const m = openModal({ title: '🗺️ 지도 완성!', body: h('div', { class: 'col', style: { textAlign: 'center' } },
+  const m = openModal({ title: $t('main.countryComplete.7'), body: h('div', { class: 'col', style: { textAlign: 'center' } },
     h('div', { style: { fontSize: '60px' } }, c.flag),
-    h('div', { class: 'conf-title' }, `${c.name} 지도 완성!`),
-    h('div', {}, `${COMPANY}의 이름이 ${c.name}에 새겨졌어요.`),
-    h('div', { class: 'fb' }, `다음 나라: ${next.flag} ${next.name} — ${BUILDINGS.filter((b) => b.c === next.id).map((b) => b.name).join(', ')}`),
-    st.track === 'student' && curDef().id === 'pyramid' ? h('div', { class: 'fb good' }, '🎓 퀴즈 난이도가 "건축기사 입문"으로 올라가요!') : null,
-    st.track === 'student' && curDef().id === 'arc' ? h('div', { class: 'fb good' }, '🎓 퀴즈 난이도가 "건축기사 실전"으로 올라가요!') : null,
-    h('button', { class: 'btn primary big', onclick: () => m.close() }, `${next.name}(으)로 출발! ✈️`)) });
+    h('div', { class: 'conf-title' }, $t('main.countryComplete.6', { name: c.name })),
+    h('div', {}, $t('main.countryComplete.5', { COMPANY, name: c.name })),
+    h('div', { class: 'fb' }, $t('main.countryComplete.4', { flag: next.flag, name: next.name, v3: BUILDINGS.filter((b) => b.c === next.id).map((b) => b.name).join(', ') })),
+    h('button', { class: 'btn primary big', onclick: () => m.close() }, $t('main.countryComplete.1', { name: next.name }))) });
   m.onClose = then;
 }
 
@@ -381,58 +384,58 @@ function showBriefing(then) {
   const w = todayWx(), d = describe(w), ef = effect(w), def = curDef();
   const s = statusText(true);
   const talk = shuffle(BRIEF_TALK).slice(0, 2);
-  const sched = h('table', { class: 'tbl' }, h('tr', {}, h('th', {}, '건물'), h('th', {}, '공기'), h('th', {}, '마감 / 상태')));
+  const sched = h('table', { class: 'tbl' }, h('tr', {}, h('th', {}, $t('main.showBriefing.32')), h('th', {}, $t('main.showBriefing.31')), h('th', {}, $t('main.showBriefing.30'))));
   BUILDINGS.forEach((b, i) => {
     const c = COUNTRIES.find((x) => x.id === b.c);
     let stTxt;
-    if (i < st.bIdx || st.finished) stTxt = '준공 ✅';
-    else if (i === st.bIdx) stTxt = st.started ? ddayText().replace('마감 ', '') : '착공 전';
+    if (i < st.bIdx || st.finished) stTxt = $t('main.showBriefing.29');
+    else if (i === st.bIdx) stTxt = st.started ? ddayText().replace($t('main.showBriefing.28'), '') : $t('main.showBriefing.27');
     else stTxt = '-';
-    sched.append(h('tr', { class: i === st.bIdx && !st.finished ? 'cur' : '' }, h('td', {}, `${c.flag} ${b.name}`), h('td', {}, `${b.days}일`), h('td', {}, stTxt)));
+    sched.append(h('tr', { class: i === st.bIdx && !st.finished ? 'cur' : '' }, h('td', {}, `${c.flag} ${b.name}`), h('td', {}, $t('main.showBriefing.26', { days: b.days })), h('td', {}, stTxt)));
   });
-  const todo = [[`직접 작업 ${ACTIONS_PER_DAY - st.actionsLeft}/${ACTIONS_PER_DAY}`, st.actionsLeft === 0]];
-  (MG[st.track] || MG.student).forEach((g) => todo.push([`${g.icon} ${g.name}`, !!st.todo.done?.[g.id]]));
+  const todo = [[$t('main.showBriefing.25', { v1: ACTIONS_PER_DAY - st.actionsLeft, ACTIONS_PER_DAY }), st.actionsLeft === 0]];
+  MG.field.forEach((g) => todo.push([`${g.icon} ${g.name}`, !!st.todo.done?.[g.id]]));
   // 오늘 예상 이벤트 층
   let expect = null;
   if (st.started && !st.finished && !ef.stop && !FLOORS[def.id]?.walk) {
     const f1 = Math.max(1, currentFloor(def, actual()));
     const f2 = Math.max(f1, currentFloor(def, Math.min(1, (st.progress + rates().total * st.actionsLeft) / def.work)));
     const ph = curPhase();
-    const lab = f1 === f2 ? floorLabel(def.id, f1) : FLOORS[def.id]?.zones ? `${floorLabel(def.id, f1)}~${floorLabel(def.id, f2)}` : `${f1}~${f2}층`;
-    expect = `📍 오늘 ${PHASES[ph]} ${lab} ${ph === 1 ? '타설 예정' : '작업 예정'} — 이 층들에서 무전이 올 수 있어요${effect(w).craneStop || w.wind >= 8 ? ' (강풍: 외부 비계·자재 결속 이벤트 주의)' : ''}`;
+    const lab = f1 === f2 ? floorLabel(def.id, f1) : FLOORS[def.id]?.zones ? `${floorLabel(def.id, f1)}~${floorLabel(def.id, f2)}` : $t('main.showBriefing.24', { f1, f2 });
+    expect = $t('main.showBriefing.23', { v1: PHASES[ph], lab, v3: ph === 1 ? $t('main.showBriefing.21') : $t('main.showBriefing.20'), v4: effect(w).craneStop || w.wind >= 8 ? $t('main.showBriefing.22') : '' });
   }
   const nightLine = nightReportLine(st);
-  if (st.todo.hadConflict || st.conflict != null) todo.push(['현장 갈등 해결', st.conflict == null]);
+  if (st.todo.hadConflict || st.conflict != null) todo.push([$t('main.showBriefing.19'), st.conflict == null]);
   const pl = planned(true), a = actual();
-  const m = openModal({ title: `☀️ 오늘의 현장 브리핑`, body: h('div', { class: 'col' },
-    h('div', { class: 'brief-date' }, `${st.day}일차 · ${fmtDate(dateOf(st.day))}`),
+  const m = openModal({ title: $t('main.showBriefing.18', {  }), body: h('div', { class: 'col' },
+    h('div', { class: 'brief-date' }, $t('main.showBriefing.17', { day: st.day, v2: fmtDate(dateOf(st.day)) })),
     h('div', { class: 'brief-wx' }, h('div', { class: 'big' }, d.icon), h('div', {},
-      h('b', {}, `${CITIES.find((c) => c.id === st.city).name} ${d.name} · ${Math.round(w.tmin)}° / ${Math.round(w.tmax)}° · 💧${w.rain}mm · 🌬${w.wind}m/s`),
-      h('div', { class: 'tiny muted' }, isLive() && w.live ? 'Open-Meteo 실시간 예보' : '⚠️ 예보 연결 실패/범위 밖 → 계절 기반 가상 예보'),
+      h('b', {}, `${CITIES.find((c) => c.id === st.city).name} ${d.name} · ${Math.round(w.tmin)}° / ${Math.round(w.tmax)}° · 💧${num(w.rain, 1)}${U('mm')} · 🌬${num(w.wind, 1)}${U('m/s')}`),
+      h('div', { class: 'tiny muted' }, isLive() && w.live ? $t('main.showBriefing.16') : $t('main.showBriefing.15')),
       h('ul', {}, ef.notes.map((n) => h('li', {}, n))))),
-    ef.stop ? h('div', { class: 'status late' }, '⛔ 오늘은 공사 중지! 부업과 퀘스트로 돈을 벌어 보세요') : null,
+    ef.stop ? h('div', { class: 'status late' }, $t('main.showBriefing.14')) : null,
     h('div', { class: 'fb' },
-      h('div', {}, h('b', {}, `${COUNTRIES[countryIdxOf(def)].flag} ${st.finished ? '세계 일주 완료' : def.name}`), ' · ', ddayText()),
-      h('div', { class: 'barrow' }, h('span', {}, '계획'), h('div', { class: 'bar plan' }, h('i', { style: { width: pl * 100 + '%' } })), h('em', {}, Math.round(pl * 100) + '%')),
-      h('div', { class: 'barrow' }, h('span', {}, '실적'), h('div', { class: 'bar act' }, h('i', { style: { width: a * 100 + '%' } })), h('em', {}, Math.round(a * 100) + '%'))),
+      h('div', {}, h('b', {}, `${COUNTRIES[countryIdxOf(def)].flag} ${st.finished ? $t('main.showBriefing.13') : def.name}`), ' · ', ddayText()),
+      h('div', { class: 'barrow' }, h('span', {}, $t('main.showBriefing.12')), h('div', { class: 'bar plan' }, h('i', { style: { width: pl * 100 + '%' } })), h('em', {}, Math.round(pl * 100) + '%')),
+      h('div', { class: 'barrow' }, h('span', {}, $t('main.showBriefing.11')), h('div', { class: 'bar act' }, h('i', { style: { width: a * 100 + '%' } })), h('em', {}, Math.round(a * 100) + '%'))),
     h('div', { class: 'status ' + s.c }, s.t),
     expect ? h('div', { class: 'fb' }, expect) : null,
     nightLine ? h('div', { class: 'fb night' }, nightLine, ...(st.morning || []).map((t) => h('div', { class: 'tiny minus' }, '→ ' + t))) : null,
-    st.events.length ? h('div', { class: 'fb bad' }, '🚨 아직 해결 못 한 층별 문제: ' + st.events.map((e) => `${floorLabel(def.id, e.floor)} ${SHORT[e.id]}(남은 작업 ${e.left}회)`).join(', ')) : null,
+    st.events.length ? h('div', { class: 'fb bad' }, $t('main.showBriefing.10') + st.events.map((e) => $t('main.showBriefing.9', { v1: floorLabel(def.id, e.floor), v2: SHORT[e.id], left: e.left })).join(', ')) : null,
     h('div', { class: 'chat' }, talk.map(([who, t]) => h('div', { class: 'msg' }, h('b', {}, who), h('div', { class: 'say' }, t)))),
-    h('div', { class: 'sec' }, '공사 일정표'),
+    h('div', { class: 'sec' }, $t('main.showBriefing.8')),
     h('div', { class: 'schedule' }, sched),
-    h('div', { class: 'sec' }, '오늘의 할 일'),
+    h('div', { class: 'sec' }, $t('main.showBriefing.7')),
     h('ul', { class: 'todo' }, todo.map(([t, done]) => h('li', { class: done ? 'done' : '' }, h('span', {}, t), h('span', {}, done ? '✔' : '○')))),
-    h('button', { class: 'btn primary big', onclick: () => m.close() }, '출근하기! 🦺')) });
+    h('button', { class: 'btn primary big', onclick: () => m.close() }, $t('main.showBriefing.6'))) });
   m.onClose = () => {
     then?.();
     if (!st.test.pre && !st.preAsked) {
       st.preAsked = true; save();
-      const q = openModal({ title: '📋 이해도 사전 테스트', body: h('div', { class: 'col' },
-        h('div', {}, '게임을 하기 전에 6문제로 지금 알고 있는 것을 확인해요. 건물을 1개 이상 지은 뒤 같은 문제로 사후 테스트를 하고 점수를 비교해요.'),
-        h('div', { class: 'tiny muted' }, '사전 테스트는 정답을 공개하지 않아요.'),
-        h('div', { class: 'grid2' }, h('button', { class: 'btn', onclick: () => q.close() }, '나중에 (퀘스트 탭)'), h('button', { class: 'btn primary', onclick: () => { q.close(); runTest('pre'); } }, '지금 풀기'))) });
+      const q = openModal({ title: $t('main.showBriefing.5'), body: h('div', { class: 'col' },
+        h('div', {}, $t('main.showBriefing.4')),
+        h('div', { class: 'tiny muted' }, $t('main.showBriefing.3')),
+        h('div', { class: 'grid2' }, h('button', { class: 'btn', onclick: () => q.close() }, $t('main.showBriefing.2')), h('button', { class: 'btn primary', onclick: () => { q.close(); runTest('pre'); } }, $t('main.showBriefing.1')))) });
     }
   };
 }
@@ -441,22 +444,22 @@ function showForecast() {
   const body = h('div', { class: 'col' });
   const render = () => {
     body.innerHTML = '';
-    body.append(h('div', { class: 'set-row' }, h('span', {}, '도시'), h('div', { class: 'seg' }, CITIES.map((c) => h('button', { class: c.id === st.city ? 'on' : '', onclick: async () => {
+    body.append(h('div', { class: 'set-row' }, h('span', {}, $t('main.render.7')), h('div', { class: 'seg' }, CITIES.map((c) => h('button', { class: c.id === st.city ? 'on' : '', onclick: async () => {
       st.city = c.id; save(); body.querySelector('.seg').style.opacity = .5;
       await fetchForecast(st.city); render(); refreshAll(); S.setWeather(describe(todayWx()).kind);
     } }, c.name)))));
-    body.append(h('div', { class: 'tiny ' + (isLive() ? '' : 'muted') }, isLive() ? '🛰️ Open-Meteo 실시간 일별 예보와 연결됨 (게임 1일차 = 시작한 실제 날짜)' : '⚠️ 예보 연결 실패 → 계절 기반 가상 예보로 대체 중'));
+    body.append(h('div', { class: 'tiny ' + (isLive() ? '' : 'muted') }, isLive() ? $t('main.render.6') : $t('main.render.5')));
     for (let k = 0; k < 5; k++) {
       const day = st.day + k, w = getWeather(dateOf(day)), d = describe(w), ef = effect(w);
       body.append(h('div', { class: 'wxday' + (ef.stop ? ' stop' : '') },
-        h('div', {}, h('b', {}, k === 0 ? '오늘' : `${day}일차`), h('div', { class: 'tiny' }, fmtDate(dateOf(day)))),
+        h('div', {}, h('b', {}, k === 0 ? $t('main.render.4') : $t('main.render.3', { day })), h('div', { class: 'tiny' }, fmtDate(dateOf(day)))),
         h('div', { class: 'ic' }, d.icon),
-        h('div', {}, h('div', {}, `${d.name} ${Math.round(w.tmin)}°/${Math.round(w.tmax)}° · 💧${w.rain}mm · 🌬${w.wind}m/s${w.live ? '' : ' (가상)'}`),
+        h('div', {}, h('div', {}, `${d.name} ${Math.round(w.tmin)}°/${Math.round(w.tmax)}° · 💧${num(w.rain, 1)}${U('mm')} · 🌬${num(w.wind, 1)}${U('m/s')}${w.live ? '' : $t('main.render.2')}`),
           h('div', { class: 'tiny ' + (ef.stop ? 'minus' : 'muted') }, ef.notes.join(' / ')))));
     }
   };
   render();
-  openModal({ title: '🌤️ 5일 예보', body });
+  openModal({ title: $t('main.render.1'), body });
 }
 
 /* ---------------- 대화 · 갈등 ---------------- */
@@ -500,7 +503,7 @@ function openTab(tab) {
 function closeSheet() { $('#sheet').classList.add('hidden'); curTab = null; document.querySelectorAll('#nav button').forEach((b) => b.classList.remove('active')); }
 function renderTab(tab) {
   const body = $('#sheetBody'); body.innerHTML = '';
-  const titles = { shop: '🛒 상점', side: '💼 부업', quest: '📋 퀘스트', together: '🤝 함께 짓기', map: '🗺️ 세계지도' };
+  const titles = { shop: $t('main.renderTab.5'), side: $t('main.renderTab.4'), quest: $t('main.renderTab.3'), together: $t('main.renderTab.2'), map: $t('main.renderTab.1') };
   $('#sheetTitle').textContent = titles[tab];
   ({ shop: tabShop, side: tabSide, quest: tabQuest, together: tabTogether, map: tabMap })[tab](body);
 }
@@ -513,49 +516,49 @@ function itemRow(ic, title, sub, btnLabel, onClick, opts = {}) {
 
 function tabShop(body) {
   const r = rates();
-  body.append(h('div', { class: 'tiny muted' }, `작업 1회 = 내 몫 ${Math.round(r.my)} + 인부 ${st.workers}명 × 3 × 장비 ${r.eq.toFixed(1)} × 사기 ${r.moraleMult.toFixed(2)}${st.conflict != null ? ' × 갈등 0.7' : ''}${r.robot ? ' + 로봇 40' : ''} × 날씨 ${r.ef.mult.toFixed(2)} = ${r.total}블록`));
-  body.append(h('div', { class: 'sec' }, '인부 고용'));
+  body.append(h('div', { class: 'tiny muted' }, $t('main.tabShop.24', { v1: Math.round(r.my), workers: st.workers, v3: r.eq.toFixed(1), v4: r.moraleMult.toFixed(2), v5: st.conflict != null ? $t('main.tabShop.22') : '', v6: r.robot ? $t('main.tabShop.23') : '', v7: r.ef.mult.toFixed(2), total: r.total })));
+  body.append(h('div', { class: 'sec' }, $t('main.tabShop.21')));
   const hc = hireCost(st.workers);
-  body.append(itemRow('👷', `인부 고용 (${st.workers}/${MAX_WORKERS}명)`, '작업 1회마다 인부 1명당 3블록 × 장비 배율', st.workers >= MAX_WORKERS ? '만원' : won(hc), () => {
-    if (st.money < hc) return toast('돈이 부족해요', 'bad');
+  body.append(itemRow('👷', $t('main.tabShop.20', { workers: st.workers, MAX_WORKERS }), $t('main.tabShop.19'), st.workers >= MAX_WORKERS ? $t('main.tabShop.18') : won(hc), () => {
+    if (st.money < hc) return toast($t('main.tabShop.17'), 'bad');
     st.money -= hc; st.workers++; st.stats.hires++;
     S.setWorkers(st.workers); A.sfx('coin');
     setTimeout(() => S.say(LINES.hired[0], st.workers - 1), 300);
-    toast(`👷 ${WORKER_NAMES[(st.workers - 1) % WORKER_NAMES.length]} 합류!`);
+    toast($t('main.tabShop.16', { v1: WORKER_NAMES[(st.workers - 1) % WORKER_NAMES.length] }));
     save(); refreshAll();
   }, { disabled: st.workers >= MAX_WORKERS }));
-  body.append(h('div', { class: 'sec' }, '공구 (내 몫)'));
+  body.append(h('div', { class: 'sec' }, $t('main.tabShop.15')));
   TOOLS.forEach((t, i) => {
     const owned = has('tools', t.id), prevOk = i === 0 || has('tools', TOOLS[i - 1].id);
-    body.append(itemRow(t.icon, t.name, t.desc, owned ? '보유' : won(t.price), () => buy('tools', t), { owned, disabled: owned || !prevOk, locked: !prevOk }));
+    body.append(itemRow(t.icon, t.name, t.desc, owned ? $t('main.tabShop.14') : won(t.price), () => buy('tools', t), { owned, disabled: owned || !prevOk, locked: !prevOk }));
   });
-  body.append(h('div', { class: 'sec' }, '장비 (인부 몫 배율)'));
+  body.append(h('div', { class: 'sec' }, $t('main.tabShop.13')));
   EQUIP.forEach((e) => {
     const owned = has('equip', e.id);
-    body.append(itemRow(e.icon, e.name, e.desc, owned ? '보유' : won(e.price), () => buy('equip', e), { owned, disabled: owned }));
+    body.append(itemRow(e.icon, e.name, e.desc, owned ? $t('main.tabShop.12') : won(e.price), () => buy('equip', e), { owned, disabled: owned }));
   });
   const def = curDef();
   if (needsHoist(def.id) && !st.finished) {
-    body.append(h('div', { class: 'sec' }, '현장 설비'));
+    body.append(h('div', { class: 'sec' }, $t('main.tabShop.11')));
     const hp = hoistPrice(st.bIdx), own = hasHoist();
-    body.append(itemRow('🔼', `건설용 리프트(호이스트) · ${def.name}`, st.started ? '건물 옆 마스트+운반구. 층별 문제를 빠르게 해결 (없으면 계단: 작업 횟수·사기 소모)' : '🔒 착공하면 설치할 수 있어요', own ? '설치됨' : won(hp), () => {
-      if (st.money < hp) return toast('돈이 부족해요', 'bad');
+    body.append(itemRow('🔼', $t('main.tabShop.10', { name: def.name }), st.started ? $t('main.tabShop.9') : $t('main.tabShop.8'), own ? $t('main.tabShop.7') : won(hp), () => {
+      if (st.money < hp) return toast($t('main.tabShop.6'), 'bad');
       st.money -= hp; st.hoist = st.bIdx; st.stats.hoists++; A.sfx('build'); S.setHoist(true);
-      toast('🔼 호이스트 설치! 건물 옆 리프트를 누르면 탑승해요'); S.say('호이스트 마스트 세웠습니다!');
+      toast($t('main.tabShop.5')); S.say($t('main.tabShop.4'));
       save(); refreshAll();
     }, { owned: own, disabled: own || !st.started, locked: !st.started }));
   }
-  body.append(h('div', { class: 'sec' }, '후반부 장비'));
+  body.append(h('div', { class: 'sec' }, $t('main.tabShop.3')));
   LATE_ITEMS.forEach((e) => {
     const owned = has('late', e.id), locked = st.bIdx < e.minStage;
-    body.append(itemRow(e.icon, e.name, locked ? `🔒 ${BUILDINGS[e.minStage].name}부터 판매` : e.desc, owned ? '보유' : won(e.price), () => buy('late', e), { owned, locked, disabled: owned || locked }));
+    body.append(itemRow(e.icon, e.name, locked ? $t('main.tabShop.2', { v1: BUILDINGS[e.minStage].name }) : e.desc, owned ? $t('main.tabShop.1') : won(e.price), () => buy('late', e), { owned, locked, disabled: owned || locked }));
   });
 }
 function buy(list, item) {
-  if (st.money < item.price) return toast('돈이 부족해요', 'bad');
+  if (st.money < item.price) return toast($t('main.buy.3'), 'bad');
   st.money -= item.price; st[list].push(item.id); A.sfx('coin');
-  toast(`${item.icon} ${item.name} 구입!`);
-  if (item.id === 'crane') { S.setCrane(true, todayEf().craneStop); S.say('크레인 섰다! 양중 시작합니다', 0); note('lifting'); }
+  toast($t('main.buy.2', { icon: item.icon, name: item.name }));
+  if (item.id === 'crane') { S.setCrane(true, todayEf().craneStop); S.say($t('main.buy.1'), 0); note('lifting'); }
   save(); refreshAll();
 }
 
@@ -587,36 +590,36 @@ function startGame(g) {
 }
 function tabSide(body) {
   const ef = todayEf(), sm = stageMult();
-  const games = MG[st.track] || MG.student;
-  if (ef.stop) body.append(h('div', { class: 'status late' }, '⛔ 오늘은 공사 중지! 부업으로 돈을 벌어 보세요'));
-  body.append(h('div', { class: 'tiny muted' }, `${st.track === 'field' ? '🦺 현장 첫 출근' : '🎓 학생'} 트랙 미니게임 · 보상은 현장 단계가 오를수록 커져요 (현재 ×${sm.toFixed(1)})`));
-  body.append(h('div', { class: 'sec' }, '오늘의 부업'));
+  const games = MG.field;
+  if (ef.stop) body.append(h('div', { class: 'status late' }, $t('main.tabSide.27')));
+  body.append(h('div', { class: 'tiny muted' }, $t('main.tabSide.26', { v1: st.track === 'field' ? $t('main.tabSide.25') : $t('main.tabSide.24'), v2: sm.toFixed(1) })));
+  body.append(h('div', { class: 'sec' }, $t('main.tabSide.23')));
   games.forEach((g) => {
     const left = st.mg[g.id] ?? 0;
-    let sub = `${g.desc} · 남은 ${left}/${g.per}회`;
-    if (g.id === 'quiz') sub = `5문제 · 난이도: ${QUIZ_LEVELS[quizLevelFor(st.track, st.bIdx)]} · 남은 ${left}/${g.per}회`;
-    if (g.id === 'fquiz') sub = `${g.desc} · ${LANGS.find((l) => l.id === st.lang)?.name || '한국어'} · 남은 ${left}/${g.per}회`;
-    body.append(itemRow(g.icon, g.name + (g.move ? ' 🕹️' : ''), sub, st.todo.done?.[g.id] && left <= 0 ? '완료' : '시작', () => startGame(g), { disabled: left <= 0 }));
+    let sub = $t('main.tabSide.22', { desc: g.desc, left, per: g.per });
+    if (g.id === 'quiz') sub = $t('main.tabSide.21', { v1: QUIZ_LEVELS[quizLevelFor(st.track, st.bIdx)], left, per: g.per });
+    if (g.id === 'fquiz' && MULTI_LANG) sub = $t('main.tabSide.20', { desc: g.desc, v2: LANGS.find((l) => l.id === st.lang)?.name || $t('main.tabSide.19'), left, per: g.per });
+    body.append(itemRow(g.icon, g.move ? [g.name, ' 🕹️'] : g.name, sub, st.todo.done?.[g.id] && left <= 0 ? $t('main.tabSide.18') : $t('main.tabSide.17'), () => startGame(g), { disabled: left <= 0 }));
   });
-  body.append(h('div', { class: 'sec' }, '현장 일'));
+  body.append(h('div', { class: 'sec' }, $t('main.tabSide.16')));
   if (st.conflict != null) {
     const c = CONFLICTS[st.conflict];
-    body.append(itemRow('⚠️', `갈등: ${c.title}`, '해결 전엔 인부 작업량 -30%', '해결하기', () => {
+    body.append(itemRow('⚠️', $t('main.tabSide.15', { title: c.title }), $t('main.tabSide.14'), $t('main.tabSide.13'), () => {
       closeSheet();
       const m = runConflict(c, (s) => {
         st.conflict = null; st.todo.conflictDone = true; st.stats.conflicts++;
         st.morale = Math.max(0, Math.min(100, st.morale + (s === 2 ? 8 : s === 1 ? 2 : -8)));
         note('conflict');
-        if (s === 2) earn(Math.round(4 * sm), '갈등 해결 보너스'); else { save(); refreshAll(); }
+        if (s === 2) earn(Math.round(4 * sm), $t('main.tabSide.12')); else { save(); refreshAll(); }
       });
       m.onClose = () => refreshAll();
     }));
-  } else body.append(h('div', { class: 'tiny muted' }, '지금은 현장 갈등이 없어요. 날이 바뀔 때 생길 수 있어요.'));
-  if (st.events.length) st.events.forEach((e) => body.append(itemRow('🚨', `${floorLabel(curDef().id, e.floor)} ${SHORT[e.id]}`, `남은 작업 ${e.left}회 안에 가서 해결`, '가기', () => { closeSheet(); goToFloor(ctx, e.floor); })));
-  body.append(itemRow('🎁', '선물 말풍선 줍기', `인부 머리 위 노란 말풍선을 눌러요 · 오늘 남은 ${st.gifts}/3회`, null));
+  } else body.append(h('div', { class: 'tiny muted' }, $t('main.tabSide.11')));
+  if (st.events.length) st.events.forEach((e) => body.append(itemRow('🚨', `${floorLabel(curDef().id, e.floor)} ${SHORT[e.id]}`, $t('main.tabSide.10', { left: e.left }), $t('main.tabSide.9'), () => { closeSheet(); goToFloor(ctx, e.floor); })));
+  body.append(itemRow('🎁', $t('main.tabSide.8'), $t('main.tabSide.7', { gifts: st.gifts }), null));
   if (st.track === 'field') {
-    body.append(h('div', { class: 'sec' }, '현장 첫 출근 트랙'));
-    body.append(itemRow('🦺', '첫 출근 안전 코스 다시 하기', `언어: ${LANGS.find((l) => l.id === st.lang)?.name || '한국어'}${st.safety.record ? ` · 지난 기록 ${st.safety.record.score}/6` : ''}`, '시작', () => { closeSheet(); openSafety(); }));
+    body.append(h('div', { class: 'sec' }, $t('main.tabSide.6')));
+    body.append(itemRow('🦺', $t('main.tabSide.5'), $t(MULTI_LANG ? 'main.tabSide.4' : 'main.tabSide.4ko', { v1: LANGS.find((l) => l.id === st.lang)?.name || $t('main.tabSide.2'), v2: st.safety.record ? $t('main.tabSide.3', { score: st.safety.record.score }) : '' }), $t('main.tabSide.1'), () => { closeSheet(); openSafety(); }));
   }
 }
 
@@ -640,44 +643,44 @@ function fillQuests() {
 }
 function tabQuest(body) {
   fillQuests();
-  body.append(h('div', { class: 'sec' }, '소장님 지시'));
+  body.append(h('div', { class: 'sec' }, $t('main.tabQuest.27')));
   st.quests.forEach((q, i) => {
     const d = questDef(q), p = Math.min(d.n, questProgress(q)), ok = p >= d.n;
-    body.append(itemRow(ok ? '✅' : '📌', d.t, `${p}/${d.n} · 보상 ${won(Math.round(d.reward * stageMult()))}`, ok ? '받기' : '진행 중', () => {
+    body.append(itemRow(ok ? '✅' : '📌', d.t, $t('main.tabQuest.26', { p, n: d.n, v3: won(Math.round(d.reward * stageMult())) }), ok ? $t('main.tabQuest.25') : $t('main.tabQuest.24'), () => {
       const amt = Math.round(d.reward * stageMult());
       st.quests.splice(i, 1); st.doneQuests = [...(st.doneQuests || []), d.id];
-      fillQuests(); earn(amt, `지시 완료: ${d.t}`);
+      fillQuests(); earn(amt, $t('main.tabQuest.23', { t: d.t }));
     }, { disabled: !ok, extra: h('div', { class: 'pbar' }, h('i', { style: { width: (p / d.n * 100) + '%' } })) }));
   });
   // 이해도 테스트
-  body.append(h('div', { class: 'sec' }, '이해도 테스트 (사전 · 사후)'));
+  body.append(h('div', { class: 'sec' }, $t('main.tabQuest.22')));
   const pre = st.test.pre, post = st.test.post;
-  body.append(itemRow('📝', '사전 테스트', pre ? `완료 · ${pre.score}/6 (${pre.day}일차)` : '게임 전 내 지식 확인 · 6문제 · 정답 비공개', pre ? '완료' : '풀기', () => runTest('pre'), { disabled: !!pre }));
+  body.append(itemRow('📝', $t('main.tabQuest.21'), pre ? $t('main.tabQuest.20', { score: pre.score, day: pre.day }) : $t('main.tabQuest.19'), pre ? $t('main.tabQuest.18') : $t('main.tabQuest.17'), () => runTest('pre'), { disabled: !!pre }));
   const canPost = pre && st.completed.length >= 1;
-  body.append(itemRow('🎯', '사후 테스트', post ? `완료 · ${post.score}/6 (${post.day}일차)` : canPost ? '같은 6문제로 다시 확인' : (pre ? '건물을 1개 이상 준공하면 열려요' : '사전 테스트 먼저'), post ? '다시 풀기' : '풀기', () => runTest('post'), { disabled: !canPost }));
+  body.append(itemRow('🎯', $t('main.tabQuest.16'), post ? $t('main.tabQuest.15', { score: post.score, day: post.day }) : canPost ? $t('main.tabQuest.14') : (pre ? $t('main.tabQuest.13') : $t('main.tabQuest.12')), post ? $t('main.tabQuest.11') : $t('main.tabQuest.10'), () => runTest('post'), { disabled: !canPost }));
   if (pre) {
     const box = h('div', { class: 'fb' });
-    box.append(h('div', { class: 'cmp' }, h('span', {}, '사전'), h('div', { class: 'bar' }, h('i', { style: { width: pre.score / 6 * 100 + '%' } })), h('b', {}, `${pre.score}/6`)));
+    box.append(h('div', { class: 'cmp' }, h('span', {}, $t('main.tabQuest.9')), h('div', { class: 'bar' }, h('i', { style: { width: pre.score / 6 * 100 + '%' } })), h('b', {}, `${pre.score}/6`)));
     if (post) {
-      box.append(h('div', { class: 'cmp' }, h('span', {}, '사후'), h('div', { class: 'bar post' }, h('i', { style: { width: post.score / 6 * 100 + '%' } })), h('b', {}, `${post.score}/6`)));
+      box.append(h('div', { class: 'cmp' }, h('span', {}, $t('main.tabQuest.8')), h('div', { class: 'bar post' }, h('i', { style: { width: post.score / 6 * 100 + '%' } })), h('b', {}, `${post.score}/6`)));
       const d = post.score - pre.score;
-      box.append(h('div', { class: 'tiny' }, d > 0 ? `📈 ${d}문제 더 맞혔어요! 게임으로 배운 효과예요.` : d === 0 ? '점수가 같아요. 배움 노트를 다시 읽어 봐요.' : '점수가 내려갔어요. 배움 노트를 복습해 봐요.'));
+      box.append(h('div', { class: 'tiny' }, d > 0 ? $t('main.tabQuest.7', { d }) : d === 0 ? $t('main.tabQuest.6') : $t('main.tabQuest.5')));
     }
     body.append(box);
   }
   // 배움 노트
   const myNotes = notesFor(st.track);
   const n = myNotes.filter((x) => st.notes[x.id]).length;
-  body.append(h('div', { class: 'sec' }, `배움 노트 ${n}/${myNotes.length}`));
-  if (st.nearMiss.length) body.append(h('div', { class: 'tiny minus' }, `아차사고 기록 ${st.nearMiss.length}건 (이번 건물 ${st.bNearMiss || 0}건) — 층별 위험 이벤트를 제때 해결하면 줄어요`));
+  body.append(h('div', { class: 'sec' }, $t('main.tabQuest.4', { n, length: myNotes.length })));
+  if (st.nearMiss.length) body.append(h('div', { class: 'tiny minus' }, $t('main.tabQuest.3', { length: st.nearMiss.length, v2: st.bNearMiss || 0 })));
   myNotes.forEach((x) => body.append(h('div', { class: 'note' + (st.notes[x.id] ? ' on' : '') },
-    h('b', {}, (st.notes[x.id] ? '✅ ' : '⬜ ') + x.t), st.notes[x.id] ? h('span', { class: 'tiny muted' }, ` · ${st.notes[x.id]}일차`) : null,
-    h('div', { class: 'tiny' }, st.notes[x.id] ? x.d : '아직 경험하지 않았어요'))));
+    h('b', {}, (st.notes[x.id] ? '✅ ' : '⬜ ') + x.t), st.notes[x.id] ? h('span', { class: 'tiny muted' }, $t('main.tabQuest.2', { v1: st.notes[x.id] })) : null,
+    h('div', { class: 'tiny' }, st.notes[x.id] ? x.d : $t('main.tabQuest.1')))));
 }
 function runTest(kind) {
   const answers = [];
   let i = 0;
-  const m = openModal({ title: kind === 'pre' ? '📝 사전 테스트' : '🎯 사후 테스트', body: '' });
+  const m = openModal({ title: kind === 'pre' ? $t('main.runTest.2') : $t('main.runTest.1'), body: '' });
   const show = () => {
     if (i >= TEST.length) return end();
     const q = TEST[i];
@@ -687,9 +690,9 @@ function runTest(kind) {
       if (kind === 'pre') { A.sfx('tap'); i++; show(); return; }
       btns.forEach((b) => (b.disabled = true));
       if (k === q.a) { A.sfx('good'); e.currentTarget.classList.add('right'); } else { A.sfx('bad'); e.currentTarget.classList.add('wrong'); btns[q.a].classList.add('right'); }
-      fb.append(h('button', { class: 'btn primary', onclick: () => { i++; show(); } }, '다음'));
+      fb.append(h('button', { class: 'btn primary', onclick: () => { i++; show(); } }, $t('main.show.3')));
     } }, o));
-    m.setBody(h('div', { class: 'col' }, h('div', { class: 'qhead' }, h('span', {}, kind === 'pre' ? '정답은 사후 테스트 때 공개돼요' : '사후 테스트'), h('span', {}, `${i + 1} / 6`)), h('div', { class: 'qtext' }, q.q), h('div', { class: 'col gap6' }, btns), fb));
+    m.setBody(h('div', { class: 'col' }, h('div', { class: 'qhead' }, h('span', {}, kind === 'pre' ? $t('main.show.2') : $t('main.show.1')), h('span', {}, `${i + 1} / 6`)), h('div', { class: 'qtext' }, q.q), h('div', { class: 'col gap6' }, btns), fb));
   };
   const end = () => {
     const score = answers.filter((a, k) => a === TEST[k].a).length;
@@ -699,9 +702,9 @@ function runTest(kind) {
     const pre = st.test.pre;
     m.setBody(h('div', { class: 'col' },
       h('div', { class: 'big-score' }, `${score} / 6`),
-      kind === 'pre' ? h('div', { class: 'fb' }, '사전 테스트 완료! 건물을 1개 이상 지은 뒤 퀘스트 탭에서 사후 테스트를 풀어 비교해 보세요.')
-        : h('div', { class: 'fb good' }, `사전 ${pre.score}/6 → 사후 ${score}/6 (${score - pre.score >= 0 ? '+' : ''}${score - pre.score})`),
-      h('button', { class: 'btn primary big', onclick: () => m.close() }, '확인')));
+      kind === 'pre' ? h('div', { class: 'fb' }, $t('main.end.3'))
+        : h('div', { class: 'fb good' }, $t('main.end.2', { score: pre.score, score_: score, v3: score - pre.score >= 0 ? '+' : '', v4: score - pre.score })),
+      h('button', { class: 'btn primary big', onclick: () => m.close() }, $t('main.end.1'))));
   };
   show();
 }
@@ -709,33 +712,33 @@ function runTest(kind) {
 function tabTogether(body) {
   const mode = netMode();
   body.append(h('div', { class: 'fb ' + (mode === 'firebase' ? 'good' : '') },
-    mode === 'firebase' ? '🟢 Firebase에 연결됨 — 같은 앱을 켠 친구들이 실시간으로 보여요'
-      : mode === 'local' ? '🟡 같은 기기 테스트 모드 — 이 기기의 다른 탭과 연결돼요 (firebase-config.js에 DB 주소를 넣으면 온라인 연결)'
-        : '⚪ 오프라인 — 혼자 하기만 할 수 있어요'));
-  body.append(h('div', { class: 'tiny muted' }, `내 닉네임: ${st.nick} · 오늘 도와주기 ${st.helpsLeft}/10회`));
+    mode === 'firebase' ? $t('main.tabTogether.13')
+      : mode === 'local' ? $t('main.tabTogether.12')
+        : $t('main.tabTogether.11')));
+  body.append(h('div', { class: 'tiny muted' }, $t('main.tabTogether.10', { nick: st.nick, helpsLeft: st.helpsLeft })));
   const list = onlineFriends();
-  body.append(h('div', { class: 'sec' }, `지금 접속한 친구 ${list.length}명`));
-  if (!list.length) body.append(h('div', { class: 'tiny muted' }, '아직 접속한 친구가 없어요. 친구에게 앱을 공유해 보세요!'));
+  body.append(h('div', { class: 'sec' }, $t('main.tabTogether.9', { length: list.length })));
+  if (!list.length) body.append(h('div', { class: 'tiny muted' }, $t('main.tabTogether.8')));
   list.forEach((f) => {
     body.append(h('div', { class: 'item' },
       h('div', { class: 'ic' }, f.flag || '👷'),
-      h('div', { class: 'tx' }, h('b', {}, f.nick), h('small', {}, `${f.country || ''} · ${f.building || ''} ${f.progress ?? 0}% · 준공 ${f.completes || 0}개`)),
+      h('div', { class: 'tx' }, h('b', {}, f.nick), h('small', {}, $t('main.tabTogether.7', { v1: f.country || '', v2: f.building || '', v3: f.progress ?? 0, v4: f.completes || 0 }))),
       h('div', { class: 'col gap6' },
         h('button', { class: 'btn primary', disabled: st.helpsLeft <= 0, onclick: async () => {
           const ok = await sendTo(f.id, { type: 'help', nick: st.nick });
-          if (!ok) return toast('보내지 못했어요. 인터넷을 확인해 주세요', 'bad');
+          if (!ok) return toast($t('main.tabTogether.6'), 'bad');
           st.helpsLeft--; st.stats.helps++;
-          earn(Math.round(1 + stageMult()), `${f.nick}님 현장 도와주기 수고비`);
-        } }, '도와주기'),
-        h('button', { class: 'btn', onclick: () => chatPicker(f) }, '한마디'))));
+          earn(Math.round(1 + stageMult()), $t('main.tabTogether.5', { nick: f.nick }));
+        } }, $t('main.tabTogether.4')),
+        h('button', { class: 'btn', onclick: () => chatPicker(f) }, $t('main.tabTogether.3')))));
   });
   if (list.length) {
-    body.append(h('div', { class: 'sec' }, '모두에게 한마디'));
-    body.append(h('div', { class: 'seg' }, QUICK_CHAT.map((t) => h('button', { onclick: () => { list.forEach((f) => sendTo(f.id, { type: 'chat', nick: st.nick, text: t })); S.say(t, 'me'); toast('💬 보냈어요'); } }, t))));
+    body.append(h('div', { class: 'sec' }, $t('main.tabTogether.2')));
+    body.append(h('div', { class: 'seg' }, QUICK_CHAT.map((t) => h('button', { onclick: () => { list.forEach((f) => sendTo(f.id, { type: 'chat', nick: st.nick, text: t })); S.say(t, 'me'); toast($t('main.tabTogether.1')); } }, t))));
   }
 }
 function chatPicker(f) {
-  const m = openModal({ title: `💬 ${f.nick}에게`, body: h('div', { class: 'grid2' }, QUICK_CHAT.map((t) => h('button', { class: 'btn', onclick: () => { sendTo(f.id, { type: 'chat', nick: st.nick, text: t }); S.say(t, 'me'); m.close(); toast('💬 보냈어요'); } }, t))) });
+  const m = openModal({ title: $t('main.chatPicker.2', { nick: f.nick }), body: h('div', { class: 'grid2' }, QUICK_CHAT.map((t) => h('button', { class: 'btn', onclick: () => { sendTo(f.id, { type: 'chat', nick: st.nick, text: t }); S.say(t, 'me'); m.close(); toast($t('main.chatPicker.1')); } }, t))) });
 }
 
 /* ---------------- 세계지도 ---------------- */
@@ -783,33 +786,56 @@ function drawWorldMap() {
 }
 function tabMap(body) {
   body.append(drawWorldMap());
-  body.append(h('div', { class: 'tiny muted' }, '🟩 완성한 나라 · 🟨 진행 중인 나라'));
+  body.append(h('div', { class: 'tiny muted' }, $t('main.tabMap.27')));
   const curCi = countryIdxOf(curDef());
-  body.append(h('div', { class: 'sec' }, '9개국 22개 건축물'));
+  body.append(h('div', { class: 'sec' }, $t('main.tabMap.26')));
   COUNTRIES.forEach((c, ci) => {
     const done = st.finished || ci < curCi, prog = !st.finished && ci === curCi;
     const bl = BUILDINGS.filter((b) => b.c === c.id);
     const doneN = bl.filter((b) => BUILDINGS.indexOf(b) < st.bIdx || st.finished).length;
-    body.append(itemRow(c.flag, c.name, bl.map((b) => b.name).join(' · '), done ? '보기' : null, () => viewCountry(ci),
-      { extra: h('span', { class: 'badge ' + (done ? 'done' : prog ? 'prog' : 'lock') }, done ? '지도 완성' : prog ? `진행 중 ${doneN}/${bl.length}` : '잠김'), primary: false }));
+    body.append(itemRow(c.flag, c.name, bl.map((b) => b.name).join(' · '), done ? $t('main.tabMap.25') : null, () => viewCountry(ci),
+      { extra: h('span', { class: 'badge ' + (done ? 'done' : prog ? 'prog' : 'lock') }, done ? $t('main.tabMap.24') : prog ? $t('main.tabMap.23', { doneN, length: bl.length }) : $t('main.tabMap.22')), primary: false }));
   });
   // 설정
-  body.append(h('div', { class: 'sec' }, '설정'));
-  body.append(h('div', { class: 'set-row' }, h('span', {}, '트랙'), h('div', { class: 'seg' },
-    h('button', { class: st.track === 'student' ? 'on' : '', onclick: () => { if (st.track !== 'student') { st.track = 'student'; st.mg = mgDefaults('student'); st.quests = st.quests.filter((q) => !QUESTS.find((x) => x.id === q.id)?.tr); } save(); toast('🎓 학생 트랙 — 퀴즈가 진행에 따라 깊어져요'); renderTab('map'); } }, '🎓 학생'),
-    h('button', { class: st.track === 'field' ? 'on' : '', onclick: () => { if (st.track !== 'field') { st.track = 'field'; st.mg = mgDefaults('field'); st.quests = st.quests.filter((q) => !QUESTS.find((x) => x.id === q.id)?.tr); } save(); toast('🦺 현장 첫 출근 트랙'); renderTab('map'); if (!st.safety.done) { closeSheet(); openSafety(); } } }, '🦺 현장 첫 출근'))));
-  body.append(h('div', { class: 'set-row' }, h('span', {}, '안전 코스 언어'), h('div', { class: 'seg' }, LANGS.map((l) => h('button', { class: st.lang === l.id ? 'on' : '', onclick: () => { st.lang = l.id; save(); renderTab('map'); } }, l.name)))));
-  body.append(h('div', { class: 'set-row' }, h('span', {}, '날씨 도시'), h('div', { class: 'seg' }, CITIES.map((c) => h('button', { class: st.city === c.id ? 'on' : '', onclick: async () => { st.city = c.id; save(); await fetchForecast(st.city); S.setWeather(describe(todayWx()).kind); refreshAll(); } }, c.name)))));
-  body.append(h('div', { class: 'set-row' }, h('span', {}, '소리'), h('div', { class: 'seg' },
-    h('button', { class: st.music ? 'on' : '', onclick: () => { toggleMusic(); renderTab('map'); } }, `🎵 음악 ${st.music ? '켜짐' : '꺼짐'}`),
-    h('button', { class: st.sfx ? 'on' : '', onclick: () => { st.sfx = !st.sfx; A.setPrefs(st.music, st.sfx); save(); renderTab('map'); } }, `🔊 효과음 ${st.sfx ? '켜짐' : '꺼짐'}`))));
-  body.append(h('div', { class: 'set-row' }, h('span', {}, '닉네임'), h('div', { class: 'seg' }, h('button', { onclick: () => {
-    const v = prompt('새 닉네임 (10자 이내)', st.nick); if (v && v.trim()) { st.nick = v.trim().slice(0, 10); save(); publishNow(); renderTab('map'); }
+  body.append(h('div', { class: 'sec' }, $t('main.tabMap.21')));
+  if (MULTI_LANG) {
+  body.append(h('div', { class: 'set-row' }, h('span', {}, $t('main.tabMap.15')), h('div', { class: 'seg' }, LANG_IDS.map((l) => h('button', { class: st.lang === l ? 'on' : '', 'data-no-ko': '', 'data-ko-ok': '', onclick: () => chooseLang(l) }, LANG_NAMES[l])))));
+  body.append(h('div', { class: 'set-row' }, h('span', {}, $t('set.showKo')), h('div', { class: 'seg' },
+    h('button', { class: st.showKo ? 'on' : '', onclick: () => { st.showKo = !st.showKo; setShowKo(st.showKo); save(); refreshAll(); renderTab('map'); } }, st.showKo ? $t('set.on') : $t('set.off')))));
+  }
+  body.append(h('div', { class: 'set-row' }, h('span', {}, $t('main.tabMap.14')), h('div', { class: 'seg' }, CITIES.map((c) => h('button', { class: st.city === c.id ? 'on' : '', onclick: async () => { st.city = c.id; save(); await fetchForecast(st.city); S.setWeather(describe(todayWx()).kind); refreshAll(); } }, c.name)))));
+  body.append(h('div', { class: 'set-row' }, h('span', {}, $t('main.tabMap.13')), h('div', { class: 'seg' },
+    h('button', { class: st.music ? 'on' : '', onclick: () => { toggleMusic(); renderTab('map'); } }, $t('main.tabMap.12', { v1: st.music ? $t('main.tabMap.11') : $t('main.tabMap.10') })),
+    h('button', { class: st.sfx ? 'on' : '', onclick: () => { st.sfx = !st.sfx; A.setPrefs(st.music, st.sfx); save(); renderTab('map'); } }, $t('main.tabMap.9', { v1: st.sfx ? $t('main.tabMap.8') : $t('main.tabMap.7') })))));
+  body.append(h('div', { class: 'set-row' }, h('span', {}, $t('main.tabMap.6')), h('div', { class: 'seg' }, h('button', { onclick: () => {
+    const v = prompt($t('main.tabMap.5'), st.nick); if (v && v.trim()) { st.nick = v.trim().slice(0, 10); save(); publishNow(); renderTab('map'); }
   } }, `${st.nick} ✏️`))));
-  body.append(h('div', { class: 'set-row' }, h('span', {}, '처음부터 다시'), h('div', { class: 'seg' }, h('button', { onclick: () => {
-    if (confirm('모든 진행 기록을 지우고 처음부터 시작할까요?')) { wipe(); location.reload(); }
-  } }, '🗑️ 초기화'))));
-  body.append(h('div', { class: 'tiny muted', style: { marginTop: '8px' } }, `첫 삽 · ${COMPANY} · 건설업 사고 사망자의 82.3%가 근속 6개월 미만(2025, 안전보건공단). 이 게임은 입문 교육을 돕는 연습 도구이며 법정 안전교육을 대신하지 않아요.`));
+  body.append(h('div', { class: 'set-row' }, h('span', {}, $t('main.tabMap.4')), h('div', { class: 'seg' }, h('button', { onclick: () => {
+    if (confirm($t('main.tabMap.3'))) { wipe(); location.reload(); }
+  } }, $t('main.tabMap.2')))));
+  body.append(h('div', { class: 'tiny muted', style: { marginTop: '8px' } }, $t('main.tabMap.1', { COMPANY })));
+  if (MULTI_LANG) body.append(h('div', { class: 'tiny muted i18n-note' }, '🌐 ', $t('set.reviewNote')));
+  body.append(h('div', { class: 'tiny muted basis-note' }, '📚 근거 표시 — 법정: 산업안전보건법·안전보건규칙 / 표준: KS·KCS 표준시방서 / 게임: 이해를 돕기 위해 단순화한 부분. v10 · 한국어 버전 (다국어는 다음 단계)'));
+}
+// 게임 언어 바꾸기: 새로고침 없이 지금 화면을 다시 그린다
+async function chooseLang(code) {
+  if (st.lang !== code) { st.lang = code; save(); }
+  await setLang(code);
+}
+onLangChange(() => {
+  renderIntroLang();
+  S.relabel($t('scene.ensureMe.1'));
+  if ($('#introCont') && st.track) $('#introCont').textContent = $t('main.boot.2', { day: st.day, v2: st.finished ? $t('main.boot.1') : curDef().name });
+  refreshAll();
+  if (!$('#intro') && viewing == null && !walkActive()) syncScene();
+  if (curTab) renderTab(curTab);
+  publishNow?.();
+});
+function renderIntroLang() {
+  const box = $('#introLang'); if (!box) return;
+  box.innerHTML = '';
+  if (!MULTI_LANG) { box.classList.add('hidden'); return; }
+  LANG_IDS.forEach((l) => box.append(h('button', { class: 'chip' + (st.lang === l ? ' on' : ''), 'data-no-ko': '', 'data-ko-ok': '', onclick: () => chooseLang(l) }, LANG_NAMES[l])));
 }
 function viewCountry(ci) {
   closeSheet();
@@ -822,17 +848,17 @@ function viewCountry(ci) {
   let fi = 0;
   const bar = h('div', { id: 'viewBar', class: 'viewbar' },
     h('button', { class: 'btn', onclick: () => { fi = (fi + list.length - 1) % list.length; S.focusOn(fi); } }, '◀'),
-    h('b', {}, `${c.flag} ${c.name} 지도`),
+    h('b', {}, $t('main.viewCountry.2', { flag: c.flag, name: c.name })),
     h('button', { class: 'btn', onclick: () => { fi = (fi + 1) % list.length; S.focusOn(fi); } }, '▶'),
-    h('button', { class: 'btn primary', onclick: () => { syncScene(); } }, '내 현장으로'));
+    h('button', { class: 'btn primary', onclick: () => { syncScene(); } }, $t('main.viewCountry.1')));
   $('#app').append(bar);
 }
 
 /* ---------------- 안전 코스 ---------------- */
 function openSafety(then) {
   const m = runSafetyCourse({ nick: st.nick, lang: st.lang, onNote: note, onDone: (rec, lang) => {
-    st.safety = { done: true, record: rec }; st.lang = lang; save();
-    toast(`🦺 연습 기록 저장: ${rec.score}/6`);
+    st.safety = { done: true, record: rec }; save(); if (st.lang !== lang) chooseLang(lang);
+    toast($t('main.openSafety.1', { score: rec.score }));
   } });
   m.onClose = () => { then?.(); refreshAll(); };
 }
@@ -864,9 +890,9 @@ function ambient() {
     giftT = 22 + Math.random() * 20;
     if (st.gifts > 0 && st.workers > 0 && !anyModal()) {
       const n = Math.max(1, Math.round((1 + Math.random() * 2) * stageMult()));
-      S.giftBubble(`고철 주웠어요! 팔까요? +${n}만원`, () => {
+      S.giftBubble($t('main.ambient.2', { n: won(n) }), () => {
         if (st.gifts <= 0) return;
-        st.gifts--; earn(n, '고철 판매');
+        st.gifts--; earn(n, $t('main.ambient.1'));
       });
     }
   }
@@ -876,7 +902,7 @@ function ambient() {
 /* ---------------- 함께 짓기 ---------------- */
 function presenceInfo() {
   const def = curDef(), c = COUNTRIES[countryIdxOf(def)];
-  return { nick: st.nick, flag: c.flag, country: c.name, building: st.finished ? '세계 일주 완료' : def.name, progress: Math.round(actual() * 100), completes: st.completed.length, day: st.day, building_on: st.started };
+  return { nick: st.nick, flag: c.flag, country: c.name, building: st.finished ? $t('main.presenceInfo.1') : def.name, progress: Math.round(actual() * 100), completes: st.completed.length, day: st.day, building_on: st.started };
 }
 function onNetMessage(msg) {
   if (msg.type === 'help') {
@@ -884,11 +910,11 @@ function onNetMessage(msg) {
       const amt = Math.round(20 * stageMult());
       st.progress = Math.min(curDef().work - 1, st.progress + amt);
       updateCurrentBlocks(true);
-      toast(`🤝 ${msg.nick}님이 도와줬어요! +${amt}블록`);
+      toast($t('main.onNetMessage.3', { nick: msg.nick, amt }));
     } else {
-      st.money += 5; toast(`🤝 ${msg.nick}님의 응원금 +5만원`);
+      st.money += 5; toast($t('main.onNetMessage.2', { nick: msg.nick, amt: won(5) }));
     }
-    S.friendSay(msg.from, '도와줄게요!');
+    S.friendSay(msg.from, $t('main.onNetMessage.1'));
     A.sfx('coin'); save(); refreshAll();
   } else if (msg.type === 'chat') {
     toast(`💬 ${msg.nick}: ${msg.text}`);
@@ -900,7 +926,7 @@ function onNetChange() {
   const list = onlineFriends();
   if (viewing == null) S.setFriends(list.slice(0, 6).map((f) => ({ id: f.id, nick: f.nick })));
   const el = $('#cntFriends'); el.textContent = list.length; el.classList.toggle('hidden', !list.length);
-  if (lastFriendCount >= 0 && list.length > lastFriendCount) toast('👋 친구가 접속했어요!');
+  if (lastFriendCount >= 0 && list.length > lastFriendCount) toast($t('main.onNetChange.1'));
   lastFriendCount = list.length;
   if (curTab === 'together') renderTab('together');
 }
@@ -910,8 +936,8 @@ async function toggleDemo() {
   if (!demo) {
     demoSnap = JSON.stringify(st);
     demo = true; walkActive()?.end(true); closeAllModals(); closeSheet(); $('#radio')?.remove();
-    $('#demoBtn').classList.add('on'); $('#demoBtn').textContent = '■ 시연 종료';
-    toast('▶ 시연 모드: 남은 건물을 차례로 자동 시공해요');
+    $('#demoBtn').classList.add('on'); $('#demoBtn').textContent = $t('main.toggleDemo.6');
+    toast($t('main.toggleDemo.5'));
     if (st.workers < 6) { st.workers = 6; S.setWorkers(6); }
     syncScene();
     while (demo && !st.finished) {
@@ -926,7 +952,7 @@ async function toggleDemo() {
       }
       if (!demo) break;
       A.sfx('fanfare');
-      toast(`🎉 ${def.name} 준공!`);
+      toast($t('main.toggleDemo.4', { name: def.name }));
       st.completed.push({ id: def.id, day: st.day, late: 0, ext: 0, total: def.reward });
       st.day += def.days;
       const prevC = def.c;
@@ -934,7 +960,7 @@ async function toggleDemo() {
       if (st.bIdx >= BUILDINGS.length) { st.finished = true; st.bIdx = BUILDINGS.length - 1; st.progress = def.work; refreshAll(); break; }
       if (curDef().c !== prevC) {
         const c = COUNTRIES.find((x) => x.id === prevC);
-        toast(`${c.flag} ${c.name} 지도 완성!`);
+        toast($t('main.toggleDemo.3', { flag: c.flag, name: c.name }));
         await sleep(900);
         if (!demo) break;
         syncScene();
@@ -946,27 +972,27 @@ async function toggleDemo() {
   } else {
     demo = false;
     st = JSON.parse(demoSnap);
-    $('#demoBtn').classList.remove('on'); $('#demoBtn').textContent = '▶ 시연 모드';
+    $('#demoBtn').classList.remove('on'); $('#demoBtn').textContent = $t('main.toggleDemo.2');
     closeAllModals(); syncScene(); refreshAll();
-    toast('🔨 직접 짓기로 돌아왔어요');
+    toast($t('main.toggleDemo.1'));
   }
 }
 function showEnding(isDemo) {
   A.sfx('fanfare');
   const myNotes = notesFor(st.track);
   const n = myNotes.filter((x) => st.notes[x.id]).length;
-  const m = openModal({ title: '🏆 세계 일주 완공!', body: h('div', { class: 'col ending' },
-    h('div', { class: 'logo' }, '첫 삽'),
-    h('div', { class: 'conf-title' }, `${COMPANY}, 9개국 22개 건축물 완공!`),
-    h('div', {}, '강아지집에서 시작해 사그라다 파밀리아까지. 모든 건물은 기초 → 골조 → 외장 → 마감, 그리고 안전에서 시작했어요.'),
+  const m = openModal({ title: $t('main.showEnding.17'), body: h('div', { class: 'col ending' },
+    h('div', { class: 'logo' }, $t('main.showEnding.16')),
+    h('div', { class: 'conf-title' }, $t('main.showEnding.15', { COMPANY })),
+    h('div', {}, $t('main.showEnding.14')),
     h('div', { class: 'settle' },
-      h('div', { class: 'r' }, h('span', {}, '준공한 건물'), h('b', {}, `${st.completed.length}개`)),
-      h('div', { class: 'r' }, h('span', {}, '걸린 날'), h('b', {}, `${st.day}일`)),
-      h('div', { class: 'r' }, h('span', {}, '배움 노트'), h('b', {}, `${n}/${myNotes.length}`)),
-      h('div', { class: 'r' }, h('span', {}, '아차사고'), h('b', {}, `${st.nearMiss.length}건`)),
-      st.test.pre ? h('div', { class: 'r' }, h('span', {}, '이해도 테스트'), h('b', {}, `사전 ${st.test.pre.score}/6${st.test.post ? ` → 사후 ${st.test.post.score}/6` : ''}`)) : null),
-    h('div', { class: 'tiny muted' }, '첫 삽 — 게임으로 시작하는 건설 입문 교육'),
-    h('button', { class: 'btn primary big', onclick: () => { m.close(); if (isDemo) toggleDemo(); } }, isDemo ? '직접 짓기로 돌아가기' : '현장 둘러보기')) });
+      h('div', { class: 'r' }, h('span', {}, $t('main.showEnding.13')), h('b', {}, $t('main.showEnding.12', { length: st.completed.length }))),
+      h('div', { class: 'r' }, h('span', {}, $t('main.showEnding.11')), h('b', {}, $t('main.showEnding.10', { day: st.day }))),
+      h('div', { class: 'r' }, h('span', {}, $t('main.showEnding.9')), h('b', {}, `${n}/${myNotes.length}`)),
+      h('div', { class: 'r' }, h('span', {}, $t('main.showEnding.8')), h('b', {}, $t('main.showEnding.7', { length: st.nearMiss.length }))),
+      st.test.pre ? h('div', { class: 'r' }, h('span', {}, $t('main.showEnding.6')), h('b', {}, $t('main.showEnding.5', { score: st.test.pre.score, v2: st.test.post ? $t('main.showEnding.4', { score: st.test.post.score }) : '' }))) : null),
+    h('div', { class: 'tiny muted' }, $t('main.showEnding.3')),
+    h('button', { class: 'btn primary big', onclick: () => { m.close(); if (isDemo) toggleDemo(); } }, isDemo ? $t('main.showEnding.2') : $t('main.showEnding.1'))) });
 }
 
 /* ---------------- 음악 ---------------- */
@@ -981,6 +1007,16 @@ async function boot() {
   const saved = await loadSave();
   booted = true;
   if (saved && (saved.v === 1 || saved.v === 2)) { try { st = migrate(saved); } catch (e) { console.warn('save migrate failed', e); } }
+  // 게임 언어: 저장 기록 → 기기에 저장된 선택 → 한국어
+  if (!saved) st.lang = savedLang() || 'ko';
+  if (!MULTI_LANG) st.lang = 'ko';
+  await setLang(st.lang || 'ko', { silent: true });
+  setShowKo(st.showKo ?? (st.track === 'field'));
+  renderIntroLang();
+  if (DEV) {
+    const b = h('button', { class: 'chip i18n-check', onclick: () => { const n = checkHangul([st.nick]); toast($t('dev.checkResult', { n })); if (missingKeys().length) console.warn('[i18n] 빠진 키', missingKeys()); } }, $t('dev.check'));
+    $('#app').append(b);
+  }
   A.setPrefs(st.music, st.sfx);
   document.body.classList.add('intro-on');
   S.initScene($('#gl'), $('#labels'));
@@ -990,12 +1026,11 @@ async function boot() {
   fetchForecast(st.city).then(() => { refreshAll(); if (!$('#intro')) S.setWeather(describe(todayWx()).kind); });
   if (saved && saved.track) {
     const ci = $('#introCont');
-    ci.textContent = `📅 ${st.day}일차 · ${st.finished ? '세계 일주 완료' : curDef().name} 이어하기`;
+    ci.textContent = $t('main.boot.2', { day: st.day, v2: st.finished ? $t('main.boot.1') : curDef().name });
     ci.classList.remove('hidden');
   }
   $('#nickInput').value = st.nick || '';
   $('#introMusic').onclick = () => toggleMusic();
-  $('#trackStudent').onclick = () => enter('student');
   $('#trackField').onclick = () => enter('field');
   // 메인 UI 이벤트
   $('#workBtn').onclick = doWork;
@@ -1015,10 +1050,11 @@ async function boot() {
 }
 
 function enter(track) {
-  const nick = $('#nickInput').value.trim().slice(0, 10) || st.nick || `소장${Math.floor(100 + Math.random() * 900)}`;
+  const nick = $('#nickInput').value.trim().slice(0, 10) || st.nick || $t('main.enter.1', { v1: Math.floor(100 + Math.random() * 900) });
   st.nick = nick;
   if (st.track !== track || !Object.keys(mgDefaults(track)).every((k) => k in st.mg)) st.mg = mgDefaults(track);
   st.track = track;
+  if (st.showKo == null) { st.showKo = track === 'field'; setShowKo(st.showKo); }
   st.quests = st.quests.filter((q) => { const d = QUESTS.find((x) => x.id === q.id); return d && (!d.tr || d.tr === track); });
   A.unlock(); A.setPrefs(st.music, st.sfx);
   if (st.music) A.startMusic();
@@ -1033,7 +1069,7 @@ function enter(track) {
   let tab = sessionStorage.getItem('cheotsap.tab');
   if (!tab) { tab = rid().slice(0, 4); sessionStorage.setItem('cheotsap.tab', tab); }
   startNet(`${st.id}-${tab}`, presenceInfo, { onMessage: onNetMessage, onChange: onNetChange });
-  if (track === 'field' && !st.safety.done) openSafety(() => showBriefing());
+  if (!st.safety.done) openSafety(() => showBriefing()); // 안전 코스를 마치지 않았으면 트랙과 상관없이 안전 코스부터
   else showBriefing();
 }
 

@@ -1,5 +1,6 @@
 // "작은 3D 공간에서 캐릭터 걷기" 공용 모듈 — 안전 순찰·유리 옮기기·층별 이벤트·야간 당직에서 재사용
 import * as THREE from 'three';
+import { t as $t } from './lang.js';
 import { createJoystick } from './joystick.js';
 import { makePerson, setPaused } from './scene.js';
 import { h } from './ui.js';
@@ -24,8 +25,8 @@ export function openWalk(o) {
   const title = h('div', { class: 'walk-title' }, o.title || '');
   const info = h('div', { class: 'walk-info' }, o.info || '');
   const timerEl = h('div', { class: 'walk-timer hidden' });
-  const quit = h('button', { class: 'x walk-x', 'aria-label': '나가기' }, '✕');
-  const actBtn = h('button', { class: 'walk-act', disabled: true }, o.actionLabel || '확인');
+  const quit = h('button', { class: 'x walk-x', 'aria-label': $t('walk.openWalk.2') }, '✕');
+  const actBtn = h('button', { class: 'walk-act', disabled: true }, o.actionLabel || $t('walk.openWalk.1'));
   const extra = h('div', { class: 'walk-extra' });
   const hud = h('div', { class: 'walk-hud' }, h('div', { class: 'walk-top' }, title, timerEl, quit), info);
   root.append(canvas, labels, hud, actBtn, extra);
@@ -193,12 +194,12 @@ export function openWalk(o) {
     if (api.timeLeft != null) {
       api.timeLeft = Math.max(0, api.timeLeft - dt);
       timerEl.classList.remove('hidden');
-      timerEl.textContent = `⏱ ${Math.ceil(api.timeLeft)}초`;
+      timerEl.textContent = $t('walk.loop.3', { v1: Math.ceil(api.timeLeft) });
       timerEl.classList.toggle('low', api.timeLeft <= 10);
       if (api.timeLeft <= 0) { api.timeLeft = null; o.onTimeUp?.(api); }
     }
     const near = api.nearest();
-    if (o.autoAction !== false) api.setAction(near ? (near.act || o.actionLabel || '확인') : (o.actionLabel || '확인'), !!near || !!o.actionAlways);
+    if (o.autoAction !== false) api.setAction(near ? (near.act || o.actionLabel || $t('walk.loop.2')) : (o.actionLabel || $t('walk.loop.1')), !!near || !!o.actionAlways);
     o.onTick?.(dt, api, near);
     if (api.ended) return;
     for (const a of agents) {

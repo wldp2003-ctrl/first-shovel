@@ -1,5 +1,6 @@
 // 3D 현장 — Three.js 복셀 렌더링
 import * as THREE from 'three';
+import { t as $t } from './lang.js';
 import { buildModel } from './models.js';
 import { BUILDINGS, COUNTRIES } from './data.js';
 
@@ -374,7 +375,7 @@ export function setWorkers(n) {
 }
 export function ensureMe() {
   if (me) return;
-  me = newAgent('me', { helmet: 0xffffff, vest: 0x2fb35a, label: '나', labelCls: 'me' });
+  me = newAgent('me', { helmet: 0xffffff, vest: 0x2fb35a, label: $t('scene.ensureMe.1'), labelCls: 'me' });
   const sp = siteSpots(); if (sp) me.pos.set(sp.cx - sp.w - 3, 0, sp.d + 4);
 }
 export function setFriends(list) {
@@ -649,3 +650,5 @@ export function rideHoist(toY, ms = 2200, onUpdate) {
   return new Promise((resolve) => { hoistRide = { from: hoist.userData.cage.position.y, to: toY, ms, t0: performance.now(), onUpdate, resolve }; });
 }
 export function endRide() { if (hoist) hoist.userData.cage.position.y = 0; focusOn(focusIdx); }
+
+export function relabel(meText) { if (me?.label) me.label.textContent = meText; }
