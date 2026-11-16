@@ -2,99 +2,19 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#2b2f36">
-<meta name="description" content="첫 삽 — 작업을 알면 위험이 보인다 (지예건설)">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14213d">
+<meta name="description" content="첫 삽 — 건설현장이 처음인 분을 위한 30분 기초 교육. 현장 입문, 보호구, 많이 일어나는 사고, 멈추고 알리기.">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>첫 삽 — 작업을 알면 위험이 보인다</title>
+<title>첫 삽 — 건설현장 기초 교육</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/icon-192.png">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=IBM+Plex+Sans+KR:wght@400;600;700&family=Noto+Sans:wght@400;600;700;800&family=Noto+Sans+SC:wght@400;600;700;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./css/style.css">
-<link rel="stylesheet" href="./css/upgrade.css">
-<link rel="stylesheet" href="./css/i18n.css">
-<script type="importmap">{ "imports": { "three": "./vendor/three.module.js" } }</script>
+<link rel="stylesheet" href="./css/learn.css">
 </head>
 <body>
-<div id="app">
-  <canvas id="gl"></canvas>
-  <div id="labels"></div>
-
-  <header id="topbar">
-    <div class="row">
-      <button class="chip money" id="moneyChip" data-i18n-title="html.money">💰 <b id="money">0</b></button>
-      <button class="chip" id="dateChip" data-i18n-title="html.forecast">📅 <span id="dateTxt">-</span> <span id="wxIcon">☀️</span> <span id="wxTemp"></span></button>
-      <div class="spacer"></div>
-      <button class="chip icon" id="musicBtn" data-i18n-title="html.music">🎵</button>
-      <button class="chip demo" id="demoBtn" data-i18n-title="html.demoTitle" data-i18n="html.demo" data-i18n-ko="no">▶ 시연 모드</button>
-    </div>
-    <div class="row sub">
-      <span class="mini" id="moraleTxt">😊 사기 60</span>
-      <span class="mini" id="crewTxt">👷 인부 0</span>
-      <span class="mini" id="wxNote"></span>
-      <span class="mini conflict hidden" id="conflictTag" data-i18n="html.conflict" data-i18n-ko="no">⚠️ 갈등 중 -30%</span>
-    </div>
-  </header>
-
-  <section id="sitecard">
-    <div class="sc-head">
-      <div><span id="scFlag">🇰🇷</span> <b id="scName">강아지집</b> <span class="tag" id="scPhase">착공 전</span></div>
-      <div class="dday" id="scDday">공기 2일</div>
-    </div>
-    <div class="phases" id="scPhases"></div>
-    <div class="bars">
-      <div class="barrow"><span data-i18n="html.plan" data-i18n-ko="no">계획</span><div class="bar plan"><i id="barPlan"></i></div><em id="pctPlan">0%</em></div>
-      <div class="barrow"><span data-i18n="html.actual" data-i18n-ko="no">실적</span><div class="bar act"><i id="barAct"></i></div><em id="pctAct">0%</em></div>
-    </div>
-    <div class="warn hidden" id="scWarn">⚠️ 공정 지연</div>
-    <div class="evbox hidden" id="scEvent"></div>
-    <button class="lift hidden" id="liftBtn">🪜 층 이동</button>
-  </section>
-
-  <section id="actions">
-    <button class="btn work" id="workBtn"><span class="lbl">🔨 작업</span><small id="workSub">12 / 12</small></button>
-    <button class="btn next" id="nextBtn"><span class="lbl">🌙 하루 마감</span><small id="nextSub">다음 날</small></button>
-  </section>
-
-  <nav id="nav">
-    <button data-tab="shop">🛒<span data-i18n="html.tabShop" data-i18n-ko="no">상점</span></button>
-    <button data-tab="side">💼<span data-i18n="html.tabSide" data-i18n-ko="no">부업</span><i class="dot hidden" id="dotSide"></i></button>
-    <button data-tab="quest">📋<span data-i18n="html.tabQuest" data-i18n-ko="no">퀘스트</span><i class="dot hidden" id="dotQuest"></i></button>
-    <button data-tab="together">🤝<span data-i18n="html.tabTogether" data-i18n-ko="no">함께</span><i class="cnt hidden" id="cntFriends">0</i></button>
-    <button data-tab="map">🗺️<span data-i18n="html.tabMap" data-i18n-ko="no">세계지도</span></button>
-  </nav>
-
-  <div id="sheet" class="hidden">
-    <div class="sheet-head"><b id="sheetTitle"></b><button class="x" id="sheetClose">✕</button></div>
-    <div class="sheet-body" id="sheetBody"></div>
-  </div>
-
-  <div id="intro">
-    <div class="intro-top">
-      <button class="chip icon" id="introMusic">🎵</button>
-    </div>
-    <div class="logo-wrap">
-      <div class="logo" data-ko-ok>첫 삽</div>
-      <div class="logo-sub" data-i18n="html.logoSub"></div>
-      <div class="slogan" data-i18n="html.slogan">작업을 알면 위험이 보인다</div>
-      <div class="company" data-ko-ok>⛑️ 지예건설</div>
-    </div>
-    <div class="intro-panel">
-      <div class="cont hidden" id="introCont"></div>
-      <div class="langpick" id="introLang"></div>
-      <input id="nickInput" maxlength="10" data-i18n-ph="html.nick" placeholder="닉네임을 입력하세요" autocomplete="off">
-      <button class="track field start" id="trackField"><b>🦺 첫 출근 시작</b><small>건설현장이 처음인 분 · 10분 안전 코스부터</small></button>
-    </div>
-  </div>
-
-  <div id="modals"></div>
-  <div id="toasts"></div>
-</div>
-<script type="module" src="./js/main.js"></script>
+<div id="app"><p class="loading">불러오는 중…</p></div>
+<script type="module" src="./js/learn/app.js"></script>
 </body>
 </html>

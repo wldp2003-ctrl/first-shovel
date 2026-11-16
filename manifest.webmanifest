@@ -1,14 +1,14 @@
 {
-  "name": "첫 삽 — 작업을 알면 위험이 보인다",
+  "name": "첫 삽 — 건설현장 기초 교육",
   "short_name": "첫 삽",
-  "description": "건설현장 신규·초보 근로자가 작업의 순서와 위험을 게임으로 익히는 입문 교육",
+  "description": "건설현장이 처음인 분을 위한 30분 기초 교육 (현장 입문·보호구·사고 유형·멈추고 알리기)",
   "lang": "ko",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#2b2f36",
-  "theme_color": "#2b2f36",
+  "background_color": "#14213d",
+  "theme_color": "#14213d",
   "icons": [
     { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
