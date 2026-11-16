@@ -102,5 +102,6 @@ body.riding #sitecard, body.riding #actions, body.riding #nav, body.riding #shee
 .basis .bz.law { background: var(--red); }
 .basis .bz.std { background: var(--blue); }
 .basis .bz.game { background: #8a8f98; }
+.basis .bz.chk { background: #fff4c2; color: #8a6100; border: 1px solid #e0b100; }
 .basis .bz-stop { background: var(--asphalt); color: var(--yellow); border-radius: 8px; padding: 5px 8px; font-size: 12px; font-weight: 700; }
 .intro-panel .track.start { width: 100%; }

@@ -124,7 +124,10 @@ body.deep .tabs { display: none; }
 .basis ul { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 6px; }
 .basis li { display: flex; gap: 8px; align-items: flex-start; }
 .lv { flex: none; font-style: normal; font-size: 11px; font-weight: 800; color: #fff; border-radius: 5px; padding: 1px 6px; margin-top: 2px; background: #6b7280; }
-.lv.law { background: var(--bad); } .lv.notice { background: #b45309; } .lv.kosha { background: var(--blue); } .lv.stat { background: #0f766e; }
+.lv.g1 { background: var(--bad); } .lv.g2 { background: var(--blue); } .lv.g3 { background: #0f766e; }
+/* 개발 모드(?dev=1)에서만 보이는 초안 문장 */
+.draft { outline: 3px solid #facc15; outline-offset: 2px; background: #fffbe6; }
+.draft::after { content: ' [초안]'; font-size: 11px; color: #a16207; }
 
 /* 점검 결과 · 기록 */
 .result { text-align: center; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 22px 16px; }

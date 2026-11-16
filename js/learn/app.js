@@ -12,6 +12,13 @@ if (!Element.prototype.append.__skipNull) {
 const KEY = 'cheotsap.learn.v1';
 const DONE_KEY = 'cheotsap.learn.done'; // 게임(game.html) 잠금 해제 표시
 let D = null; // lessons.json
+let SRC = {}; // sources.json (id → 출처)
+// 근거 검증: 화면에는 원문확인 이상만. 초안은 ?dev=1 에서만 노란 테두리로
+const DEV = /[?&]dev=1/.test(location.search);
+const OK_STATUS = ['원문확인', '전문가확인'];
+const shown = (o) => !!o && (OK_STATUS.includes(o.status) || DEV);
+const isDraft = (o) => !!o && !OK_STATUS.includes(o.status);
+const T = (o) => (o == null ? '' : typeof o === 'string' ? o : o.t);
 let S = null; // 학습 기록
 let tab = 'home';
 let live = null; // 지금 열린 레슨의 시간 측정 { id, t0 }
@@ -35,7 +42,9 @@ const shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; 
 const rid = () => Math.random().toString(36).slice(2, 10);
 const today = () => { const d = new Date(); return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`; };
 const mmss = (ms) => { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)}분 ${String(s % 60).padStart(2, '0')}초`; };
-const chars = (c) => (c.text + (c.more || '')).replace(/\s/g, '').length;
+const chars = (c) => (T(c.text) + T(c.more)).replace(/\s/g, '').length;
+const visCards = (x) => x.cards.map((c, i) => ({ ...c, i })).filter((c) => shown(c.text));
+const visQuiz = (x) => x.quiz.map((q, i) => ({ ...q, i })).filter(shown);
 
 /* ---------------- 기록 ---------------- */
 const fresh = () => ({ v: 1, anon: rid(), created: Date.now(), pre: null, post: null, lessons: {}, wrong: [], hours: {}, name: '', certAt: null });
@@ -112,7 +121,7 @@ function home(v) {
 
 /* ---------------- 사전·사후 점검 ---------------- */
 function runTest(kind) {
-  const items = D[kind];
+  const items = D[kind].filter(shown);
   const ans = [];
   const v = deep(kind === 'pre' ? '처음 점검' : '마지막 점검');
   const order = items.map((q) => shuffle(q.options.map((_, k) => k)));
@@ -121,7 +130,7 @@ function runTest(kind) {
     v.innerHTML = '';
     if (i >= items.length) return finish();
     const q = items[i];
-    v.append(h('div', { class: 'qhead' }, `${i + 1} / ${items.length}`), q.art ? pic(q.art) : null, h('h2', { class: 'q' }, q.q),
+    v.append(h('div', { class: 'qhead' }, `${i + 1} / ${items.length}`), q.art ? pic(q.art) : null, h('h2', { class: 'q' + (isDraft(q) ? ' draft' : '') }, q.q),
       optionList(q, order[i], (k) => { ans[i] = k; show(i + 1); }));
   };
   const finish = () => {
@@ -130,7 +139,7 @@ function runTest(kind) {
     S[kind] = rec; save();
     v.innerHTML = '';
     if (kind === 'pre') {
-      v.append(h('div', { class: 'result' }, h('div', { class: 'big' }, `6문제 중 ${rec.score}개`), h('p', {}, '지금 아는 만큼이에요. 레슨을 마치고 다시 풀어 볼게요.')),
+      v.append(h('div', { class: 'result' }, h('div', { class: 'big' }, `${items.length}문제 중 ${rec.score}개`), h('p', {}, '지금 아는 만큼이에요. 레슨을 마치고 다시 풀어 볼게요.')),
         h('button', { class: 'btn primary big', onclick: () => openLesson(D.lessons[0].id) }, '레슨 1 시작'));
     } else {
       const pre = S.pre?.score ?? 0;
@@ -162,25 +171,27 @@ function openLesson(id) {
       h('ul', { class: 'goals' }, x.goals.map((g) => h('li', {}, g))),
       h('button', { class: 'btn primary big', onclick: () => step('cards') }, '시작'));
   }
+  const vc = visCards(x), quizzes = visQuiz(x);
   function cardView(i, { onNext, onPrev, nextLabel }) {
-    const c = x.cards[i];
+    const c = vc[i];
     const img = Array.isArray(c.art) ? h('div', { class: `grid g${c.art.length}` }, c.art.map((a) => h('figure', {}, pic(a.art, 'pic sm'), h('figcaption', {}, a.label)))) : pic(c.art);
-    return h('div', { class: 'card', 'data-chars': chars(c) }, img, h('p', { class: 'ct' }, c.text), c.more ? h('p', { class: 'cm' }, c.more) : null,
-      h('div', { class: 'nav2' }, onPrev ? h('button', { class: 'btn', onclick: onPrev }, '이전') : h('span'), h('span', { class: 'cnt' }, `${i + 1} / ${x.cards.length}`), h('button', { class: 'btn primary', onclick: onNext }, nextLabel || '다음')));
+    return h('div', { class: 'card', 'data-chars': chars(c) }, img, h('p', { class: 'ct' + (isDraft(c.text) ? ' draft' : '') }, T(c.text)), shown(c.more) ? h('p', { class: 'cm' + (isDraft(c.more) ? ' draft' : '') }, T(c.more)) : null,
+      h('div', { class: 'nav2' }, onPrev ? h('button', { class: 'btn', onclick: onPrev }, '이전') : h('span'), h('span', { class: 'cnt' }, `${i + 1} / ${vc.length}`), h('button', { class: 'btn primary', onclick: onNext }, nextLabel || '다음')));
   }
   function cards() {
-    const i = Math.min(st.card, x.cards.length - 1);
+    const i = Math.min(st.card, vc.length - 1);
+    const hasAct = shown(x.activity);
     v.append(cardView(i, {
       onPrev: i > 0 ? () => { st.card = i - 1; step('cards'); } : null,
-      onNext: () => { if (i + 1 < x.cards.length) { st.card = i + 1; step('cards'); } else { st.card = 0; step('activity'); } },
-      nextLabel: i + 1 < x.cards.length ? '다음' : '한 번 해보기',
+      onNext: () => { if (i + 1 < vc.length) { st.card = i + 1; step('cards'); } else { st.card = 0; st.qi = 0; step(hasAct ? 'activity' : 'quiz'); } },
+      nextLabel: i + 1 < vc.length ? '다음' : hasAct ? '한 번 해보기' : '확인 문제 풀기',
     }));
   }
   function activity() {
     const a = x.activity;
     const fin = () => { v.append(h('div', { class: 'fb good' }, a.done), h('button', { class: 'btn primary big', onclick: () => { st.qi = 0; step('quiz'); } }, '확인 문제 풀기')); };
     const fail = () => { st.actTries++; save(); };
-    v.append(h('div', { class: 'kind' }, '한 번 해보기 · 30초'), h('h2', { class: 'lead' }, a.prompt));
+    v.append(h('div', { class: 'kind' }, '한 번 해보기 · 30초'), h('h2', { class: 'lead' + (isDraft(a) ? ' draft' : '') }, a.prompt));
     if (a.type === 'order') {
       const slots = h('ol', { class: 'slots' }, a.items.map(() => h('li', {}, '')));
       let k = 0; const msg = h('div', { class: 'fb' });
@@ -232,37 +243,38 @@ function openLesson(id) {
   }
   function quiz() {
     const i = st.qi;
-    if (i >= x.quiz.length) return step('summary');
-    const q = x.quiz[i], order = shuffle(q.options.map((_, k) => k));
+    if (i >= quizzes.length) return step('summary');
+    const q = quizzes[i], qi = q.i, order = shuffle(q.options.map((_, k) => k));
+    const backIdx = Math.max(0, vc.findIndex((c) => c.i === q.back));
     const msg = h('div', { class: 'fb' });
-    v.append(h('div', { class: 'qhead' }, `확인 문제 ${i + 1} / ${x.quiz.length}`), q.art ? pic(q.art) : null, h('h2', { class: 'q' }, q.q),
+    v.append(h('div', { class: 'qhead' }, `확인 문제 ${i + 1} / ${quizzes.length}`), q.art ? pic(q.art) : null, h('h2', { class: 'q' + (isDraft(q) ? ' draft' : '') }, q.q),
       optionList(q, order, (k, btn) => {
-        const firstTry = st.first[i] === undefined;
+        const firstTry = st.first[qi] === undefined;
         if (k === q.answer) {
-          if (firstTry) st.first[i] = true;
-          S.wrong = S.wrong.filter((w) => !(w.lesson === x.id && w.qi === i && w.kind === 'quiz'));
+          if (firstTry) st.first[qi] = true;
+          S.wrong = S.wrong.filter((w) => !(w.lesson === x.id && w.qi === qi && w.kind === 'quiz'));
           btn.classList.add('right'); btn.parentElement.querySelectorAll('button').forEach((b) => (b.disabled = true));
           msg.className = 'fb good'; msg.innerHTML = ''; msg.append(h('b', {}, '맞아요! '), q.why);
-          v.append(h('button', { class: 'btn primary big', onclick: () => { st.qi = i + 1; step('quiz'); } }, i + 1 < x.quiz.length ? '다음 문제' : '정리하기'));
+          v.append(h('button', { class: 'btn primary big', onclick: () => { st.qi = i + 1; step('quiz'); } }, i + 1 < quizzes.length ? '다음 문제' : '정리하기'));
           save(); return;
         }
         // 틀리면: 이유 한 줄 → 해당 카드로 돌아가서 다시 보고 → 같은 문제 다시
-        if (firstTry) st.first[i] = false;
+        if (firstTry) st.first[qi] = false;
         st.retries++;
-        if (!S.wrong.some((w) => w.lesson === x.id && w.qi === i && w.kind === 'quiz')) S.wrong.push({ kind: 'quiz', lesson: x.id, qi: i, at: Date.now() });
+        if (!S.wrong.some((w) => w.lesson === x.id && w.qi === qi && w.kind === 'quiz')) S.wrong.push({ kind: 'quiz', lesson: x.id, qi, at: Date.now() });
         save();
         btn.classList.add('wrong'); btn.parentElement.querySelectorAll('button').forEach((b) => (b.disabled = true));
         msg.className = 'fb bad'; msg.innerHTML = ''; msg.append(h('b', {}, '다시 볼까요? '), q.why);
         v.append(h('button', { class: 'btn primary big', onclick: () => {
           v.innerHTML = '';
-          v.append(h('div', { class: 'kind' }, '카드 다시 보기'), cardView(q.back, { onNext: () => step('quiz'), nextLabel: '문제로 돌아가기' }));
+          v.append(h('div', { class: 'kind' }, '카드 다시 보기'), cardView(backIdx, { onNext: () => step('quiz'), nextLabel: '문제로 돌아가기' }));
         } }, '카드 다시 보기'));
       }), msg);
   }
   function summary() {
-    const firstOk = x.quiz.filter((_, i) => st.first[i]).length;
-    v.append(h('div', { class: 'sum' }, h('div', { class: 'kind' }, '한 줄 정리'), h('p', { class: 'sumline' }, x.summary)),
-      h('div', { class: 'small' }, `확인 문제 첫 번째 시도 ${firstOk} / ${x.quiz.length} 정답`),
+    const firstOk = quizzes.filter((q) => st.first[q.i]).length;
+    v.append(shown(x.summary) ? h('div', { class: 'sum' }, h('div', { class: 'kind' }, '한 줄 정리'), h('p', { class: 'sumline' + (isDraft(x.summary) ? ' draft' : '') }, T(x.summary))) : null,
+      h('div', { class: 'small' }, `확인 문제 첫 번째 시도 ${firstOk} / ${quizzes.length} 정답`),
       basisBox(x),
       h('button', { class: 'btn primary big', id: 'lessonDone', onclick: () => {
         st.status = 'done'; st.doneAt ||= Date.now(); st.review = false; timeStop(); save();
@@ -272,9 +284,18 @@ function openLesson(id) {
   }
   step(STEPS.includes(st.step) ? st.step : 'goals');
 }
+export function lessonFacts(x) {
+  const f = [];
+  x.cards.forEach((c) => { f.push(c.text); if (c.more) f.push(c.more); });
+  f.push(x.activity, ...x.quiz, x.summary);
+  return f.filter(Boolean);
+}
+const GRADE = { 1: '법령', 2: '공공기관', 3: '표준' };
+// 근거 상자: 레슨에서 쓴 출처 id를 모아 sources.json으로 보여 준다
 function basisBox(x) {
-  return h('details', { class: 'basis' }, h('summary', {}, '근거 보기'),
-    h('ul', {}, x.basis.map((b) => h('li', {}, h('i', { class: 'lv ' + b.lv }, D.levels[b.lv]), h('span', {}, b.t)))));
+  const ids = [...new Set(lessonFacts(x).filter(shown).flatMap((o) => o.src || []))];
+  return h('details', { class: 'basis' }, h('summary', {}, `근거 보기 (${ids.length})`),
+    h('ul', {}, ids.map((id) => SRC[id]).filter(Boolean).map((s) => h('li', {}, h('i', { class: 'lv g' + s.grade }, GRADE[s.grade] || '참고'), h('span', {}, `${s.org} 「${s.doc}」 ${s.loc}`)))));
 }
 
 /* ---------------- 다시 보기 ---------------- */
@@ -284,7 +305,7 @@ function review(v) {
   if (!wr.length) v.append(h('p', { class: 'muted' }, '틀린 문제가 없어요. 레슨을 하면 여기에 모여요.'));
   wr.forEach((w) => {
     const x = D.lessons.find((l) => l.id === w.lesson), q = x?.quiz[w.qi];
-    if (!q) return;
+    if (!q || !shown(q)) return;
     const box = h('div', { class: 'rv' });
     const msg = h('div', { class: 'fb' });
     box.append(h('small', {}, `${x.no}. ${x.title}`), h('b', {}, q.q), optionList(q, shuffle(q.options.map((_, k) => k)), (k, btn) => {
@@ -296,20 +317,20 @@ function review(v) {
   });
   v.append(h('h2', { class: 'sec' }, '레슨별 한 장 요약'));
   D.lessons.forEach((x) => v.append(h('div', { class: 'sumcard' }, pic(Array.isArray(x.cards[0].art) ? x.cards[0].art[0].art : x.cards[0].art, 'pic xs'),
-    h('div', {}, h('b', {}, `${x.no}. ${x.title}`), h('p', {}, x.summary), h('ul', {}, x.goals.map((g) => h('li', {}, g)))))));
+    h('div', {}, h('b', {}, `${x.no}. ${x.title}`), shown(x.summary) ? h('p', {}, T(x.summary)) : null, h('ul', {}, x.goals.map((g) => h('li', {}, g)))))));
 }
 
 /* ---------------- 내 기록 ---------------- */
 function record(v) {
   v.append(h('h2', { class: 'sec' }, '점검 점수'),
-    h('div', { class: 'cmp card-lite' }, h('div', {}, h('small', {}, '처음'), h('b', {}, S.pre ? `${S.pre.score}/6` : '-')), h('span', {}, '→'), h('div', { class: 'up' }, h('small', {}, '마지막'), h('b', {}, S.post ? `${S.post.score}/6` : '-'))));
+    h('div', { class: 'cmp card-lite' }, h('div', {}, h('small', {}, '처음'), h('b', {}, S.pre ? `${S.pre.score}/${S.pre.correct.length}` : '-')), h('span', {}, '→'), h('div', { class: 'up' }, h('small', {}, '마지막'), h('b', {}, S.post ? `${S.post.score}/${S.post.correct.length}` : '-'))));
   v.append(h('h2', { class: 'sec' }, '레슨별 기록'));
   const tb = h('table', { class: 'tbl' }, h('tr', {}, h('th', {}, '레슨'), h('th', {}, '상태'), h('th', {}, '시간'), h('th', {}, '첫 시도 정답')));
   let total = 0;
   D.lessons.forEach((x) => {
     const st = S.lessons[x.id]; total += st?.timeMs || 0;
-    const ok = st ? x.quiz.filter((_, i) => st.first[i]).length : 0, tried = st ? Object.keys(st.first).length : 0;
-    tb.append(h('tr', {}, h('td', {}, `${x.no}. ${x.title}`), h('td', {}, st?.status === 'done' ? '완료' : st?.status === 'doing' ? '하는 중' : '-'), h('td', {}, st ? mmss(st.timeMs) : '-'), h('td', {}, tried ? `${ok}/${x.quiz.length}` : '-')));
+    const qs = visQuiz(x), ok = st ? qs.filter((q) => st.first[q.i]).length : 0, tried = st ? Object.keys(st.first).length : 0;
+    tb.append(h('tr', {}, h('td', {}, `${x.no}. ${x.title}`), h('td', {}, st?.status === 'done' ? '완료' : st?.status === 'doing' ? '하는 중' : '-'), h('td', {}, st ? mmss(st.timeMs) : '-'), h('td', {}, tried ? `${ok}/${qs.length}` : '-')));
   });
   v.append(tb, h('p', { class: 'small' }, `레슨에 쓴 시간 합계 ${mmss(total)}`));
   v.append(h('h2', { class: 'sec' }, '연구용 결과 내보내기'),
@@ -373,7 +394,7 @@ function showCert() {
 function noteHour() { const hr = new Date().getHours(); S.hours[hr] = (S.hours[hr] || 0) + 1; }
 async function boot() {
   S = load();
-  try { D = await (await fetch('./data/lessons.json')).json(); }
+  try { D = await (await fetch('./data/lessons.json')).json(); SRC = Object.fromEntries((await (await fetch('./data/sources.json')).json()).sources.map((s) => [s.id, s])); }
   catch (e) { app().innerHTML = '<p style="padding:24px">레슨 파일을 불러오지 못했어요. 인터넷에 한 번 연결한 뒤 다시 열어 주세요.</p>'; return; }
   noteHour(); save();
   const t = location.hash.replace('#', '');
@@ -381,5 +402,6 @@ async function boot() {
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
 }
 // 자동 점검용 (tools/smoke-learn.mjs)
-window.__learn = { get S() { return S; }, get D() { return D; }, exportPayload, chars };
+window.__learn = { get S() { return S; }, get D() { return D; }, get SRC() { return SRC; }, exportPayload, chars, lessonFacts, DEV };
+if (DEV) document.documentElement.classList.add('dev');
 boot();
