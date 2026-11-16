@@ -1,5 +1,5 @@
 {
-  "version": "v11.1",
+  "version": "v11.2",
   "updated": "2026-11-16",
   "rules": {
     "cardCharLimit": 40,
@@ -76,8 +76,8 @@
           "text": { "t": "비계를 조립해 높은 곳에 작업발판을 만들어요.", "src": ["rule-42"], "status": "원문확인" },
           "more": { "t": "발판 끝·개구부엔 안전난간·덮개를 둬요.", "src": ["rule-43", "kb-p55"], "status": "원문확인" } },
         { "art": [{ "art": "formwork", "label": "거푸집·동바리" }, { "art": "pour", "label": "타설" }],
-          "text": { "t": "타설 중엔 거푸집·동바리가 휘는지 살펴요.", "src": ["rule-334", "kb-p52"], "status": "원문확인" },
-          "more": { "t": "이상하면 작업을 멈추고 대피해요.", "src": ["rule-334"], "status": "원문확인" } },
+          "text": { "t": "동바리는 콘크리트가 굳을 때까지 하중을 받쳐요.", "src": ["kcs-215005"], "status": "원문확인" },
+          "more": { "t": "타설 중 휘면 멈추고 대피해요.", "src": ["rule-334", "kb-p52"], "status": "원문확인" } },
         { "art": [{ "art": "lifting", "label": "양중" }, { "art": "signal", "label": "신호수" }],
           "text": { "t": "양중기는 크레인·리프트처럼 들어 올리는 기계.", "src": ["rule-132"], "status": "원문확인" },
           "more": { "t": "장비는 신호수 신호에 따라 움직여요.", "src": ["kb-p54", "kb-p59"], "status": "원문확인" } },
