@@ -79,4 +79,6 @@ export const PAIR = {
   rebarBad: () => svg(slab + [40, 62, 84, 106].map((x) => `<line x1="${x}" y1="64" x2="${x}" y2="22" stroke="var(--art-rebar)" stroke-width="4" stroke-linecap="round"/>`).join('') + person(132, 64, { scale: 0.7, rot: -10 })),
   rebarGood: () => svg(slab + [40, 62, 84, 106].map((x) => `<line x1="${x}" y1="64" x2="${x}" y2="26" stroke="var(--art-rebar)" stroke-width="4"/><rect x="${x - 6}" y="16" width="12" height="12" rx="3" fill="${ORANGE}" stroke="${INK}" stroke-width="1"/>`).join('') + person(132, 64, { scale: 0.7 })),
 };
-export const pair = (id) => (PAIR[id] ? PAIR[id]() : PAIR2[id] ? PAIR2[id]() : '');
+// v15: 3D 장면에서 가까이 찍은 비교 그림이 있으면 그것을 (scene3d.js renderPairs 결과를 app.js 가 채움)
+export const PAIR3D = {};
+export const pair = (id) => (PAIR3D[id] ? `<img class="p3d" src="${PAIR3D[id]}" alt="">` : PAIR[id] ? PAIR[id]() : PAIR2[id] ? PAIR2[id]() : '');

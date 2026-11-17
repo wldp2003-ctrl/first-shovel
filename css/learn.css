@@ -836,3 +836,19 @@ main { padding-top: calc(var(--s4) + 5px); }
 .z-who { left: -88px; top: -76px; }
 .z-tip { top: -92px; left: 30px; }
 .z-tip { top: -112px; left: -64px; transform: none; }
+
+/* ---------- v15 눈높이 3D 장면 + 지시문 ---------- */
+.scene-box canvas.scene3d { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; }
+.scene-box.is3d { background: var(--art-sky); }
+.q-ask { align-items: flex-start; }
+.q-ask-t { flex: 1; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.q-ask-t small { font-size: var(--fs-small); font-weight: 700; color: var(--ink-2); line-height: 1.35; }
+.q-ask-t h1 { font-size: 20px; line-height: 1.3; }
+.pt-ask { justify-content: flex-start; text-align: left; }
+.pt-ask-t { flex: 1; display: flex; flex-direction: column; }
+.pt-ask-t small { color: var(--ink-2); font-weight: 700; }
+.pt-ask-t b { font-size: 18px; }
+.act-q p small { color: var(--ink-2); font-weight: 700; }
+/* 3D 비교 사진: 칸을 가득 채움 */
+img.p3d { display: block; width: 100%; height: 100%; object-fit: cover; aspect-ratio: 160 / 110; }
+.pic img.p3d, .pt-opt .pic img.p3d, .sw-card .pic img.p3d { border-radius: var(--r-s); }

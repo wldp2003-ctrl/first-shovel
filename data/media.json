@@ -242,6 +242,15 @@
    "reference": "원작 캐릭터 첫삽이 — 유명 캐릭터를 닮지 않게(디자인 가이드 0-7)"
   },
   {
+   "id": "scene3d-v15",
+   "kind": "직접 만든 3D (three.js, 근로자 눈높이 장면 7곳 + 위험/안전 비교 렌더)",
+   "file": "js/learn/scene3d.js",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "3D 인물(실존 인물 아님)",
+   "reference": "사진·AI 이미지로 바꾸는 방법: docs/현장이미지_제작가이드.md"
+  },
+  {
    "id": "site3d-v14",
    "kind": "직접 만든 3D (three.js 블록)",
    "file": "js/learn/site3d.js",

@@ -3,7 +3,8 @@
 import { art, dressFigure } from './art.js';
 import { icon, LESSON_ICON, LESSON_TONE } from './icons.js';
 import { logoMark, sapi, building } from './brand.js';
-import { sceneFloor, pair } from './scene-art.js';
+import { sceneFloor, pair, PAIR3D } from './scene-art.js';
+import { makeScene3D, renderPairs, hasGL, SCENE3D_IDS } from './scene3d.js';
 import { mountSite } from './site3d.js';
 import { sceneTbm, sceneScaffold, sceneLifting, sceneEquip, scenePour, sceneHot, STOP } from './scene-art2.js';
 
@@ -115,6 +116,7 @@ function shell() {
     ].map(([id, nm]) => h('button', { 'data-tab': id, onclick: () => go(id) }, ic(nm), h('span', {}, t('nav.' + id)), id === 'practice' && !isComplete() ? h('em', { class: 'lock', 'aria-label': t('nav.locked') }, ic('lock', { size: 12 })) : null))));
 }
 function go(tb) {
+  curV3?.dispose(); curV3 = null;
   timeStop();
   tab = tb; if (history.state?.deep) history.back();
   shell(); document.body.classList.remove('deep');
@@ -144,6 +146,7 @@ function home(v) {
   // 3D 공사 현장 지도 (WebGL 을 못 쓰면 평면 길)
   const site = h('div', { class: 'site3d', 'aria-label': t('map.title') });
   v.append(unitCard(), site);
+  warmPairs();
   mountSite(site, { zones: siteZones(), onPick: (z) => (z.roof ? stopTell() : openScene(z.id)) }).then((r) => { if (!r && site.isConnected) site.replaceWith(siteMap()); });
   const td = todayScene(); if (td) v.append(todayCard(td));
   v.append(installTip());
@@ -160,6 +163,14 @@ function home(v) {
   v.append(h('section', { class: 'lessons6' }, h('h2', { class: 'sec head' }, ic('learn', { size: 24 }), h('span', {}, t('home.lessons6'))), h('p', { class: 'small' }, t('home.lessons6Note')), list));
   v.append(h('p', { class: 'note' }, t('home.note')));
 }
+// v15: 3D 비교 그림 — 장면마다 위험 켬/끔 두 장을 만들어 PAIR3D 에 채움 (한 번만)
+const pairsDone = new Set(); let curV3 = null;
+async function ensurePairs(id) {
+  if (pairsDone.has(id) || !hasGL()) return; pairsDone.add(id);
+  try { const r = await renderPairs(id); const sc = scene(id); if (!r || !sc) return; for (const z of sc.hazards) if (r[z.id]) { PAIR3D[z.bad] = r[z.id].bad; PAIR3D[z.good] = r[z.id].good; } } catch { pairsDone.delete(id); }
+}
+const idle = (fn, ms) => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: ms }) : setTimeout(fn, ms));
+function warmPairs() { if (!hasGL()) return; const ids = SCENE3D_IDS.filter((i) => !pairsDone.has(i)); let k = 0; const step = () => { if (k >= ids.length) return; ensurePairs(ids[k++]).then(() => idle(step, 600)); }; idle(step, 1500); }
 // 3D 지도 이름표는 짧게 (겹치지 않게)
 const SHORT = { tbm: '출근', floor: '골조 바닥', scaffold: '비계', lifting: '양중', equip: '장비', pour: '타설', hot: '용접·밀폐' };
 // 3D 지도 구역: 상태(완료·지금·잠김), 번호 표시 아이콘, 이름, 별
@@ -345,7 +356,7 @@ function runPicTest(kind) {
     const q = items[i], sides = shuffle(['bad', 'good']);
     v.append(h('div', { class: 'qhead' }, h('span', { class: 'qtag' }, isPic() ? ic('check', { size: 16 }) : kind === 'pre' ? t('test.pre') : t('test.post')), t('common.of', { i: i + 1, n: items.length })),
       i === 0 && !isPic() ? h('p', { class: 'hint left' }, t('test.noAnswer')) : null,
-      h('div', { class: 'pt-ask' }, h('span', { class: 'pt-good' }, ic('check', { size: 26 })), ic('finger', { size: 28 }), isPic() ? null : h('b', {}, t('test.pickSafe'))),
+      h('div', { class: 'pt-ask' }, h('span', { class: 'pt-good' }, ic('check', { size: 26 })), h('div', { class: 'pt-ask-t' }, h('small', {}, t('test.situ')), h('b', {}, t('test.pickSafe'))), h('button', { class: 'q-say', 'aria-label': t('scene.listen'), onclick: () => speak(`${t('test.situ')} ${t('test.pickSafe')}`) }, ic('sound', { size: 22 }))),
       h('div', { class: 'pt-opts' }, sides.map((sd, k) => h('button', { class: 'pt-opt', 'data-side': sd, 'aria-label': t('test.pickN', { n: k + 1 }), onclick: () => { ans.push({ id: q.id, pick: sd }); show(i + 1); } }, h('span', { class: 'pic', html: pair(q[sd]) })))));
   };
   const finish = () => {
@@ -800,7 +811,8 @@ function openScene(id, o = {}) {
   rec.tries++; save();
   // 무작위 출제: 레이어로 그린 장면은 처음엔 위험 전부(측정용), 다시 할 때는 2~4개를 골라 낸다. 안 낸 위험은 안전한 모습으로 그려짐
   const pool = sc.hazards.filter((z) => shown(z.line));
-  const hz = sc.layered && rec.tries > 1 && !o.all ? shuffle(pool).slice(0, Math.min(pool.length, 2 + Math.floor(Math.random() * (Math.min(4, pool.length) - 1)))).sort((a, b) => pool.indexOf(a) - pool.indexOf(b)) : pool;
+  const use3d = hasGL() && SCENE3D_IDS.includes(sc.id);
+  const hz = (sc.layered || use3d) && rec.tries > 1 && !o.all ? shuffle(pool).slice(0, Math.min(pool.length, 2 + Math.floor(Math.random() * (Math.min(4, pool.length) - 1)))).sort((a, b) => pool.indexOf(a) - pool.indexOf(b)) : pool;
   const off = sc.hazards.filter((z) => !hz.includes(z)); // 꺼진 위험 = 이번엔 안전한 곳
   const total = hz.length;
   // 시안: 머리 = X(닫기) + 둥근 주황 진행 막대
@@ -812,16 +824,30 @@ function openScene(id, o = {}) {
   // 찾은 칸: 찾으면 노랑(주의) 네모 + 체크, 아직은 회색 점선 네모
   const slots = h('div', { class: 'haz-slots', 'aria-label': t('scene.count', { f: 0, n: total }) }, hz.map((z) => h('span', { class: 'haz-slot', 'data-id': z.id }, ic('check', { size: 20 }))));
   const box = h('div', { class: 'scene-box', html: SC_ART[sc.art](sc.layered ? hz.map((z) => z.id) : undefined) });
-  v.dataset.say = t('scene.ask');
+  const ask = t('scene.askN', { n: hz.length });
+  v.dataset.say = `${sc.situation || ''} ${ask}`;
   const layer = h('div', { class: 'scene-layer' });
   box.append(layer);
+  // v15: 근로자 눈높이 3D 장면 (WebGL 이 없으면 그림 그대로). 누를 곳은 3D 위치를 화면에 투영한 값
+  let A3 = null;
+  const A = (q) => A3?.hazards[q.id] || A3?.safe[q.id] || q.area;
+  // 점검 도구용: 지금 열린 장면에서 위험·함정의 실제 누를 자리 (3D 투영 또는 그림 좌표)
+  window.__learn.areaOf = (zid) => { const q = [...sc.hazards, ...sc.safe].find((x) => x.id === zid); return q ? A(q) : null; };
+  window.__learn.ready3d = () => !use3d || !!A3;
+  curV3?.dispose(); curV3 = null;
+  if (use3d) makeScene3D(sc.id, { on: hz.map((z) => z.id) }).then((v3) => {
+    if (!v3) return; if (!box.isConnected) { v3.dispose(); return; }
+    curV3 = v3; A3 = v3.areas(); window.__learn.areas3d = A3;
+    box.querySelector('svg')?.remove(); box.prepend(v3.canvas); box.classList.add('is3d');
+  });
+  ensurePairs(sc.id);
   const pct = (a) => ({ left: `${(a.x / 400) * 100}%`, top: `${(a.y / 300) * 100}%`, width: `${(a.r * 2 / 400) * 100}%` });
   const ring = (a, cls) => { const p = pct(a); const el = h('span', { class: 'ring ' + cls, style: `left:${p.left};top:${p.top};width:${p.width}` }); layer.append(el); return el; };
   const sheet = h('div', { class: 'scene-sheet', 'aria-live': 'polite' });
   const endBtn = h('button', { class: 'q-end', id: 'sceneEnd', 'aria-label': t('scene.end'), title: t('scene.end'), onclick: () => finish() }, ic('flag', { size: 22 }), isPic() ? null : h('span', {}, t('scene.endShort')));
   // 시안: 지시 줄 = 손가락 네모 + "위험한 곳을 누르세요" + 듣기 네모
-  v.append(h('div', { class: 'q-ask' }, h('span', { class: 'q-finger' }, ic('finger', { size: 26 })), isPic() ? h('span', { class: 'grow' }) : h('h1', {}, t('scene.ask')),
-      h('button', { class: 'q-say', id: 'sceneSay', 'aria-label': t('scene.listen'), onclick: () => speak(t('scene.ask')) }, ic('sound', { size: 24 }))),
+  v.append(h('div', { class: 'q-ask' }, h('span', { class: 'q-finger' }, ic('finger', { size: 26 })), h('div', { class: 'q-ask-t' }, sc.situation ? h('small', {}, sc.situation) : null, h('h1', {}, ask)),
+      h('button', { class: 'q-say', id: 'sceneSay', 'aria-label': t('scene.listen'), onclick: () => speak(`${sc.situation || ''} ${ask}`) }, ic('sound', { size: 24 }))),
     h('div', { class: 'q-slots' }, slots, endBtn), box, sheet);
   // 그림 모드 안내: 손가락이 장면을 두 번 눌러 보이는 애니메이션 (답 위치는 알려 주지 않음)
   if (!reduceMotion()) { const f = h('span', { class: 'finger-demo' }, ic('finger', { size: 40 })); box.append(f); setTimeout(() => f.remove(), 2200); }
@@ -831,10 +857,10 @@ function openScene(id, o = {}) {
     const r = box.getBoundingClientRect();
     const x = ((e.clientX - r.left) / r.width) * 400, y = ((e.clientY - r.top) / r.height) * 300;
     const near = (a) => Math.hypot(a.x - x, a.y - y) <= a.r;
-    const z = hz.filter((q) => !found.includes(q.id) && near(q.area)).sort((p, q) => Math.hypot(p.area.x - x, p.area.y - y) - Math.hypot(q.area.x - x, q.area.y - y))[0];
-    if (z) { found.push(z.id); ring(z.area, 'hit'); slots.querySelector(`[data-id="${z.id}"]`).classList.add('on'); prog.style.width = `${(found.length / total) * 100}%`; prog.parentElement.setAttribute('aria-valuenow', String(found.length)); showHazard(z); return; }
-    const sf = [...sc.safe, ...off].find((q) => near(q.area));
-    if (sf) { ring(sf.area, 'trap'); showSafe(off.includes(sf) ? { area: sf.area } : sf); return; }
+    const z = hz.filter((q) => !found.includes(q.id) && near(A(q))).sort((p, q) => Math.hypot(A(p).x - x, A(p).y - y) - Math.hypot(A(q).x - x, A(q).y - y))[0];
+    if (z) { found.push(z.id); ring(A(z), 'hit'); slots.querySelector(`[data-id="${z.id}"]`).classList.add('on'); prog.style.width = `${(found.length / total) * 100}%`; prog.parentElement.setAttribute('aria-valuenow', String(found.length)); showHazard(z); return; }
+    const sf = [...sc.safe, ...off].find((q) => near(A(q)));
+    if (sf) { ring(A(sf), 'trap'); showSafe(off.includes(sf) ? { area: A(sf) } : sf); return; }
     tapsMiss++;
     const rp = h('span', { class: 'ripple', style: `left:${(x / 400) * 100}%;top:${(y / 300) * 100}%` }); layer.append(rp); setTimeout(() => rp.remove(), 500);
   });
@@ -842,7 +868,7 @@ function openScene(id, o = {}) {
   // 시안: 찾음 → 아래에서 초록 피드백 바 (위험한 모습 X → 안전한 모습 체크 + 한 줄)
   function showHazard(z) {
     const last = found.length >= total;
-    feedbackBar({ ok: true, title: t('fb.found'), sub: T(z.line), say: T0(z.line), pics: [{ html: pair(z.bad), ok: false }, { html: pair(z.good), ok: true }],
+    feedbackBar({ ok: true, title: t('fb.found'), sub: `${T(z.name)} — ${T(z.line)}`, say: `${T0(z.name)}. ${T0(z.line)}`, pics: [{ html: pair(z.bad), ok: false }, { html: pair(z.good), ok: true }],
       btn: last ? t('scene.seeResult') : t('fb.continue'), id: 'hzNext', onNext: () => { if (last) finish(); } });
   }
   // 시안: 안전한 곳을 누름 → 아래에서 빨강 피드백 바 ("거긴 안전해요" + 아직 못 찾은 위험 하나를 힌트 그림으로)
@@ -857,7 +883,7 @@ function openScene(id, o = {}) {
     endBtn.remove();
     const ms = Date.now() - t0; rec.timeMs += ms; spent = ms;
     const missed = hz.filter((z) => !found.includes(z.id));
-    missed.forEach((z) => ring(z.area, 'miss'));
+    missed.forEach((z) => ring(A(z), 'miss'));
     // 찾기 → 어떻게 할까 (찾은 위험 하나를 무작위로)
     const q = shuffle(hz.filter((z) => found.includes(z.id) && z.act))[0];
     if (q) askAct(q, (act) => result(missed, act)); else result(missed, null);
@@ -867,7 +893,7 @@ function openScene(id, o = {}) {
     v.dataset.say = t('act.ask');
     const opts = shuffle(['stop', 'tell', 'ppe']);
     const box2 = h('div', { class: 'act-card', id: 'actCard', 'data-hz': z.id },
-      h('div', { class: 'act-q' }, h('span', { class: 'pic', html: pair(z.bad) }), h('span', { class: 'act-ask' }, ic('finger', { size: 26 }), h('b', {}, '?')), isPic() ? null : h('p', {}, t('act.ask')), speakBtn(t('act.ask'))),
+      h('div', { class: 'act-q' }, h('span', { class: 'pic', html: pair(z.bad) }), h('span', { class: 'act-ask' }, ic('finger', { size: 26 }), h('b', {}, '?')), h('p', {}, h('small', {}, t('act.situ', { name: T0(z.name) })), h('br'), t('act.ask')), speakBtn(`${t('act.situ', { name: T0(z.name) })} ${t('act.ask')}`)),
       h('div', { class: 'act-opts' }, opts.map((a) => h('button', { class: 'act-opt', 'data-act': a, 'aria-label': t('act.' + a), onclick: (e) => pick(a, e.currentTarget) }, h('span', { class: 'pic', html: STOP[a]() }), isPic() ? null : h('small', {}, t('act.' + a))))));
     const done = { picked: false };
     function pick(a, btn) {
