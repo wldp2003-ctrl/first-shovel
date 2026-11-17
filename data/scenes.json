@@ -1,0 +1,1035 @@
+{
+ "version": "v13",
+ "updated": "2026-11-16",
+ "note": "장면 위 좌표는 그림 viewBox(0~400, 0~300) 기준. r 30 = 휴대전화 390px 폭에서 지름 약 54px(48px 이상). 그림을 실제 사진으로 바꾸면 image와 좌표만 다시 찍는다. 문장은 {t, src, status} — v11.1 근거 규칙 그대로",
+ "hazardTypes": {
+  "fall": "떨어짐",
+  "struck": "맞음",
+  "hit": "부딪힘",
+  "caught": "끼임",
+  "collapse": "무너짐",
+  "shock": "감전",
+  "fire": "불",
+  "suffocate": "질식",
+  "heat": "더위",
+  "trip": "넘어짐",
+  "pierce": "찔림"
+ },
+ "scenes": [
+  {
+   "id": "tbm",
+   "no": 0,
+   "title": "출근·TBM 장소",
+   "art": "sceneTbm",
+   "media": "scene-tbm",
+   "layered": true,
+   "hazards": [
+    {
+     "id": "0-1",
+     "type": "struck",
+     "area": {
+      "x": 130,
+      "y": 230,
+      "r": 30
+     },
+     "bad": "noHelmetBad",
+     "good": "noHelmetGood",
+     "act": "ppe",
+     "name": {
+      "t": "안전모를 안 쓴 사람",
+      "src": [
+       "rule-32",
+       "kb-p7"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "현장에선 늘 안전모를 써요",
+      "src": [
+       "rule-32",
+       "kb-p7"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "0-2",
+     "type": "struck",
+     "area": {
+      "x": 205,
+      "y": 222,
+      "r": 30
+     },
+     "bad": "strapBad",
+     "good": "strapGood",
+     "act": "ppe",
+     "name": {
+      "t": "턱끈이 풀린 안전모",
+      "src": [
+       "kb-p57"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "안전모는 턱끈까지 조여요",
+      "src": [
+       "kb-p57"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "0-3",
+     "type": "caught",
+     "area": {
+      "x": 280,
+      "y": 262,
+      "r": 30
+     },
+     "bad": "sneakerBad",
+     "good": "sneakerGood",
+     "act": "ppe",
+     "name": {
+      "t": "운동화를 신은 사람",
+      "src": [
+       "rule-32"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "현장에선 안전화를 신어요",
+      "src": [
+       "rule-32"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ],
+   "safe": [
+    {
+     "id": "0-s1",
+     "area": {
+      "x": 355,
+      "y": 232,
+      "r": 30
+     },
+     "name": {
+      "t": "보호구를 다 갖춘 반장",
+      "src": [
+       "rule-32",
+       "kb-p7"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ]
+  },
+  {
+   "id": "floor",
+   "no": 1,
+   "title": "골조 층 바닥",
+   "art": "sceneFloor",
+   "media": "scene-floor",
+   "hazards": [
+    {
+     "id": "1-1",
+     "type": "fall",
+     "area": {
+      "x": 119,
+      "y": 169,
+      "r": 30
+     },
+     "bad": "holeBad",
+     "good": "holeGood",
+     "name": {
+      "t": "덮개 없는 개구부",
+      "src": [
+       "rule-43"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "구멍은 덮고 표시해요",
+      "src": [
+       "rule-43"
+      ],
+      "status": "원문확인"
+     },
+     "act": "tell"
+    },
+    {
+     "id": "1-2",
+     "type": "fall",
+     "area": {
+      "x": 293,
+      "y": 173,
+      "r": 30
+     },
+     "bad": "edgeBad",
+     "good": "edgeGood",
+     "name": {
+      "t": "난간 없는 바닥 끝",
+      "src": [
+       "rule-43",
+       "kb-p55"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "바닥 끝에는 난간이 있어야 해요",
+      "src": [
+       "rule-43",
+       "kb-p55"
+      ],
+      "status": "원문확인"
+     },
+     "act": "tell"
+    },
+    {
+     "id": "1-3",
+     "type": "fall",
+     "area": {
+      "x": 349,
+      "y": 123,
+      "r": 30
+     },
+     "bad": "walkBad",
+     "good": "walkGood",
+     "name": {
+      "t": "안전대 없이 걷는 사람",
+      "src": [
+       "kb-p51"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "높은 바닥은 고리를 걸고 걸어요",
+      "src": [
+       "kb-p51",
+       "rule-44"
+      ],
+      "status": "원문확인"
+     },
+     "act": "ppe"
+    },
+    {
+     "id": "1-4",
+     "type": "trip",
+     "area": {
+      "x": 230,
+      "y": 176,
+      "r": 30
+     },
+     "bad": "pileBad",
+     "good": "pileGood",
+     "name": {
+      "t": "길을 막은 자재",
+      "src": [
+       "kb-p57b"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "자재는 치우고 통로를 비워요",
+      "src": [
+       "kb-p57b"
+      ],
+      "status": "원문확인"
+     },
+     "act": "tell"
+    },
+    {
+     "id": "1-5",
+     "type": "pierce",
+     "area": {
+      "x": 229,
+      "y": 104,
+      "r": 30
+     },
+     "bad": "rebarBad",
+     "good": "rebarGood",
+     "name": {
+      "t": "캡 없는 철근 끝",
+      "src": [
+       "kb-p51b"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "철근 끝에는 보호캡을 씌워요",
+      "src": [
+       "kb-p51b"
+      ],
+      "status": "원문확인"
+     },
+     "act": "tell"
+    }
+   ],
+   "safe": [
+    {
+     "id": "1-s1",
+     "area": {
+      "x": 168,
+      "y": 131,
+      "r": 30
+     },
+     "name": {
+      "t": "덮개와 표시가 된 개구부",
+      "src": [
+       "rule-43"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ]
+  },
+  {
+   "id": "scaffold",
+   "no": 2,
+   "title": "외부 비계·고소작업대",
+   "art": "sceneScaffold",
+   "media": "scene-scaffold",
+   "layered": false,
+   "hazards": [
+    {
+     "id": "2-1",
+     "type": "fall",
+     "area": {
+      "x": 100,
+      "y": 120,
+      "r": 30
+     },
+     "bad": "gapBad",
+     "good": "gapGood",
+     "act": "tell",
+     "name": {
+      "t": "발판 사이 빈 곳",
+      "src": [
+       "kb-p55b",
+       "rule-42"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "비계 발판은 빈틈없이 깔아요",
+      "src": [
+       "kb-p55b",
+       "rule-42"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "2-2",
+     "type": "fall",
+     "area": {
+      "x": 68,
+      "y": 32,
+      "r": 30
+     },
+     "bad": "scafHarnessBad",
+     "good": "scafHarnessGood",
+     "act": "ppe",
+     "name": {
+      "t": "안전대를 안 건 작업자",
+      "src": [
+       "kb-p55",
+       "rule-44"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "비계 위에선 안전대를 걸어요",
+      "src": [
+       "kb-p55",
+       "rule-44"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "2-3",
+     "type": "struck",
+     "area": {
+      "x": 118,
+      "y": 268,
+      "r": 30
+     },
+     "bad": "underBad",
+     "good": "underGood",
+     "act": "stop",
+     "name": {
+      "t": "비계 아래로 지나가는 사람",
+      "src": [
+       "kb-p55",
+       "rule-14"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "위에서 일하면 아래는 피해 가요",
+      "src": [
+       "kb-p55",
+       "rule-14"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "2-4",
+     "type": "fall",
+     "area": {
+      "x": 321,
+      "y": 150,
+      "r": 30
+     },
+     "bad": "awpBad",
+     "good": "awpGood",
+     "act": "ppe",
+     "name": {
+      "t": "작업대 위 안전대 안 건 사람",
+      "src": [
+       "kb-p67"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "고소작업대에서도 안전대를 걸어요",
+      "src": [
+       "kb-p67"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "2-5",
+     "type": "collapse",
+     "area": {
+      "x": 208,
+      "y": 238,
+      "r": 30
+     },
+     "bad": "wheelBad",
+     "good": "wheelGood",
+     "act": "tell",
+     "name": {
+      "t": "바퀴를 안 잠근 이동식 비계",
+      "src": [
+       "kb-p55c"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "이동식 비계는 바퀴를 고정해요",
+      "src": [
+       "kb-p55c"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ],
+   "safe": [
+    {
+     "id": "2-s1",
+     "area": {
+      "x": 140,
+      "y": 172,
+      "r": 30
+     },
+     "name": {
+      "t": "안전대를 걸고 일하는 사람",
+      "src": [
+       "kb-p55",
+       "rule-44"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ]
+  },
+  {
+   "id": "lifting",
+   "no": 3,
+   "title": "양중·크레인·리프트",
+   "art": "sceneLifting",
+   "media": "scene-lifting",
+   "layered": false,
+   "hazards": [
+    {
+     "id": "3-1",
+     "type": "struck",
+     "area": {
+      "x": 158,
+      "y": 258,
+      "r": 30
+     },
+     "bad": "underLoadBad",
+     "good": "underLoadGood",
+     "act": "stop",
+     "name": {
+      "t": "매단 짐 아래 사람",
+      "src": [
+       "kb-p53",
+       "kb-p56"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "매단 짐 아래로 다니지 않아요",
+      "src": [
+       "kb-p53",
+       "kb-p56",
+       "rule-14"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "3-2",
+     "type": "struck",
+     "area": {
+      "x": 218,
+      "y": 92,
+      "r": 30
+     },
+     "bad": "slingBad",
+     "good": "slingGood",
+     "act": "tell",
+     "name": {
+      "t": "한 줄로 매단 자재",
+      "src": [
+       "kb-p53b"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "자재는 두 줄로 수평으로 들어요",
+      "src": [
+       "kb-p53b"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "3-3",
+     "type": "fall",
+     "area": {
+      "x": 240,
+      "y": 196,
+      "r": 30
+     },
+     "bad": "liftDoorBad",
+     "good": "liftDoorGood",
+     "act": "tell",
+     "name": {
+      "t": "문이 열린 리프트",
+      "src": [
+       "kb-p12"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "리프트 문은 닫혀 있어야 해요",
+      "src": [
+       "kb-p12"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "3-4",
+     "type": "hit",
+     "area": {
+      "x": 92,
+      "y": 220,
+      "r": 30
+     },
+     "bad": "noSignalBad",
+     "good": "noSignalGood",
+     "act": "stop",
+     "name": {
+      "t": "신호수 없이 움직이는 지게차",
+      "src": [
+       "kb-p53",
+       "kb-p54"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "지게차 곁엔 신호수가 있어야 해요",
+      "src": [
+       "kb-p53",
+       "kb-p54"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ],
+   "safe": [
+    {
+     "id": "3-s1",
+     "area": {
+      "x": 30,
+      "y": 262,
+      "r": 30
+     },
+     "name": {
+      "t": "깃발로 신호하는 신호수",
+      "src": [
+       "kb-p54"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ]
+  },
+  {
+   "id": "equip",
+   "no": 4,
+   "title": "장비·토공사",
+   "art": "sceneEquip",
+   "media": "scene-equip",
+   "layered": false,
+   "hazards": [
+    {
+     "id": "4-1",
+     "type": "hit",
+     "area": {
+      "x": 48,
+      "y": 220,
+      "r": 30
+     },
+     "bad": "swingBad",
+     "good": "swingGood",
+     "act": "stop",
+     "name": {
+      "t": "굴착기 도는 범위 안 사람",
+      "src": [
+       "kb-p59",
+       "kb-p53"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "장비가 도는 곳엔 들어가지 않아요",
+      "src": [
+       "kb-p59",
+       "kb-p53"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "4-2",
+     "type": "caught",
+     "area": {
+      "x": 212,
+      "y": 148,
+      "r": 30
+     },
+     "bad": "betweenBad",
+     "good": "betweenGood",
+     "act": "stop",
+     "name": {
+      "t": "덤프와 굴착기 사이 사람",
+      "src": [
+       "kb-p53c"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "장비 사이에 서지 않아요",
+      "src": [
+       "kb-p53c"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "4-3",
+     "type": "hit",
+     "area": {
+      "x": 128,
+      "y": 268,
+      "r": 30
+     },
+     "bad": "rollerBad",
+     "good": "rollerGood",
+     "act": "stop",
+     "name": {
+      "t": "후진하는 롤러 뒤 사람",
+      "src": [
+       "kb-p67b",
+       "kb-p59"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "장비 뒤에선 유도자 신호를 따라요",
+      "src": [
+       "kb-p67b",
+       "kb-p59"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "4-4",
+     "type": "collapse",
+     "area": {
+      "x": 292,
+      "y": 252,
+      "r": 30
+     },
+     "bad": "trenchBad",
+     "good": "trenchGood",
+     "act": "stop",
+     "name": {
+      "t": "가파른 흙벽 아래 사람",
+      "src": [
+       "kb-p59"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "가파른 흙벽은 무너질 수 있어요",
+      "src": [
+       "kb-p59"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ],
+   "safe": [
+    {
+     "id": "4-s1",
+     "area": {
+      "x": 368,
+      "y": 172,
+      "r": 30
+     },
+     "name": {
+      "t": "안전한 곳에서 신호하는 유도자",
+      "src": [
+       "kb-p54"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ]
+  },
+  {
+   "id": "pour",
+   "no": 5,
+   "title": "타설·동바리",
+   "art": "scenePour",
+   "media": "scene-pour",
+   "layered": false,
+   "hazards": [
+    {
+     "id": "5-1",
+     "type": "collapse",
+     "area": {
+      "x": 114,
+      "y": 222,
+      "r": 30
+     },
+     "bad": "bentShoreBad",
+     "good": "bentShoreGood",
+     "act": "stop",
+     "name": {
+      "t": "휜 동바리 아래 사람",
+      "src": [
+       "rule-334",
+       "kb-p52"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "동바리가 휘면 바로 피하고 알려요",
+      "src": [
+       "rule-334",
+       "kb-p52",
+       "kb-p7"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "5-2",
+     "type": "collapse",
+     "area": {
+      "x": 170,
+      "y": 116,
+      "r": 30
+     },
+     "bad": "pileUpBad",
+     "good": "pileUpGood",
+     "act": "tell",
+     "name": {
+      "t": "한곳에 쌓인 콘크리트",
+      "src": [
+       "rule-334",
+       "kb-p52"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "콘크리트는 골고루 나눠 부어요",
+      "src": [
+       "rule-334",
+       "kb-p52"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "5-3",
+     "type": "collapse",
+     "area": {
+      "x": 200,
+      "y": 200,
+      "r": 30
+     },
+     "bad": "twoTierBad",
+     "good": "twoTierGood",
+     "act": "tell",
+     "name": {
+      "t": "이어 세운 동바리",
+      "src": [
+       "kb-p52b"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "동바리는 이어 세우지 않아요",
+      "src": [
+       "kb-p52b"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "5-4",
+     "type": "shock",
+     "area": {
+      "x": 362,
+      "y": 50,
+      "r": 30
+     },
+     "bad": "boomBad",
+     "good": "boomGood",
+     "act": "stop",
+     "name": {
+      "t": "전선에 가까운 펌프카 붐",
+      "src": [
+       "rule-335"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "붐은 전선에서 멀리 두어요",
+      "src": [
+       "rule-335"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ],
+   "safe": [
+    {
+     "id": "5-s1",
+     "area": {
+      "x": 22,
+      "y": 240,
+      "r": 30
+     },
+     "name": {
+      "t": "밖에서 지켜보는 감시자",
+      "src": [
+       "kb-p52",
+       "rule-334"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ]
+  },
+  {
+   "id": "hot",
+   "no": 6,
+   "title": "용접·밀폐공간·폭염",
+   "art": "sceneHot",
+   "media": "scene-hot",
+   "layered": false,
+   "hazards": [
+    {
+     "id": "6-1",
+     "type": "fire",
+     "area": {
+      "x": 96,
+      "y": 178,
+      "r": 30
+     },
+     "bad": "sparkBad",
+     "good": "sparkGood",
+     "act": "tell",
+     "name": {
+      "t": "불티 옆 페인트통",
+      "src": [
+       "rule-241",
+       "kb-p57"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "불티 옆 탈 것은 치워요",
+      "src": [
+       "rule-241",
+       "kb-p57"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "6-2",
+     "type": "suffocate",
+     "area": {
+      "x": 205,
+      "y": 228,
+      "r": 30
+     },
+     "bad": "manholeBad",
+     "good": "manholeGood",
+     "act": "stop",
+     "name": {
+      "t": "측정 없이 맨홀에 들어감",
+      "src": [
+       "rule-619-2",
+       "rule-620"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "맨홀은 재고 환기한 뒤 들어가요",
+      "src": [
+       "rule-619-2",
+       "rule-620",
+       "kb-p57"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "6-3",
+     "type": "shock",
+     "area": {
+      "x": 80,
+      "y": 266,
+      "r": 30
+     },
+     "bad": "cableBad",
+     "good": "cableGood",
+     "act": "tell",
+     "name": {
+      "t": "피복이 벗겨진 전선",
+      "src": [
+       "rule-313",
+       "kb-p7"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "벗겨진 전선은 만지지 말고 알려요",
+      "src": [
+       "rule-313",
+       "kb-p7"
+      ],
+      "status": "원문확인"
+     }
+    },
+    {
+     "id": "6-4",
+     "type": "heat",
+     "area": {
+      "x": 330,
+      "y": 270,
+      "r": 30
+     },
+     "bad": "sunBad",
+     "good": "sunGood",
+     "act": "stop",
+     "name": {
+      "t": "땡볕 아래 쉬는 사람",
+      "src": [
+       "rule-567",
+       "rule-560"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "더울 땐 그늘에서 쉬어요",
+      "src": [
+       "rule-567",
+       "rule-560"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ],
+   "safe": [
+    {
+     "id": "6-s1",
+     "area": {
+      "x": 312,
+      "y": 176,
+      "r": 30
+     },
+     "name": {
+      "t": "방화포와 소화기를 갖춘 용접",
+      "src": [
+       "rule-241"
+      ],
+      "status": "원문확인"
+     }
+    }
+   ]
+  }
+ ],
+ "stop": {
+  "line": {
+   "t": "위험하면 멈추고, 피하고, 알려요",
+   "src": [
+    "act-52-1",
+    "act-52-2",
+    "kb-p7"
+   ],
+   "status": "원문확인"
+  }
+ },
+ "acts": {
+  "stop": {
+   "t": "급박한 위험이면 멈추고 피해요",
+   "src": [
+    "act-52-1"
+   ],
+   "status": "원문확인"
+  },
+  "tell": {
+   "t": "망가진 안전시설은 바로 알려요",
+   "src": [
+    "kb-p7",
+    "act-52-2"
+   ],
+   "status": "원문확인"
+  },
+  "ppe": {
+   "t": "보호구를 제대로 갖춰요",
+   "src": [
+    "kb-p7",
+    "rule-32"
+   ],
+   "status": "원문확인"
+  }
+ }
+}

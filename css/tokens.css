@@ -1,0 +1,81 @@
+/* 첫 삽 v12.1 디자인 토큰 — 화면의 색·글꼴·간격은 이 값만 쓴다 (docs/디자인_가이드.md 0장)
+   안전 4색(초록·빨강·노랑·파랑)은 안전 표지 의미 전용. 주황은 브랜드색. */
+:root {
+  /* 브랜드 */
+  --brand: #FF7A1A;        /* 첫삽 주황: 주 버튼, 진행 중 길, 로고, 캐릭터 안전모·조끼 */
+  --brand-dark: #D9600A;   /* 주 버튼 아래 두께 */
+  /* 글자·선 */
+  --ink: #1F2A44;          /* 본문 글자, 모든 윤곽선 */
+  --ink-2: #5B6478;        /* 보조 글자 */
+  --line: #E3E6EC;         /* 카드 테두리, 구분선 */
+  /* 바탕 */
+  --bg: #FFFFFF;
+  --bg-soft: #F5F7FA;
+  /* 안전 표지 4색 — 의미 전용 */
+  --safe: #22A447;  --safe-dark: #17803A;           /* 정답·안전·완료만 */
+  --danger: #E5484D; --danger-dark: #B8323A;        /* 오답·위험·금지만 */
+  --caution: #FFC93C; --caution-dark: #D9A51C;      /* 주의만 (글자는 --ink) */
+  --mandatory: #2F7FE0; --mandatory-dark: #1E62B5;  /* 꼭 할 것(보호구 착용 등)만 */
+  --locked: #C9CED8;                                /* 잠긴 구역·비활성 */
+  /* 캐릭터 전용 (4-1, 4-3) */
+  --skin: #F2C39B;
+  --stripe-edge: #D7DCE3;  /* 조끼 반사띠 테두리 */
+  /* 연한 바탕 — 위 색을 흰색에 섞은 값 (피드백 바) */
+  --safe-soft: color-mix(in srgb, var(--safe) 12%, var(--bg));
+  --danger-soft: color-mix(in srgb, var(--danger) 12%, var(--bg));
+  --brand-soft: color-mix(in srgb, var(--brand) 12%, var(--bg));
+
+  /* 글꼴 (저장소 안 fonts/, 외부 CDN 없음) */
+  --font: Pretendard, "Pretendard Variable", "Noto Sans", "Noto Sans SC", sans-serif;
+  --fs-title: 28px; --fw-title: 800;   /* 제목 */
+  --fs-h: 22px; --fw-h: 800;           /* 화면 제목 */
+  --fs-body: 17px; --fw-body: 500;     /* 본문 */
+  --fs-btn: 17px; --fw-btn: 800;       /* 버튼 */
+  --fs-small: 14px; --fw-small: 500;   /* 작은 글 */
+  --lh: 1.45;
+  --btn-tracking: 0.2px;
+
+  /* 간격 (4의 배수), 화면 좌우 여백 16 */
+  --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s6: 24px; --s8: 32px;
+  --gutter: 16px;
+  /* 모서리 */
+  --r-sm: 12px; --r-md: 16px; --r-lg: 24px; --r-full: 999px;
+  /* 테두리 (그림자 대신) */
+  --bd: 2px solid var(--line);
+  --press: 4px;           /* 두툼한 버튼 아래 두께 */
+  --press-t: .08s;
+}
+
+/* ---------- 두툼한 버튼 ---------- */
+/* 주황 버튼 글자는 남색: 흰 글자는 대비 2.61:1이라 4.5:1 규칙에 못 미침 (가이드 0-3) */
+.t-btn { display: flex; align-items: center; justify-content: center; gap: var(--s2); width: 100%; min-height: 52px; padding: 0 var(--s4);
+  font: var(--fw-btn) var(--fs-btn)/1.2 var(--font); letter-spacing: var(--btn-tracking); border-radius: var(--r-md); cursor: pointer;
+  background: var(--brand); color: var(--ink); border: 0; border-bottom: var(--press) solid var(--brand-dark);
+  transition: transform var(--press-t), border-bottom-width var(--press-t), margin-top var(--press-t); }
+.t-btn:active, .t-btn.is-pressed { transform: translateY(var(--press)); border-bottom-width: 0; margin-bottom: var(--press); }
+.t-btn.sub { background: var(--bg); color: var(--ink); border: var(--bd); border-bottom: var(--press) solid var(--line); }
+/* 정답 뒤 / 오답 뒤: 흰 글자가 4.5:1을 넘는 진한 쪽을 바탕으로 */
+.t-btn.ok { background: var(--safe-dark); color: var(--bg); border-bottom-color: var(--ink); }
+.t-btn.no { background: var(--danger-dark); color: var(--bg); border-bottom-color: var(--ink); }
+.t-btn[disabled] { background: var(--locked); color: var(--ink); border-bottom-color: var(--locked); cursor: default; }
+
+/* ---------- 카드·선택지 ---------- */
+.t-card { background: var(--bg); border: var(--bd); border-radius: var(--r-md); }
+.t-choice { background: var(--bg); border: var(--bd); border-bottom: var(--press) solid var(--line); border-radius: var(--r-md); cursor: pointer; }
+.t-choice.sel { border-color: var(--brand); border-bottom-color: var(--brand-dark); } /* 고름 = 브랜드색 (정답·오답 색과 구분) */
+.t-choice.right { border-color: var(--safe); border-bottom-color: var(--safe-dark); }
+.t-choice.wrong { border-color: var(--danger); border-bottom-color: var(--danger-dark); }
+
+.t-num { font-variant-numeric: tabular-nums; }
+
+/* ---------- 캐릭터 움직임 (끌 수 있게) ---------- */
+.mascot .m-eyes { transform-box: fill-box; transform-origin: center; animation: m-blink 5s infinite; }
+@keyframes m-blink { 0%, 96%, 100% { transform: scaleY(1); } 97.2% { transform: scaleY(.1); } }
+.mascot.m-hop { animation: m-hop .3s ease-out; }
+@keyframes m-hop { 50% { transform: translateY(-8px); } }
+.mascot.m-tilt { animation: m-tilt .3s ease-out both; transform-origin: 50% 90%; }
+@keyframes m-tilt { to { transform: rotate(-6deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .mascot .m-eyes, .mascot.m-hop, .mascot.m-tilt { animation: none !important; }
+  .t-btn { transition: none; }
+}

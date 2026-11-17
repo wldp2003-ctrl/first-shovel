@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>첫삽이 캐릭터 시트 (v12.1 시안)</title>
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+  body { margin: 0; background: var(--bg); color: var(--ink); font: var(--fw-body) var(--fs-body)/var(--lh) var(--font); }
+  main { max-width: 1080px; margin: 0 auto; padding: var(--s8) var(--gutter); }
+  h1 { font-size: var(--fs-title); font-weight: var(--fw-title); margin: 0 0 var(--s1); }
+  h2 { font-size: var(--fs-h); font-weight: var(--fw-h); margin: var(--s8) 0 var(--s3); }
+  p.sub { color: var(--ink-2); margin: 0; font-size: var(--fs-small); }
+  .grid { display: grid; gap: var(--s3); }
+  .g7 { grid-template-columns: repeat(7, 1fr); } .g5 { grid-template-columns: repeat(5, 1fr); }
+  .cell { border: var(--bd); border-radius: var(--r-md); padding: var(--s3) var(--s2); text-align: center; background: var(--bg); }
+  .cell b { display: block; font-weight: 800; font-size: 15px; } .cell small { display: block; color: var(--ink-2); font-size: 13px; }
+  .hero { display: grid; grid-template-columns: 260px 1fr; gap: var(--s6); align-items: center; border: var(--bd); border-radius: var(--r-lg); padding: var(--s6); background: var(--bg-soft); }
+  .hero ul { margin: 0; padding-left: 18px; color: var(--ink); font-size: 15px; }
+  .sizes { display: flex; align-items: flex-end; gap: var(--s8); flex-wrap: wrap; }
+  .sizes .cell { padding: var(--s4); }
+  .row { display: flex; gap: var(--s4); align-items: flex-end; flex-wrap: wrap; }
+  .sw { display: inline-flex; align-items: center; gap: 6px; margin-right: var(--s4); font-size: 14px; }
+  @media (max-width: 600px) { .hero { grid-template-columns: 1fr; justify-items: center; } .g7 { grid-template-columns: repeat(4, 1fr); } .g5 { grid-template-columns: repeat(2, 1fr); } }
+  .sw i { width: 18px; height: 18px; border-radius: 6px; border: 2px solid var(--ink); display: inline-block; }
+</style>
+</head>
+<body>
+<main>
+  <h1>첫삽이 — 캐릭터 시트</h1>
+  <p class="sub">첫 삽 v12.1 시안 · 현장에 막 온 새내기 근로자, 함께 배우는 동료 · viewBox 200×240, 2.3등신 · 바깥 윤곽선 6px / 안쪽 선 4px (200×240 기준) · 색은 css/tokens.css 변수만</p>
+
+  <h2>정면 기본</h2>
+  <section class="hero">
+    <div id="hero"></div>
+    <div>
+      <ul>
+        <li>얼굴: 아래가 살짝 넓은 둥근 사각형 (너비 96 : 높이 88 = 1 : 0.92), 피부 한 톤 <code>--skin</code></li>
+        <li>안전모: 브랜드 주황, 앞 챙 + 가운데 홈 1줄 + 흰 삽 마크(로고와 같은 모양), 얼굴 위 약 40%를 덮음</li>
+        <li>턱끈: 가는 선 — 교육 내용 "턱끈까지 맨다"와 맞춤</li>
+        <li>눈: 세로 타원 2개 + 흰 반사점, 눈 사이 = 눈 너비 × 1.6 · 볼: 주황 40% · 코·귀 없음</li>
+        <li>몸: 주황 조끼 + 흰 반사띠 2줄(회색 테두리), 장갑 낀 둥근 손, 앞코 둥근 안전화, 작은 삽</li>
+        <li>국적·나이·성별이 드러나지 않게: 머리카락은 안전모에 가려 안 보임</li>
+      </ul>
+      <p class="sub" style="margin-top:12px">
+        <span class="sw"><i style="background:var(--brand)"></i>--brand</span>
+        <span class="sw"><i style="background:var(--ink)"></i>--ink</span>
+        <span class="sw"><i style="background:var(--skin)"></i>--skin</span>
+        <span class="sw"><i style="background:var(--ink-2)"></i>--ink-2</span>
+        <span class="sw"><i style="background:var(--bg-soft)"></i>--bg-soft</span>
+        <span class="sw"><i style="background:var(--locked)"></i>--locked</span>
+      </p>
+    </div>
+  </section>
+
+  <h2>표정 7가지</h2>
+  <div class="grid g7" id="faces"></div>
+
+  <h2>자세 5가지</h2>
+  <div class="grid g5" id="poses"></div>
+
+  <h2>크기 3종 — 48px는 볼·반사띠·장갑 홈선을 뺀 단순 버전</h2>
+  <div class="sizes" id="sizes"></div>
+  <div class="row" id="small7" style="margin-top:16px"></div>
+
+  <h2>흑백 윤곽만</h2>
+  <div class="row" id="mono"></div>
+</main>
+<script type="module">
+  import { renderMascot, POSES, FACES } from '../js/learn/mascot.js';
+  const FACE_KO = { basic: ['기본', '안내, 첫 화면'], joy: ['기쁨', '정답, 구역 완료'], surprise: ['놀람', '위험 발견 순간'], worry: ['걱정', '오답'], think: ['생각', '문제 시작'], firm: ['단호', '"멈춰요"'], proud: ['자랑', '배지·확인서'] };
+  const POSE_KO = { stand: ['기본 서기', '안내'], wave: ['손 흔들기', '인사·오프닝'], thumb: ['엄지척', '정답'], stop: ['손바닥 내밀기', '멈춰요'], proud: ['삽 들고 뿌듯', '완료·오프닝'] };
+  const POSE_FACE = { stand: 'basic', wave: 'joy', thumb: 'joy', stop: 'firm', proud: 'proud' };
+  document.getElementById('hero').innerHTML = renderMascot({ pose: 'stand', face: 'basic', size: 240 });
+  document.getElementById('faces').innerHTML = FACES.map((f) => `<div class="cell">${renderMascot({ pose: 'stand', face: f, size: 120 })}<b>${FACE_KO[f][0]}</b><small>${FACE_KO[f][1]}</small></div>`).join('');
+  document.getElementById('poses').innerHTML = POSES.map((p) => `<div class="cell">${renderMascot({ pose: p, face: POSE_FACE[p], size: 160 })}<b>${POSE_KO[p][0]}</b><small>${POSE_KO[p][1]}</small></div>`).join('');
+  document.getElementById('sizes').innerHTML = [48, 96, 160].map((s) => `<div class="cell">${renderMascot({ pose: 'wave', face: 'joy', size: s })}<small>${s}px</small></div>`).join('');
+  document.getElementById('small7').innerHTML = FACES.map((f) => `<div class="cell">${renderMascot({ pose: 'stand', face: f, size: 48 })}<small>${FACE_KO[f][0]} 48</small></div>`).join('');
+  document.getElementById('mono').innerHTML = POSES.map((p) => `<div class="cell">${renderMascot({ pose: p, face: POSE_FACE[p], size: 120, mono: true })}<small>${POSE_KO[p][0]}</small></div>`).join('');
+</script>
+</body>
+</html>

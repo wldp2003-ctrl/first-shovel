@@ -1,0 +1,252 @@
+{
+ "updated": "2026-11-16",
+ "note": "앱에 쓰는 그림·사진·글꼴의 출처와 이용 조건. 실제 사진을 넣을 때는 촬영 동의·얼굴·회사명 가림 여부를 꼭 적는다(people 칸). 확인: node tools/smoke-v13.mjs 7번",
+ "media": [
+  {
+   "id": "scene-tbm",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js sceneTbm()",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "구성 참고(그림 복사 아님): 기본서 7쪽 근로자 준수사항, 57쪽 턱끈. SIF 포스터·서울시 그림책은 공공누리 4유형(변경 금지)이라 그림을 쓰지 않음"
+  },
+  {
+   "id": "pairs-tbm",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js PAIR2",
+   "ids": [
+    "noHelmetBad",
+    "noHelmetGood",
+    "strapBad",
+    "strapGood",
+    "sneakerBad",
+    "sneakerGood"
+   ],
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "위험한 모습 ↔ 안전한 모습 비교 방식: 서울시 외국인 건설근로자 무번역 그림책(방식만 참고)"
+  },
+  {
+   "id": "scene-floor",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art.js sceneFloor()",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "구성 참고(그림 복사 아님): 기본서 51쪽 철근콘크리트(떨어짐), 108쪽 SIF 높은 장소. SIF 포스터·서울시 그림책은 공공누리 4유형(변경 금지)이라 그림을 쓰지 않음"
+  },
+  {
+   "id": "pairs-floor",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art.js PAIR",
+   "ids": [
+    "holeBad",
+    "holeGood",
+    "edgeBad",
+    "edgeGood",
+    "walkBad",
+    "walkGood",
+    "pileBad",
+    "pileGood",
+    "rebarBad",
+    "rebarGood"
+   ],
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "위험한 모습 ↔ 안전한 모습 비교 방식: 서울시 외국인 건설근로자 무번역 그림책(방식만 참고)"
+  },
+  {
+   "id": "scene-scaffold",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js sceneScaffold()",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "구성 참고(그림 복사 아님): 기본서 55쪽 비계, 67쪽 고소작업대 사례, SIF 고소작업대. SIF 포스터·서울시 그림책은 공공누리 4유형(변경 금지)이라 그림을 쓰지 않음"
+  },
+  {
+   "id": "pairs-scaffold",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js PAIR2",
+   "ids": [
+    "gapBad",
+    "gapGood",
+    "scafHarnessBad",
+    "scafHarnessGood",
+    "underBad",
+    "underGood",
+    "awpBad",
+    "awpGood",
+    "wheelBad",
+    "wheelGood"
+   ],
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "위험한 모습 ↔ 안전한 모습 비교 방식: 서울시 외국인 건설근로자 무번역 그림책(방식만 참고)"
+  },
+  {
+   "id": "scene-lifting",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js sceneLifting()",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "구성 참고(그림 복사 아님): 기본서 53쪽 자재 양중, 12쪽 리프트 방호, SIF 리프트. SIF 포스터·서울시 그림책은 공공누리 4유형(변경 금지)이라 그림을 쓰지 않음"
+  },
+  {
+   "id": "pairs-lifting",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js PAIR2",
+   "ids": [
+    "underLoadBad",
+    "underLoadGood",
+    "slingBad",
+    "slingGood",
+    "liftDoorBad",
+    "liftDoorGood",
+    "noSignalBad",
+    "noSignalGood"
+   ],
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "위험한 모습 ↔ 안전한 모습 비교 방식: 서울시 외국인 건설근로자 무번역 그림책(방식만 참고)"
+  },
+  {
+   "id": "scene-equip",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js sceneEquip()",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "구성 참고(그림 복사 아님): 기본서 53·59쪽 건설기계·토공사, 67쪽 롤러 사례, SIF 건설기계. SIF 포스터·서울시 그림책은 공공누리 4유형(변경 금지)이라 그림을 쓰지 않음"
+  },
+  {
+   "id": "pairs-equip",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js PAIR2",
+   "ids": [
+    "swingBad",
+    "swingGood",
+    "betweenBad",
+    "betweenGood",
+    "rollerBad",
+    "rollerGood",
+    "trenchBad",
+    "trenchGood"
+   ],
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "위험한 모습 ↔ 안전한 모습 비교 방식: 서울시 외국인 건설근로자 무번역 그림책(방식만 참고)"
+  },
+  {
+   "id": "scene-pour",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js scenePour()",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "구성 참고(그림 복사 아님): 기본서 52쪽 거푸집동바리, 안전보건규칙 제334·335조. SIF 포스터·서울시 그림책은 공공누리 4유형(변경 금지)이라 그림을 쓰지 않음"
+  },
+  {
+   "id": "pairs-pour",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js PAIR2",
+   "ids": [
+    "bentShoreBad",
+    "bentShoreGood",
+    "pileUpBad",
+    "pileUpGood",
+    "twoTierBad",
+    "twoTierGood",
+    "boomBad",
+    "boomGood"
+   ],
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "위험한 모습 ↔ 안전한 모습 비교 방식: 서울시 외국인 건설근로자 무번역 그림책(방식만 참고)"
+  },
+  {
+   "id": "scene-hot",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js sceneHot()",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "구성 참고(그림 복사 아님): 기본서 57쪽 화재·질식, 안전보건규칙 제241·619조의2·567조. SIF 포스터·서울시 그림책은 공공누리 4유형(변경 금지)이라 그림을 쓰지 않음"
+  },
+  {
+   "id": "pairs-hot",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js PAIR2",
+   "ids": [
+    "sparkBad",
+    "sparkGood",
+    "manholeBad",
+    "manholeGood",
+    "cableBad",
+    "cableGood",
+    "sunBad",
+    "sunGood"
+   ],
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "위험한 모습 ↔ 안전한 모습 비교 방식: 서울시 외국인 건설근로자 무번역 그림책(방식만 참고)"
+  },
+  {
+   "id": "stop-tell",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/scene-art2.js STOP, PAIR2.keepBad/keepGood",
+   "ids": [
+    "stop",
+    "away",
+    "tell",
+    "keepBad",
+    "keepGood"
+   ],
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "산업안전보건법 제52조(작업중지)·기본서 7쪽 — 그림은 자체 제작"
+  },
+  {
+   "id": "art-v11",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/art.js (레슨·사람 그림)",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)"
+  },
+  {
+   "id": "brand-v12",
+   "kind": "직접 그림 (SVG·PNG)",
+   "file": "js/learn/brand.js, js/learn/icons.js, icons/*.png",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "reference": "위험 종류 아이콘은 안전보건표지 경고(노랑 삼각형) 모양 규칙만 따름. 공단 픽토그램 파일은 쓰지 않음(이용 조건 미확인)"
+  },
+  {
+   "id": "mascot-v12.1",
+   "kind": "직접 그림 (SVG)",
+   "file": "js/learn/mascot.js, assets/character/*.svg",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "그림 인물(실존 인물 아님)",
+   "reference": "원작 캐릭터 첫삽이 — 유명 캐릭터를 닮지 않게(디자인 가이드 0-7)"
+  },
+  {
+   "id": "fonts",
+   "kind": "글꼴",
+   "file": "fonts/",
+   "author": "Pretendard(Kil Hyung-jin), Noto Sans(Google)",
+   "license": "SIL OFL 1.1 (fonts/OFL-*.txt)"
+  }
+ ]
+}

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>첫 삽 v12.1 화면 시안</title>
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: var(--fw-body) var(--fs-body)/var(--lh) var(--font); }
+  .scr { position: relative; width: 100%; max-width: 430px; min-height: 100vh; margin: 0 auto; display: flex; flex-direction: column; }
+  .ic { width: 24px; height: 24px; flex: none; }
+  .ic * { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+  .ic .f { fill: currentColor; stroke: none; }
+  /* 상단 바 */
+  .bar { display: flex; align-items: center; justify-content: space-between; padding: var(--s3) var(--gutter); border-bottom: var(--bd); }
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: var(--fs-body); }
+  .chip.streak { color: var(--brand-dark); } .chip.badge { color: var(--ink); }
+  .chip .t-num { color: var(--ink); }
+  /* 길 */
+  .path { position: relative; flex: 1; padding: var(--s6) var(--gutter) 120px; }
+  .unit { border-radius: var(--r-md); background: var(--brand); border-bottom: var(--press) solid var(--brand-dark); padding: var(--s4); color: var(--ink); display: flex; align-items: center; gap: var(--s3); }
+  .unit b { display: block; font-size: var(--fs-h); font-weight: 800; line-height: 1.2; }
+  .unit small { font-size: var(--fs-small); font-weight: 700; }
+  .unit .say { margin-left: auto; width: 44px; height: 44px; border-radius: var(--r-sm); border: 2px solid var(--ink); display: grid; place-items: center; background: var(--brand); }
+  .road { position: relative; height: 640px; margin-top: var(--s6); }
+  .road svg.bgline { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .node { position: absolute; width: 72px; height: 72px; border-radius: var(--r-full); display: grid; place-items: center; transform: translateX(-50%); border: 0; cursor: pointer; }
+  .node.done { background: var(--safe); border-bottom: var(--press) solid var(--safe-dark); color: var(--bg); }
+  .node.cur { background: var(--brand); border-bottom: var(--press) solid var(--brand-dark); color: var(--ink); box-shadow: 0 0 0 6px var(--brand-soft); }
+  .node.lock { background: var(--locked); border-bottom: var(--press) solid var(--line); color: var(--ink-2); }
+  .node .ic { width: 32px; height: 32px; }
+  .zl { position: absolute; transform: translateX(-50%); margin-top: 80px; font-size: var(--fs-small); font-weight: 800; color: var(--ink-2); white-space: nowrap; }
+  .start-tip { position: absolute; transform: translate(-50%, -100%); background: var(--bg); border: var(--bd); border-radius: var(--r-sm); padding: 6px 12px; font-weight: 800; font-size: 15px; color: var(--ink); border-color: var(--brand); white-space: nowrap; }
+  .start-tip::after { content: ''; position: absolute; left: 50%; bottom: -8px; width: 12px; height: 12px; background: var(--bg); border-right: var(--bd); border-bottom: var(--bd); transform: translateX(-50%) rotate(45deg); }
+  .mascot-at { position: absolute; }
+  .zone-bg { position: absolute; width: 150px; opacity: .14; filter: grayscale(1); line-height: 0; pointer-events: none; }
+  .zone-bg svg { width: 100%; height: auto; }
+  .tabs { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 430px; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--bg); border-top: var(--bd); padding: var(--s2) 0 var(--s3); }
+  .tabs a { display: grid; justify-items: center; gap: 2px; font-size: 12px; font-weight: 700; color: var(--ink-2); text-decoration: none; }
+  .tabs a.on { color: var(--ink); }
+  .tabs a.on .tb { border: 2px solid var(--brand); background: var(--brand-soft); }
+  .tabs .tb { width: 48px; height: 36px; border-radius: var(--r-sm); display: grid; place-items: center; border: 2px solid transparent; }
+  /* 문제 화면 */
+  .qtop { display: flex; align-items: center; gap: var(--s3); padding: var(--s4) var(--gutter); }
+  .x { width: 44px; height: 44px; display: grid; place-items: center; border: 0; background: none; color: var(--ink-2); }
+  .prog { flex: 1; height: 16px; border-radius: var(--r-full); background: var(--line); overflow: hidden; }
+  .prog i { display: block; height: 100%; width: 40%; background: var(--brand); border-radius: var(--r-full); }
+  .prog i::after { content: ''; display: block; height: 5px; margin: 3px 8px 0; border-radius: 99px; background: var(--bg); opacity: .35; }
+  .ask { display: flex; align-items: center; gap: var(--s3); padding: 0 var(--gutter); }
+  .ask h1 { flex: 1; margin: 0; font-size: var(--fs-h); font-weight: 800; line-height: 1.3; }
+  .ask .finger { width: 48px; height: 48px; border-radius: var(--r-sm); border: var(--bd); display: grid; place-items: center; color: var(--brand-dark); }
+  .spk { width: 48px; height: 48px; border-radius: var(--r-sm); background: var(--bg); border: var(--bd); border-bottom: var(--press) solid var(--line); color: var(--ink); display: grid; place-items: center; }
+  .spk:active, .node:active, .unit .say:active { transform: translateY(var(--press)); border-bottom-width: 0; }
+  .slots { display: flex; gap: var(--s2); padding: var(--s3) var(--gutter) 0; }
+  .slot { width: 40px; height: 36px; border-radius: var(--r-sm); border: 2px dashed var(--locked); display: grid; place-items: center; }
+  .slot.on { border: 2px solid var(--caution-dark); background: var(--caution); }
+  .scene { margin: var(--s3) var(--gutter) 0; border: var(--bd); border-radius: var(--r-lg); overflow: hidden; line-height: 0; position: relative; }
+  .scene svg { width: 100%; height: auto; }
+  .ring { position: absolute; border-radius: var(--r-full); transform: translate(-50%, -50%); }
+  .ring.hit { border: 4px solid var(--safe); box-shadow: 0 0 0 3px var(--bg); }
+  .ring.tap { border: 4px solid var(--danger); border-radius: 10px; box-shadow: 0 0 0 3px var(--bg); }
+  .ring.tap::before, .ring.tap::after { content: ''; position: absolute; left: 50%; top: 50%; width: 22px; height: 4px; background: var(--danger); border-radius: 2px; }
+  .ring.tap::before { transform: translate(-50%, -50%) rotate(45deg); } .ring.tap::after { transform: translate(-50%, -50%) rotate(-45deg); }
+  .sheet { position: fixed; left: 50%; bottom: 0; transform: translateX(-50%); width: 100%; max-width: 430px; padding: var(--s4) var(--gutter) var(--s6); border-top: 2px solid; animation: up .25s ease-out both; }
+  @keyframes up { from { transform: translate(-50%, 100%); } }
+  .sheet.no { background: var(--danger-soft); border-color: var(--danger); }
+  .sheet.ok { background: var(--safe-soft); border-color: var(--safe); }
+  .sheet .hd { display: flex; align-items: center; gap: var(--s3); }
+  .sheet .hd b { font-size: var(--fs-h); font-weight: 800; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+  .sheet .hd b .xm { width: 26px; height: 26px; border-radius: 6px; background: var(--danger-dark); color: var(--bg); display: grid; place-items: center; }
+  .sheet .hd b .xm .ic { width: 16px; height: 16px; }
+  .sheet .hd small { display: block; font-size: var(--fs-small); color: var(--ink); font-weight: 600; }
+  .why { display: flex; align-items: center; gap: var(--s2); margin: var(--s3) 0 var(--s4); }
+  .why figure { position: relative; flex: 1; margin: 0; border-radius: var(--r-sm); overflow: hidden; line-height: 0; border: 2px solid; background: var(--bg); }
+  .why figure.bad { border-color: var(--danger); } .why figure.good { border-color: var(--safe); }
+  .why figure svg { width: 100%; height: auto; }
+  .why .mk { position: absolute; top: 4px; right: 4px; width: 26px; height: 26px; display: grid; place-items: center; color: var(--bg); }
+  .why .bad .mk { background: var(--danger-dark); border-radius: 6px; } .why .good .mk { background: var(--safe-dark); border-radius: 99px; }
+  .why .mk .ic { width: 16px; height: 16px; }
+  /* 완료 화면 */
+  .done { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; padding: var(--s8) var(--gutter) var(--s6); }
+  .done h1 { font-size: var(--fs-title); font-weight: 800; margin: var(--s4) 0 var(--s1); }
+  .done p { margin: 0; color: var(--ink-2); }
+  .medal { position: relative; width: 112px; height: 112px; border-radius: var(--r-full); background: var(--brand); border: 6px solid var(--ink); display: grid; place-items: center; margin-top: var(--s3); animation: pop .5s .2s cubic-bezier(.3,1.6,.5,1) both; color: var(--ink); }
+  .medal .ic { width: 52px; height: 52px; }
+  @keyframes pop { from { transform: scale(.3); opacity: 0; } }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); width: 100%; margin: var(--s6) 0; }
+  .stat { border: var(--bd); border-radius: var(--r-md); overflow: hidden; }
+  .stat .hd { font-size: 13px; font-weight: 800; padding: 4px; color: var(--bg); }
+  .stat .bd { padding: var(--s3) var(--s1); display: flex; align-items: center; justify-content: center; gap: 4px; font-weight: 800; font-size: 20px; }
+  .stat.s1 { border-color: var(--brand); } .stat.s1 .hd { background: var(--brand); color: var(--ink); }
+  .stat.s2 { border-color: var(--safe-dark); } .stat.s2 .hd { background: var(--safe-dark); }
+  .stat.s3 { border-color: var(--ink); } .stat.s3 .hd { background: var(--ink); }
+  .confetti { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+  .confetti i { position: absolute; top: -10px; width: 8px; height: 12px; border-radius: 2px; background: var(--brand); opacity: .55; animation: fall 1s ease-out forwards; }
+  @keyframes fall { to { transform: translateY(260px) rotate(200deg); opacity: 0; } }
+  .bottom { position: sticky; bottom: 0; width: 100%; padding: var(--s4) 0 var(--s6); background: var(--bg); }
+  @media (prefers-reduced-motion: reduce) { .sheet, .medal, .confetti i { animation: none !important; } .confetti { display: none; } }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+  import { renderMascot, shovelShape } from '../js/learn/mascot.js';
+  import { sceneTbm, sceneScaffold, sceneLifting, sceneEquip, scenePour, sceneHot, PAIR2 } from '../js/learn/scene-art2.js';
+  import { sceneFloor } from '../js/learn/scene-art.js';
+  // 아이콘: 24 격자, 선 2.5, 둥근 끝 (이모지 없음)
+  const I = {
+    shovel: `<svg class="ic" viewBox="0 0 24 24">${shovelShape(12, 0.5, 23, 'currentColor')}</svg>`,
+    badge: '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/></svg>',
+    lock: '<svg class="ic" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>',
+    check: '<svg class="ic" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    cross: '<svg class="ic" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>',
+    speaker: '<svg class="ic" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/></svg>',
+    finger: '<svg class="ic" viewBox="0 0 24 24"><path d="M9 11V4.5a1.5 1.5 0 0 1 3 0V10"/><path d="M12 9.5a1.5 1.5 0 0 1 3 0V11"/><path d="M15 10.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-1a5 5 0 0 1-4-2l-2.6-3.6a1.5 1.5 0 0 1 2.3-1.9L9 15"/></svg>',
+    star: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>',
+    map: '<svg class="ic" viewBox="0 0 24 24"><path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/></svg>',
+    review: '<svg class="ic" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 2.5 5.8"/><path d="M4 19v-5h5"/></svg>',
+    record: '<svg class="ic" viewBox="0 0 24 24"><path d="M5 20V11M12 20V5M19 20v-7"/></svg>',
+    crane: '<svg class="ic" viewBox="0 0 24 24"><path d="M6 21V4h13M6 8h13M16 4v5"/><path d="M16 9v3"/><rect x="13.5" y="12" width="5" height="4" rx="1"/><path d="M3 21h8"/></svg>',
+    stop: '<svg class="ic" viewBox="0 0 24 24"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V11V5a1.5 1.5 0 0 1 3 0v6V6.5a1.5 1.5 0 0 1 3 0V15a6 6 0 0 1-6 6h-.5A5.5 5.5 0 0 1 6 17.2L4.6 13.8a1.5 1.5 0 0 1 2.6-1.5L8 13.5"/></svg>',
+  };
+  const screen = new URLSearchParams(location.search).get('screen') || 'path';
+  const app = document.getElementById('app');
+  const tabs = (on) => `<nav class="tabs">${[['map', '현장 지도'], ['review', '다시 보기'], ['record', '내 기록'], ['crane', '현장 연습']].map(([k, n], i) => `<a class="${i === on ? 'on' : ''}" href="#"><span class="tb">${I[k]}</span>${n}</a>`).join('')}</nav>`;
+
+  if (screen === 'path') {
+    // 지그재그 길: 구역 7곳 + 지붕(멈추고 알려요). 위 = 지금 할 곳부터
+    const zones = [['0', '출근·TBM', 'done', sceneTbm], ['1', '골조 층 바닥', 'done', sceneFloor], ['2', '비계·고소작업대', 'cur', sceneScaffold], ['3', '양중·크레인', 'lock', sceneLifting], ['4', '장비·토공', 'lock', sceneEquip], ['5', '타설·동바리', 'lock', scenePour]];
+    const xs = [50, 72, 50, 28, 50, 72];
+    let nodes = '', bg = '', path = 'M';
+    zones.forEach(([no, nm, st, art], i) => {
+      const x = xs[i], y = 40 + i * 100;
+      path += `${x * 3.58} ${y + 36} ${i < zones.length - 1 ? 'L' : ''}`;
+      nodes += `<button class="node ${st}" style="left:${x}%;top:${y}px" aria-label="${no}. ${nm}">${st === 'done' ? I.check : st === 'cur' ? I.star : I.lock}</button><span class="zl" style="left:${x}%;top:${y}px">${no}. ${nm}</span>`;
+      if (st === 'cur') nodes += `<span class="start-tip" style="left:${x}%;top:${y - 10}px">시작!</span><span class="mascot-at" style="left:${x - 34}%;top:${y - 18}px">${renderMascot({ pose: 'wave', face: 'joy', size: 72 })}</span>`;
+      bg += `<span class="zone-bg" style="${x > 50 ? 'left:0' : 'right:0'};top:${y - 6}px">${art()}</span>`;
+    });
+    app.innerHTML = `<div class="scr">
+      <header class="bar"><span class="chip streak">${I.shovel}<span class="t-num">3</span></span><span class="chip badge">${I.badge}<span class="t-num">2</span></span></header>
+      <section class="path">
+        <div class="unit"><div><small>현장 2 · 높은 곳</small><b>비계·고소작업대</b></div><button class="say" aria-label="듣기">${I.speaker}</button></div>
+        <div class="road">${bg}<svg class="bgline" viewBox="0 0 358 640" preserveAspectRatio="none"><path d="${path}" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 18"/></svg>${nodes}</div>
+      </section>${tabs(0)}</div>`;
+  }
+
+  if (screen === 'quiz') {
+    const a = (x, y, r, cls) => `<span class="ring ${cls}" style="left:${x / 4}%;top:${y / 3}%;width:${r * 2 / 4}%;aspect-ratio:1"></span>`;
+    app.innerHTML = `<div class="scr">
+      <div class="qtop"><button class="x" aria-label="닫기">${I.cross}</button><div class="prog" role="progressbar" aria-valuenow="2" aria-valuemax="5"><i></i></div></div>
+      <div class="ask"><span class="finger">${I.finger}</span><h1>위험한 곳을 누르세요</h1><button class="spk" aria-label="듣기">${I.speaker}</button></div>
+      <div class="slots"><span class="slot on">${I.check}</span><span class="slot"></span><span class="slot"></span></div>
+      <div class="scene">${sceneTbm()}${a(130, 230, 30, 'hit')}${a(338, 150, 22, 'tap')}</div>
+      <div class="sheet no" role="status">
+        <div class="hd"><span class="m-${'worry'}">${renderMascot({ pose: 'stand', face: 'worry', size: 64, cls: 'm-tilt' })}</span><div><b><span class="xm">${I.cross}</span>거긴 안전해요</b><small>반장은 보호구를 다 갖췄어요. 다른 사람을 보세요.</small></div></div>
+        <div class="why"><figure class="good">${PAIR2.noHelmetGood()}<span class="mk">${I.check}</span></figure><figure class="bad">${PAIR2.sneakerBad()}<span class="mk">${I.cross}</span></figure></div>
+        <button class="t-btn no">알겠어요</button>
+      </div></div>`;
+  }
+
+  if (screen === 'done') {
+    app.innerHTML = `<div class="scr">
+      <div class="confetti">${Array.from({ length: 14 }, (_, i) => `<i style="left:${6 + i * 6.6}%;animation-delay:${(i % 5) * 0.08}s;${i % 3 === 0 ? 'background:var(--ink)' : ''}"></i>`).join('')}</div>
+      <section class="done">
+        ${renderMascot({ pose: 'proud', face: 'proud', size: 160, cls: 'm-hop' })}
+        <span class="medal" aria-label="배지: 출근·TBM">${I.shovel}</span>
+        <h1>현장 0 완료!</h1><p>출근·TBM 장소의 위험 3곳을 모두 찾았어요</p>
+        <div class="stats">
+          <div class="stat s1"><div class="hd">별</div><div class="bd t-num">3</div></div>
+          <div class="stat s2"><div class="hd">찾은 위험</div><div class="bd t-num">3/3</div></div>
+          <div class="stat s3"><div class="hd">걸린 시간</div><div class="bd t-num">2:10</div></div>
+        </div>
+        <div class="bottom"><button class="t-btn">계속</button></div>
+      </section></div>`;
+  }
+</script>
+</body>
+</html>
