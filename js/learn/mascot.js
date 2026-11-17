@@ -106,9 +106,11 @@ function body(pose, o, id) {
   return g;
 }
 
-export function renderMascot({ pose = 'stand', face: fc = 'basic', size = 96, mono = false, simple, cls = '', label } = {}) {
-  const o = { mono, simple: simple ?? size <= 56 };
+export function renderMascot({ pose = 'stand', face: fc = 'basic', size = 96, mono = false, simple, head: headOnly = false, cls = '', label } = {}) {
+  const o = { mono, simple: simple ?? (size <= 56 && !headOnly) };
   const id = ++uid;
+  // 머리만 (작은 크기): 안전모~턱만 잘라 크게 — 볼은 남긴다
+  if (headOnly) return `<svg class="mascot head ${cls}" viewBox="32 6 136 114" width="${size}" height="${Math.round(size * 114 / 136)}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${label || '첫삽이'}"><g class="m-head">${head(o)}<g class="m-face">${face(fc, o)}</g></g></svg>`;
   const h = Math.round(size * 1.2);
   return `<svg class="mascot ${cls}" viewBox="0 0 200 240" width="${size}" height="${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${label || '첫삽이'}">`
     + `<g class="m-body">${body(pose, o, id)}</g><g class="m-head">${head(o)}<g class="m-face">${face(fc, o)}</g></g></svg>`;

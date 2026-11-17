@@ -25,6 +25,25 @@
   --danger-soft: color-mix(in srgb, var(--danger) 12%, var(--bg));
   --brand-soft: color-mix(in srgb, var(--brand) 12%, var(--bg));
 
+  /* 그림 전용 팔레트 — 현장 일러스트(장면·비교 그림·레슨 그림)에만. 화면 UI에는 쓰지 않는다 (tools/art-palette.mjs) */
+  --art-sky: #E8F1FB;
+  --art-ground: #D9CFBD;
+  --art-dirt: #8A6342;
+  --art-dirt-dark: #5E4630;
+  --art-concrete: #C3C8CF;
+  --art-concrete-dark: #A9B0BA;
+  --art-wall: #DCE2EA;
+  --art-steel: #8D96A0;
+  --art-wood: #C8964A;
+  --art-wood-dark: #A8772F;
+  --art-glass: #9CC3E6;
+  --art-rebar: #6B4F3A;
+  --art-shirt: #3B6FB6;
+  --art-helmet: #F5C400;
+  --art-dark: #2A303A;
+  --art-tan: #C9A46B;
+  /* 그림 팔레트 끝 */
+
   /* 글꼴 (저장소 안 fonts/, 외부 CDN 없음) */
   --font: Pretendard, "Pretendard Variable", "Noto Sans", "Noto Sans SC", sans-serif;
   --fs-title: 28px; --fw-title: 800;   /* 제목 */

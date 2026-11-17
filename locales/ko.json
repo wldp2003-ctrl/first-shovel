@@ -2033,5 +2033,12 @@
  "learn.swipe.go": "가요",
  "learn.swipe.score": "{n}장 중 {s}장 맞았어요",
  "learn.say.home": "현장 지도예요. 반짝이는 층을 눌러 위험을 찾아보세요.",
- "learn.say.homeStart": "먼저 그림 점검을 해요. 아래 파란 버튼을 누르세요."
+ "learn.say.homeStart": "먼저 그림 점검을 해요. 아래 파란 버튼을 누르세요.",
+ "learn.top.badges": "배지 {n}개 (깬 현장)",
+ "learn.map.start": "시작!",
+ "learn.fb.right": "맞았어요!",
+ "learn.fb.wrong": "다시 볼까요?",
+ "learn.fb.continue": "계속",
+ "learn.fb.gotIt": "알겠어요",
+ "learn.character.name": "첫삽이"
 }

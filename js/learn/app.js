@@ -102,8 +102,10 @@ const sayBtn = () => (canSpeak() ? h('button', { class: 'say-btn', id: 'sayBtn',
 function shell() {
   app().innerHTML = '';
   const n = streak();
-  app().append(h('header', { class: 'top' }, h('div', { class: 'brand' }, h('span', { class: 'mark', html: logoMark({ size: 28 }) }), h('b', {}, t('app.name')), h('span', {}, t('app.sub'))),
-      n > 0 ? h('div', { class: 'streak', title: t('home.streak', { n }) }, ic('streak', { size: 16 }), h('span', {}, t('home.streak', { n }))) : null, sayBtn(), modeBtn(), h('button', { class: 'gear', 'aria-label': t('settings.title'), onclick: () => { go('record'); setTimeout(() => $('.set')?.scrollIntoView({ block: 'center' }), 50); } }, ic('settings')), h('div', { class: 'prog-mini', id: 'progMini' })),
+  const nb = SC.scenes.filter((x) => S.scenes?.[x.id]?.best).length;
+  app().append(h('header', { class: 'top' }, h('span', { class: 'mark', 'aria-label': t('app.name'), html: logoMark({ size: 30 }) }),
+      h('span', { class: 'top-chip streak-c', title: t('home.streak', { n }), 'aria-label': t('home.streak', { n }) }, ic('shovel', { size: 22 }), h('span', { class: 't-num' }, String(n))),
+      h('span', { class: 'top-chip badge-c', title: t('top.badges', { n: nb }), 'aria-label': t('top.badges', { n: nb }) }, ic('badge', { size: 22 }), h('span', { class: 't-num' }, String(nb))), sayBtn(), modeBtn(), h('button', { class: 'gear', 'aria-label': t('settings.title'), onclick: () => { go('record'); setTimeout(() => $('.set')?.scrollIntoView({ block: 'center' }), 50); } }, ic('settings')), h('div', { class: 'prog-mini', id: 'progMini' })),
     h('main', { id: 'view', class: 'view-in' }),
     h('nav', { class: 'tabs', id: 'tabs' }, ...[
       ['home', 'learn'], ['review', 'review'], ['record', 'record'], ['practice', 'practice'],
@@ -120,6 +122,7 @@ function go(tb) {
 }
 // 레슨·점검처럼 화면 전체를 쓰는 단계 (휴대전화 뒤로 가기 → 목록)
 function deep(title, onBack) {
+  document.querySelector('.fbar')?.remove(); document.body.classList.remove('has-fbar');
   if (!history.state?.deep) history.pushState({ deep: true }, '');
   document.body.classList.add('deep');
   app().innerHTML = '';
@@ -168,20 +171,38 @@ function nextStep() {
   if (!S.post) return cta('postBtn', () => runPicTest('post'), ic('check'), t('home.postSmall'), t('home.post'));
   return cta('certBtn', showCert, ic('cert'), t('home.doneSmall'), t('home.cert'));
 }
-// 현장 지도: 건물 한 동. 아래(0 출근)부터 위(6)로, 지붕은 "멈추고 알려요"(준공)
+// 현장 지도 = 길: 위(0 출근)에서 아래(6)로 지그재그, 마지막은 "멈추고 알려요"(준공). 지금 할 곳 = 주황 + 첫삽이, 완료 = 초록 체크, 잠김 = 회색 자물쇠
 function siteMap() {
   const nx = nextScene(), all = allScenes();
-  const bld = h('div', { class: 'bld' });
-  bld.append(h('button', { class: 'roof' + (S.stop?.done ? ' done' : all ? ' open' : ''), id: 'roofBtn', disabled: all ? null : true, 'aria-label': t('stop.title'), onclick: stopTell },
-    h('span', { class: 'roof-flag' }, ic(S.stop?.done ? 'flag' : 'stop', { size: 22 })), isPic() ? null : h('span', {}, t('stop.title')), all ? null : ic('lock', { size: 14 })));
-  SC.scenes.map((s, i) => [s, i]).reverse().forEach(([s, i]) => {
-    const open = sceneOpen(i), b = S.scenes?.[s.id]?.best;
-    bld.append(h('button', { class: `floor${open ? '' : ' locked'}${b ? ' done' : ''}${nx?.id === s.id ? ' cur' : ''}`, disabled: open ? null : true, 'data-scene': s.id, 'aria-label': `${s.no}. ${s.title}`, onclick: () => openScene(s.id) },
-      h('span', { class: 'fl-no' }, String(s.no)), thumb(s),
-      h('span', { class: 'fl-t' }, isPic() ? null : h('b', {}, s.title), b ? stars(b.stars, 18) : open ? ic('finger', { size: 20 }) : ic('lock', { size: 16 }))));
+  const nodes = [...SC.scenes.map((s, i) => ({ s, i, open: sceneOpen(i), b: S.scenes?.[s.id]?.best })), { roof: true }];
+  const XS = [50, 74, 50, 26, 50, 74, 50, 26], GAP = 118, TOP = 64;
+  const wrap = h('div', { class: 'path-wrap', style: `height:${TOP + nodes.length * GAP}px` });
+  let d = '';
+  nodes.forEach((n, k) => {
+    const x = XS[k % XS.length], y = TOP + k * GAP;
+    d += `${k ? 'L' : 'M'}${x * 3.6} ${y + 36} `;
+    if (n.roof) {
+      const st = S.stop?.done ? 'done' : all ? 'cur' : 'lock';
+      wrap.append(h('button', { class: `p-node roof ${st}`, id: 'roofBtn', style: `left:${x}%;top:${y}px`, disabled: all ? null : true, 'aria-label': t('stop.title'), onclick: stopTell }, ic(S.stop?.done ? 'check' : all ? 'stop' : 'lock')),
+        h('span', { class: 'p-label' + (all ? '' : ' lock'), style: `left:${x}%;top:${y}px` }, isPic() ? ic('flag', { size: 18 }) : t('stop.title')));
+      if (st === 'cur') wrap.append(mascotAt(x, y));
+      return;
+    }
+    const { s: sc, open, b } = n, cur = nx?.id === sc.id, st = cur ? 'cur' : b ? 'done' : open ? 'cur' : 'lock';
+    wrap.append(h('span', { class: 'p-zone', style: `${x >= 50 ? 'left:0' : 'right:0'};top:${y - 4}px`, 'aria-hidden': 'true', html: SC_ART[sc.art]().replace(/id="stp"/g, 'id="stp-z"').replace(/url\(#stp\)/g, 'url(#stp-z)') }));
+    wrap.append(h('button', { class: `p-node ${st}`, 'data-scene': sc.id, style: `left:${x}%;top:${y}px`, disabled: open ? null : true, 'aria-label': `${sc.no}. ${sc.title}`, onclick: () => openScene(sc.id) }, ic(b && !cur ? 'check' : open ? 'star' : 'lock')),
+      h('span', { class: 'p-label' + (open ? '' : ' lock'), style: `left:${x}%;top:${y}px` }, isPic() ? String(sc.no) : `${sc.no}. ${sc.title}`, b ? stars(b.stars, 14) : null));
+    if (cur) wrap.append(mascotAt(x, y));
   });
-  bld.append(h('div', { class: 'bld-ground' }));
-  return h('section', { class: 'map', 'aria-label': t('map.title') }, isPic() ? null : h('h2', { class: 'sec' }, t('map.title')), bld);
+  wrap.prepend(h('svg', { class: 'path-line', viewBox: `0 0 360 ${TOP + nodes.length * GAP}`, preserveAspectRatio: 'none', html: `<path d="${d}" fill="none" stroke="var(--line)" stroke-width="10" stroke-linecap="round" stroke-dasharray="2 18"/>` }));
+  return h('section', { class: 'map', 'aria-label': t('map.title') }, isPic() ? null : h('h2', { class: 'sec' }, t('map.title')), wrap);
+}
+// 지금 할 곳 옆에 서 있는 첫삽이 + "시작!"
+function mascotAt(x, y) {
+  const left = x >= 50 ? x - 36 : x + 14;
+  return h('span', { class: 'p-mascot-wrap' },
+    h('span', { class: 'p-tip', style: `left:${x}%;top:${y - 12}px` }, isPic() ? ic('finger', { size: 18 }) : t('map.start')),
+    h('span', { class: 'p-mascot', style: `left:${left}%;top:${y - 14}px`, html: sapi({ size: 72, mood: 'wave' }) }));
 }
 // 오늘의 위험 찾기: 깬 장면 하나를 날짜로 골라 다시 (하루 한 번, 시간 제한 없음)
 function todayScene() {
@@ -203,8 +224,28 @@ function optionList(q, order, onPick) {
 function markRight(btn) { btn.classList.add('right'); btn.append(h('span', { class: 'mark-ok' }, ic('check', { size: 20 }))); buzz(15); beep(); }
 function markWrong(btn) { btn.classList.add('wrong'); btn.append(h('span', { class: 'mark-no' }, ic('cross', { size: 18 }))); }
 
+/* ---------------- v12.1 피드백 바 (아래에서 올라옴) ---------------- */
+// 정답: 연한 초록 + 기쁨 얼굴 + "계속"(진한 초록) / 오답: 연한 빨강 + 걱정 얼굴(고개 기울이기) + 이유 그림 + "알겠어요"(진한 빨강)
+function feedbackBar({ ok, title, sub, say, pics, btn, id, onNext }) {
+  document.querySelector('.fbar')?.remove();
+  const bar = h('div', { class: 'fbar ' + (ok ? 'ok' : 'no'), role: 'status' },
+    h('div', { class: 'fb-hd' }, h('span', { class: 'sapi-s', html: sapi({ size: 56, mood: ok ? 'cheer' : 'worry', cls: ok ? 'm-hop' : 'm-tilt' }) }),
+      h('div', { class: 'grow' }, h('b', {}, h('span', { class: 'mk' }, ic(ok ? 'check' : 'cross', { size: 16 })), title), isPic() || !sub ? null : h('small', {}, sub)), say ? speakBtn(say) : null),
+    pics ? h('div', { class: 'fb-pics' }, pics.map((x) => h('span', { class: 'pic', html: x }))) : null,
+    h('button', { class: 'btn big ' + (ok ? 'ok-btn' : 'no-btn'), id, 'aria-label': btn, onclick: () => { bar.remove(); document.body.classList.remove('has-fbar'); onNext(); } }, isPic() ? ic(ok ? 'next' : 'check') : h('span', {}, btn)));
+  document.body.append(bar); document.body.classList.add('has-fbar');
+  if (ok) { buzz(15); beep(); } else buzz(40);
+}
+function confetti() {
+  if (reduceMotion()) return;
+  const c = h('div', { class: 'confetti', 'aria-hidden': 'true' }, Array.from({ length: 16 }, (_, i) => h('i', { style: `left:${4 + i * 6}%;animation-delay:${(i % 5) * 0.07}s` })));
+  document.body.append(c); setTimeout(() => c.remove(), 1300);
+}
+// 화면을 떠나면 피드백 바 정리
+window.addEventListener('popstate', () => { document.querySelector('.fbar')?.remove(); document.body.classList.remove('has-fbar'); });
+
 /* ---------------- v13 가요 / 멈춰요 (출근 전 1분) ---------------- */
-// 그림 한 장씩: 위험하면 왼쪽(멈춰요 ✋), 안전하면 오른쪽(가요 ✓). 손가락으로 밀거나 아래 버튼. 틀려도 벌 없이 바른 쪽을 보여 주고 넘어감
+// 그림 한 장씩: 위험하면 왼쪽(멈춰요, 손바닥), 안전하면 오른쪽(가요, 체크). 손가락으로 밀거나 아래 버튼. 틀려도 벌 없이 바른 쪽을 보여 주고 넘어감
 function swipeCards(sc) {
   const pool = sc.hazards.filter((z) => shown(z.line));
   const bad = shuffle(pool).map((z) => ({ z, side: 'bad' })), good = shuffle(pool).map((z) => ({ z, side: 'good' }));
@@ -800,8 +841,8 @@ function openScene(id, o = {}) {
       box2.querySelectorAll('.act-opt').forEach((b) => (b.disabled = true));
       if (right) markRight(btn); else { markWrong(btn); markRight(box2.querySelector(`[data-act="${z.act}"]`)); }
       const line = SC.acts[z.act];
-      box2.append(h('div', { class: 'act-fb ' + (right ? 'good' : 'bad') }, h('span', { class: 'sapi-s', html: sapi({ size: 44, mood: right ? 'cheer' : 'think' }) }), isPic() ? null : h('b', {}, T(line)), h('span', { class: 'grow' }), speakBtn(T0(line))),
-        h('button', { class: 'btn primary big', id: 'actNext', 'aria-label': t('scene.seeResult'), onclick: () => then({ hz: z.id, pick: a, ok: right }) }, isPic() ? ic('star') : h('span', {}, t('scene.seeResult')), ic('next')));
+      feedbackBar({ ok: right, title: right ? t('fb.right') : t('fb.wrong'), sub: T(line), say: T0(line), pics: right ? null : [STOP[z.act]()],
+        btn: right ? t('fb.continue') : t('fb.gotIt'), id: 'actNext', onNext: () => then({ hz: z.id, pick: a, ok: right }) });
     }
     sheet.append(box2);
     sheet.scrollIntoView({ behavior: 'auto', block: 'nearest' });
@@ -812,12 +853,15 @@ function openScene(id, o = {}) {
     rec.last = { found: [...found], total, active: hz.map((z) => z.id), stars: st, at: Date.now(), hour: new Date().getHours(), mode: UI.mode || 'pic', missTaps: tapsMiss, today: !!o.today, act };
     rec.seen = [...new Set([...(rec.seen || []), ...found])];
     if (o.today) { UI.todayDone = dayStr(); saveUI(); }
+    const firstClear = !rec.best;
     if (!rec.best || st > rec.best.stars || n > rec.best.found.length) rec.best = { found: [...found], stars: st };
+    if (st === 3) confetti();
     save();
     sheet.innerHTML = '';
     const detail = h('div', { class: 'miss-detail' });
     sheet.append(h('div', { class: 'scene-result' },
-      h('div', { class: 'res-top' }, h('span', { class: 'sapi-s', html: sapi({ size: 64, mood: st === 3 ? 'cheer' : 'hi' }) }), stars(st, 34)),
+      h('div', { class: 'res-top' }, h('span', { class: 'sapi-s', html: sapi({ size: st === 3 ? 120 : 64, mood: st === 3 ? 'proud' : st === 2 ? 'cheer' : 'think', cls: st === 3 ? 'm-hop' : '' }) }), stars(st, 34)),
+      firstClear ? h('span', { class: 'medal', 'aria-label': t('top.badges', { n: 1 }) }, ic('badge', { size: 40 })) : null,
       h('div', { class: 'res-icons' }, hz.map((z) => h('span', { class: 'res-ic ' + (found.includes(z.id) ? 'on' : 'off') }, hazIc(z.type, 18)))),
       isPic() ? null : h('p', { class: 'res-t' }, t('scene.result', { n: total, f: n })),
       missed.length ? h('div', { class: 'missed' }, isPic() ? null : h('b', {}, t('scene.missed')),
@@ -880,7 +924,8 @@ function opening() {
     const ms = still ? 600 : full ? 1800 : 500;
     const el = h('div', { id: 'opening', class: still ? 'still' : full ? 'full' : 'short', role: 'button', 'aria-label': t('opening.skip') },
       h('div', { class: 'op-mark', html: logoMark({ size: 132 }) }),
-      h('div', { class: 'op-name' }, t('app.name')), h('div', { class: 'op-sub' }, t('app.sub')));
+      h('div', { class: 'op-name' }, t('app.name')), h('div', { class: 'op-sub' }, t('app.sub')),
+      h('div', { class: 'op-mascot', html: sapi({ size: 96, mood: 'wave' }) }));
     document.body.append(el);
     let gone = false;
     const done = () => { if (gone) return; gone = true; el.classList.add('out'); setTimeout(() => el.remove(), still ? 0 : 200); resolve(); };

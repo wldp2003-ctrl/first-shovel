@@ -41,6 +41,8 @@ const P = {
   shock: '<path d="M13 2 5 13h6l-1 9 8-12h-6z"/>',
   suffocate: '<circle cx="7" cy="5" r="2.2"/><path d="M7 8v7M4 21l3-6 3 6M7 10l-3 3"/><path d="M13 7c2-2 4 0 6-2M13 12c2-2 4 0 6-2M13 17c2-2 4 0 6-2"/>',
   heat: '<path d="M8 14V5a2 2 0 0 1 4 0v9a4 4 0 1 1-4 0z"/><path d="M10 9v7"/><circle cx="18" cy="6" r="2.5"/><path d="M18 1.5v1M22.5 6h-1M18 10.5v-1"/>',
+  shovel: '<path d="M8 2.5h8M12 2.5V11"/><path d="M6.5 11h11v4c0 4.5-2.5 7-5.5 8.5C9 22 6.5 19.5 6.5 15z"/>',
+  badge: '<circle cx="12" cy="9" r="6"/><path d="M8.5 14 7 22l5-3 5 3-1.5-8"/>',
   eye: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/>',
   textmode: '<path d="M5 6h14M5 10h14M5 14h10M5 18h7"/>',
   thumb: '<path d="M7 11v9H4v-9z"/><path d="M7 11l4-7c1.5 0 2.5 1 2.2 2.6L12.5 10H18a2 2 0 0 1 2 2.3l-1.2 6A2 2 0 0 1 16.8 20H7"/>',
