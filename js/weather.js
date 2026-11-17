@@ -85,13 +85,13 @@ export const isLive = () => cache.live;
 
 export function describe(w) {
   const c = w.code;
-  let icon = '☀️', name = $t('weather.describe.8'), kind = 'clear';
-  if (c === 1 || c === 2) { icon = '⛅'; name = $t('weather.describe.7'); kind = 'cloud'; }
-  else if (c === 3) { icon = '☁️'; name = $t('weather.describe.6'); kind = 'cloud'; }
-  else if (c === 45 || c === 48) { icon = '🌫️'; name = $t('weather.describe.5'); kind = 'fog'; }
-  else if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) { icon = '🌧️'; name = c < 60 ? $t('weather.describe.4') : $t('weather.describe.3'); kind = 'rain'; }
-  else if ((c >= 71 && c <= 77) || c === 85 || c === 86) { icon = '❄️'; name = $t('weather.describe.2'); kind = 'snow'; }
-  else if (c >= 95) { icon = '⛈️'; name = $t('weather.describe.1'); kind = 'storm'; }
+  let icon = '⟦sun⟧', name = $t('weather.describe.8'), kind = 'clear';
+  if (c === 1 || c === 2) { icon = '⟦cloud⟧'; name = $t('weather.describe.7'); kind = 'cloud'; }
+  else if (c === 3) { icon = '⟦cloud⟧'; name = $t('weather.describe.6'); kind = 'cloud'; }
+  else if (c === 45 || c === 48) { icon = '⟦fog⟧'; name = $t('weather.describe.5'); kind = 'fog'; }
+  else if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) { icon = '⟦rain⟧'; name = c < 60 ? $t('weather.describe.4') : $t('weather.describe.3'); kind = 'rain'; }
+  else if ((c >= 71 && c <= 77) || c === 85 || c === 86) { icon = '⟦snow⟧'; name = $t('weather.describe.2'); kind = 'snow'; }
+  else if (c >= 95) { icon = '⟦storm⟧'; name = $t('weather.describe.1'); kind = 'storm'; }
   return { icon, name, kind };
 }
 

@@ -36,7 +36,7 @@ export function openModal({ title, body, cls = '', closable = true, onClose, wid
   const layer = $('#modals');
   const card = h('div', { class: 'modal ' + cls + (wide ? ' wide' : '') });
   const back = h('div', { class: 'modal-back' }, card);
-  if (title) card.append(h('div', { class: 'modal-title' }, h('span', {}, title), closable ? h('button', { class: 'x', 'aria-label': $t('ui.openModal.1'), onclick: () => close() }, '✕') : null));
+  if (title) card.append(h('div', { class: 'modal-title' }, h('span', {}, title), closable ? h('button', { class: 'x', 'aria-label': $t('ui.openModal.1'), onclick: () => close() }, '⟦cross⟧') : null));
   const content = h('div', { class: 'modal-body' });
   if (typeof body === 'string') content.innerHTML = body; else if (body) content.append(body);
   card.append(content);

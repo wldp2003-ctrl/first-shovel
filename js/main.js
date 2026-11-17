@@ -39,6 +39,8 @@ const defaultState = () => ({
   hoist: null, events: [], evToday: 0, evCap: 1, slowActs: 0, nearMiss: [], bNearMiss: 0, night: null, nightDay: 0, evShield: 0, morning: [],
 });
 // 이전 저장 기록(v1)도 그대로 이어서 할 수 있게 변환
+// v12.1: 캔버스(세계지도)에 쓸 토큰 색을 css/tokens.css 에서 읽기
+const TOK = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function migrate(saved) {
   const out = Object.assign(defaultState(), saved, { stats: Object.assign(freshStats(), saved.stats || {}) });
   out.v = 2;
@@ -149,7 +151,7 @@ function refreshTop() {
   $('#dateTxt').textContent = $t('main.refreshTop.7', { day: st.day, v2: fmtDate(dateOf(st.day)) });
   $('#wxIcon').textContent = d.icon;
   $('#wxTemp').textContent = `${Math.round(w.tmax)}°`;
-  $('#moraleTxt').textContent = $t('main.refreshTop.6', { v1: st.morale >= 70 ? '😄' : st.morale >= 40 ? '🙂' : '😣', v2: Math.round(st.morale) });
+  $('#moraleTxt').textContent = $t('main.refreshTop.6', { v1: st.morale >= 70 ? '⟦face⟧' : st.morale >= 40 ? '⟦face⟧' : '⟦face-low⟧', v2: Math.round(st.morale) });
   $('#crewTxt').textContent = $t('main.refreshTop.5', { workers: st.workers });
   $('#wxNote').textContent = ef.stop ? $t('main.refreshTop.4') : ef.mult < 1 ? $t('main.refreshTop.3', { name: d.name, v2: Math.round(ef.mult * 100) }) + (ef.craneStop ? $t('main.refreshTop.2') : '') : `${d.name}${isLive() ? '' : $t('main.refreshTop.1')}`;
   $('#conflictTag').classList.toggle('hidden', st.conflict == null);
@@ -188,7 +190,7 @@ function refreshSite() {
   const s = statusText();
   const warn = $('#scWarn');
   warn.classList.toggle('hidden', !(st.started && s.c === 'late'));
-  warn.textContent = '⚠️ ' + (s.c === 'late' ? (st.day > deadlineDay() ? s.t : $t('main.refreshSite.15', { t: s.t })) : '');
+  warn.textContent = '⟦warn⟧ ' + (s.c === 'late' ? (st.day > deadlineDay() ? s.t : $t('main.refreshSite.15', { t: s.t })) : '');
   // 버튼
   const wb = $('#workBtn'), ef = todayEf(), r = rates();
   wb.classList.toggle('start', !st.started && !st.finished);
@@ -410,7 +412,7 @@ function showBriefing(then) {
   const m = openModal({ title: $t('main.showBriefing.18', {  }), body: h('div', { class: 'col' },
     h('div', { class: 'brief-date' }, $t('main.showBriefing.17', { day: st.day, v2: fmtDate(dateOf(st.day)) })),
     h('div', { class: 'brief-wx' }, h('div', { class: 'big' }, d.icon), h('div', {},
-      h('b', {}, `${CITIES.find((c) => c.id === st.city).name} ${d.name} · ${Math.round(w.tmin)}° / ${Math.round(w.tmax)}° · 💧${num(w.rain, 1)}${U('mm')} · 🌬${num(w.wind, 1)}${U('m/s')}`),
+      h('b', {}, `${CITIES.find((c) => c.id === st.city).name} ${d.name} · ${Math.round(w.tmin)}° / ${Math.round(w.tmax)}° · ⟦drop⟧${num(w.rain, 1)}${U('mm')} · ⟦wind⟧${num(w.wind, 1)}${U('m/s')}`),
       h('div', { class: 'tiny muted' }, isLive() && w.live ? $t('main.showBriefing.16') : $t('main.showBriefing.15')),
       h('ul', {}, ef.notes.map((n) => h('li', {}, n))))),
     ef.stop ? h('div', { class: 'status late' }, $t('main.showBriefing.14')) : null,
@@ -426,7 +428,7 @@ function showBriefing(then) {
     h('div', { class: 'sec' }, $t('main.showBriefing.8')),
     h('div', { class: 'schedule' }, sched),
     h('div', { class: 'sec' }, $t('main.showBriefing.7')),
-    h('ul', { class: 'todo' }, todo.map(([t, done]) => h('li', { class: done ? 'done' : '' }, h('span', {}, t), h('span', {}, done ? '✔' : '○')))),
+    h('ul', { class: 'todo' }, todo.map(([t, done]) => h('li', { class: done ? 'done' : '' }, h('span', {}, t), h('span', {}, done ? '⟦check⟧' : '○')))),
     h('button', { class: 'btn primary big', onclick: () => m.close() }, $t('main.showBriefing.6'))) });
   m.onClose = () => {
     then?.();
@@ -454,7 +456,7 @@ function showForecast() {
       body.append(h('div', { class: 'wxday' + (ef.stop ? ' stop' : '') },
         h('div', {}, h('b', {}, k === 0 ? $t('main.render.4') : $t('main.render.3', { day })), h('div', { class: 'tiny' }, fmtDate(dateOf(day)))),
         h('div', { class: 'ic' }, d.icon),
-        h('div', {}, h('div', {}, `${d.name} ${Math.round(w.tmin)}°/${Math.round(w.tmax)}° · 💧${num(w.rain, 1)}${U('mm')} · 🌬${num(w.wind, 1)}${U('m/s')}${w.live ? '' : $t('main.render.2')}`),
+        h('div', {}, h('div', {}, `${d.name} ${Math.round(w.tmin)}°/${Math.round(w.tmax)}° · ⟦drop⟧${num(w.rain, 1)}${U('mm')} · ⟦wind⟧${num(w.wind, 1)}${U('m/s')}${w.live ? '' : $t('main.render.2')}`),
           h('div', { class: 'tiny ' + (ef.stop ? 'minus' : 'muted') }, ef.notes.join(' / ')))));
     }
   };
@@ -486,7 +488,7 @@ function earn(amount, label) {
   st.money += amount;
   if (todayEf().stop && amount > 0) st.stats.stopDayEarn++;
   A.sfx('coin');
-  toast(`💰 ${label} +${won(amount)}`);
+  toast(`⟦money⟧ ${label} +${won(amount)}`);
   save(); refreshAll();
 }
 
@@ -519,7 +521,7 @@ function tabShop(body) {
   body.append(h('div', { class: 'tiny muted' }, $t('main.tabShop.24', { v1: Math.round(r.my), workers: st.workers, v3: r.eq.toFixed(1), v4: r.moraleMult.toFixed(2), v5: st.conflict != null ? $t('main.tabShop.22') : '', v6: r.robot ? $t('main.tabShop.23') : '', v7: r.ef.mult.toFixed(2), total: r.total })));
   body.append(h('div', { class: 'sec' }, $t('main.tabShop.21')));
   const hc = hireCost(st.workers);
-  body.append(itemRow('👷', $t('main.tabShop.20', { workers: st.workers, MAX_WORKERS }), $t('main.tabShop.19'), st.workers >= MAX_WORKERS ? $t('main.tabShop.18') : won(hc), () => {
+  body.append(itemRow('⟦worker⟧', $t('main.tabShop.20', { workers: st.workers, MAX_WORKERS }), $t('main.tabShop.19'), st.workers >= MAX_WORKERS ? $t('main.tabShop.18') : won(hc), () => {
     if (st.money < hc) return toast($t('main.tabShop.17'), 'bad');
     st.money -= hc; st.workers++; st.stats.hires++;
     S.setWorkers(st.workers); A.sfx('coin');
@@ -541,7 +543,7 @@ function tabShop(body) {
   if (needsHoist(def.id) && !st.finished) {
     body.append(h('div', { class: 'sec' }, $t('main.tabShop.11')));
     const hp = hoistPrice(st.bIdx), own = hasHoist();
-    body.append(itemRow('🔼', $t('main.tabShop.10', { name: def.name }), st.started ? $t('main.tabShop.9') : $t('main.tabShop.8'), own ? $t('main.tabShop.7') : won(hp), () => {
+    body.append(itemRow('⟦up⟧', $t('main.tabShop.10', { name: def.name }), st.started ? $t('main.tabShop.9') : $t('main.tabShop.8'), own ? $t('main.tabShop.7') : won(hp), () => {
       if (st.money < hp) return toast($t('main.tabShop.6'), 'bad');
       st.money -= hp; st.hoist = st.bIdx; st.stats.hoists++; A.sfx('build'); S.setHoist(true);
       toast($t('main.tabShop.5')); S.say($t('main.tabShop.4'));
@@ -599,12 +601,12 @@ function tabSide(body) {
     let sub = $t('main.tabSide.22', { desc: g.desc, left, per: g.per });
     if (g.id === 'quiz') sub = $t('main.tabSide.21', { v1: QUIZ_LEVELS[quizLevelFor(st.track, st.bIdx)], left, per: g.per });
     if (g.id === 'fquiz' && MULTI_LANG) sub = $t('main.tabSide.20', { desc: g.desc, v2: LANGS.find((l) => l.id === st.lang)?.name || $t('main.tabSide.19'), left, per: g.per });
-    body.append(itemRow(g.icon, g.move ? [g.name, ' 🕹️'] : g.name, sub, st.todo.done?.[g.id] && left <= 0 ? $t('main.tabSide.18') : $t('main.tabSide.17'), () => startGame(g), { disabled: left <= 0 }));
+    body.append(itemRow(g.icon, g.move ? [g.name, ' ⟦play⟧'] : g.name, sub, st.todo.done?.[g.id] && left <= 0 ? $t('main.tabSide.18') : $t('main.tabSide.17'), () => startGame(g), { disabled: left <= 0 }));
   });
   body.append(h('div', { class: 'sec' }, $t('main.tabSide.16')));
   if (st.conflict != null) {
     const c = CONFLICTS[st.conflict];
-    body.append(itemRow('⚠️', $t('main.tabSide.15', { title: c.title }), $t('main.tabSide.14'), $t('main.tabSide.13'), () => {
+    body.append(itemRow('⟦warn⟧', $t('main.tabSide.15', { title: c.title }), $t('main.tabSide.14'), $t('main.tabSide.13'), () => {
       closeSheet();
       const m = runConflict(c, (s) => {
         st.conflict = null; st.todo.conflictDone = true; st.stats.conflicts++;
@@ -615,11 +617,11 @@ function tabSide(body) {
       m.onClose = () => refreshAll();
     }));
   } else body.append(h('div', { class: 'tiny muted' }, $t('main.tabSide.11')));
-  if (st.events.length) st.events.forEach((e) => body.append(itemRow('🚨', `${floorLabel(curDef().id, e.floor)} ${SHORT[e.id]}`, $t('main.tabSide.10', { left: e.left }), $t('main.tabSide.9'), () => { closeSheet(); goToFloor(ctx, e.floor); })));
-  body.append(itemRow('🎁', $t('main.tabSide.8'), $t('main.tabSide.7', { gifts: st.gifts }), null));
+  if (st.events.length) st.events.forEach((e) => body.append(itemRow('⟦warn⟧', `${floorLabel(curDef().id, e.floor)} ${SHORT[e.id]}`, $t('main.tabSide.10', { left: e.left }), $t('main.tabSide.9'), () => { closeSheet(); goToFloor(ctx, e.floor); })));
+  body.append(itemRow('⟦gift⟧', $t('main.tabSide.8'), $t('main.tabSide.7', { gifts: st.gifts }), null));
   if (st.track === 'field') {
     body.append(h('div', { class: 'sec' }, $t('main.tabSide.6')));
-    body.append(itemRow('🦺', $t('main.tabSide.5'), $t(MULTI_LANG ? 'main.tabSide.4' : 'main.tabSide.4ko', { v1: LANGS.find((l) => l.id === st.lang)?.name || $t('main.tabSide.2'), v2: st.safety.record ? $t('main.tabSide.3', { score: st.safety.record.score }) : '' }), $t('main.tabSide.1'), () => { closeSheet(); openSafety(); }));
+    body.append(itemRow('⟦ppe⟧', $t('main.tabSide.5'), $t(MULTI_LANG ? 'main.tabSide.4' : 'main.tabSide.4ko', { v1: LANGS.find((l) => l.id === st.lang)?.name || $t('main.tabSide.2'), v2: st.safety.record ? $t('main.tabSide.3', { score: st.safety.record.score }) : '' }), $t('main.tabSide.1'), () => { closeSheet(); openSafety(); }));
   }
 }
 
@@ -646,7 +648,7 @@ function tabQuest(body) {
   body.append(h('div', { class: 'sec' }, $t('main.tabQuest.27')));
   st.quests.forEach((q, i) => {
     const d = questDef(q), p = Math.min(d.n, questProgress(q)), ok = p >= d.n;
-    body.append(itemRow(ok ? '✅' : '📌', d.t, $t('main.tabQuest.26', { p, n: d.n, v3: won(Math.round(d.reward * stageMult())) }), ok ? $t('main.tabQuest.25') : $t('main.tabQuest.24'), () => {
+    body.append(itemRow(ok ? '⟦check⟧' : '⟦note⟧', d.t, $t('main.tabQuest.26', { p, n: d.n, v3: won(Math.round(d.reward * stageMult())) }), ok ? $t('main.tabQuest.25') : $t('main.tabQuest.24'), () => {
       const amt = Math.round(d.reward * stageMult());
       st.quests.splice(i, 1); st.doneQuests = [...(st.doneQuests || []), d.id];
       fillQuests(); earn(amt, $t('main.tabQuest.23', { t: d.t }));
@@ -655,9 +657,9 @@ function tabQuest(body) {
   // 이해도 테스트
   body.append(h('div', { class: 'sec' }, $t('main.tabQuest.22')));
   const pre = st.test.pre, post = st.test.post;
-  body.append(itemRow('📝', $t('main.tabQuest.21'), pre ? $t('main.tabQuest.20', { score: pre.score, day: pre.day }) : $t('main.tabQuest.19'), pre ? $t('main.tabQuest.18') : $t('main.tabQuest.17'), () => runTest('pre'), { disabled: !!pre }));
+  body.append(itemRow('⟦note⟧', $t('main.tabQuest.21'), pre ? $t('main.tabQuest.20', { score: pre.score, day: pre.day }) : $t('main.tabQuest.19'), pre ? $t('main.tabQuest.18') : $t('main.tabQuest.17'), () => runTest('pre'), { disabled: !!pre }));
   const canPost = pre && st.completed.length >= 1;
-  body.append(itemRow('🎯', $t('main.tabQuest.16'), post ? $t('main.tabQuest.15', { score: post.score, day: post.day }) : canPost ? $t('main.tabQuest.14') : (pre ? $t('main.tabQuest.13') : $t('main.tabQuest.12')), post ? $t('main.tabQuest.11') : $t('main.tabQuest.10'), () => runTest('post'), { disabled: !canPost }));
+  body.append(itemRow('⟦star⟧', $t('main.tabQuest.16'), post ? $t('main.tabQuest.15', { score: post.score, day: post.day }) : canPost ? $t('main.tabQuest.14') : (pre ? $t('main.tabQuest.13') : $t('main.tabQuest.12')), post ? $t('main.tabQuest.11') : $t('main.tabQuest.10'), () => runTest('post'), { disabled: !canPost }));
   if (pre) {
     const box = h('div', { class: 'fb' });
     box.append(h('div', { class: 'cmp' }, h('span', {}, $t('main.tabQuest.9')), h('div', { class: 'bar' }, h('i', { style: { width: pre.score / 6 * 100 + '%' } })), h('b', {}, `${pre.score}/6`)));
@@ -674,7 +676,7 @@ function tabQuest(body) {
   body.append(h('div', { class: 'sec' }, $t('main.tabQuest.4', { n, length: myNotes.length })));
   if (st.nearMiss.length) body.append(h('div', { class: 'tiny minus' }, $t('main.tabQuest.3', { length: st.nearMiss.length, v2: st.bNearMiss || 0 })));
   myNotes.forEach((x) => body.append(h('div', { class: 'note' + (st.notes[x.id] ? ' on' : '') },
-    h('b', {}, (st.notes[x.id] ? '✅ ' : '⬜ ') + x.t), st.notes[x.id] ? h('span', { class: 'tiny muted' }, $t('main.tabQuest.2', { v1: st.notes[x.id] })) : null,
+    h('b', {}, (st.notes[x.id] ? '⟦check⟧ ' : '⟦box⟧ ') + x.t), st.notes[x.id] ? h('span', { class: 'tiny muted' }, $t('main.tabQuest.2', { v1: st.notes[x.id] })) : null,
     h('div', { class: 'tiny' }, st.notes[x.id] ? x.d : $t('main.tabQuest.1')))));
 }
 function runTest(kind) {
@@ -721,7 +723,7 @@ function tabTogether(body) {
   if (!list.length) body.append(h('div', { class: 'tiny muted' }, $t('main.tabTogether.8')));
   list.forEach((f) => {
     body.append(h('div', { class: 'item' },
-      h('div', { class: 'ic' }, f.flag || '👷'),
+      h('div', { class: 'ic' }, f.flag || '⟦worker⟧'),
       h('div', { class: 'tx' }, h('b', {}, f.nick), h('small', {}, $t('main.tabTogether.7', { v1: f.country || '', v2: f.building || '', v3: f.progress ?? 0, v4: f.completes || 0 }))),
       h('div', { class: 'col gap6' },
         h('button', { class: 'btn primary', disabled: st.helpsLeft <= 0, onclick: async () => {
@@ -772,7 +774,7 @@ function drawWorldMap() {
     const lon = -180 + (k + 0.5) * 3, lat = 82 - (r + 0.5) * 3;
     let col = null;
     for (const p of Object.values(LAND)) if (inPoly(lon, lat, p)) { col = '#e9dfc0'; break; }
-    COUNTRIES.forEach((cc, ci) => { if (inPoly(lon, lat, cc.poly)) col = doneCi(ci) ? '#3fb34f' : ci === curCi ? '#ffd21a' : '#cfc5a6'; });
+    COUNTRIES.forEach((cc, ci) => { if (inPoly(lon, lat, cc.poly)) col = doneCi(ci) ? TOK('--safe') : ci === curCi ? TOK('--brand') : '#cfc5a6'; });
     if (col) { ctx.fillStyle = col; ctx.fillRect(k * CELL, r * CELL, CELL, CELL); }
   }
   // 나라 핀 (작은 나라도 보이게)
@@ -809,13 +811,13 @@ function tabMap(body) {
     h('button', { class: st.sfx ? 'on' : '', onclick: () => { st.sfx = !st.sfx; A.setPrefs(st.music, st.sfx); save(); renderTab('map'); } }, $t('main.tabMap.9', { v1: st.sfx ? $t('main.tabMap.8') : $t('main.tabMap.7') })))));
   body.append(h('div', { class: 'set-row' }, h('span', {}, $t('main.tabMap.6')), h('div', { class: 'seg' }, h('button', { onclick: () => {
     const v = prompt($t('main.tabMap.5'), st.nick); if (v && v.trim()) { st.nick = v.trim().slice(0, 10); save(); publishNow(); renderTab('map'); }
-  } }, `${st.nick} ✏️`))));
+  } }, `${st.nick} ⟦edit⟧`))));
   body.append(h('div', { class: 'set-row' }, h('span', {}, $t('main.tabMap.4')), h('div', { class: 'seg' }, h('button', { onclick: () => {
     if (confirm($t('main.tabMap.3'))) { wipe(); location.reload(); }
   } }, $t('main.tabMap.2')))));
   body.append(h('div', { class: 'tiny muted', style: { marginTop: '8px' } }, $t('main.tabMap.1', { COMPANY })));
-  if (MULTI_LANG) body.append(h('div', { class: 'tiny muted i18n-note' }, '🌐 ', $t('set.reviewNote')));
-  body.append(h('div', { class: 'tiny muted basis-note' }, '📚 근거 표시 — 법정: 산업안전보건법·안전보건규칙 / 표준: KS·KCS 표준시방서 / 게임: 이해를 돕기 위해 단순화한 부분. v10 · 한국어 버전 (다국어는 다음 단계)'));
+  if (MULTI_LANG) body.append(h('div', { class: 'tiny muted i18n-note' }, '⟦globe⟧ ', $t('set.reviewNote')));
+  body.append(h('div', { class: 'tiny muted basis-note' }, '⟦book⟧ 근거 표시 — 법정: 산업안전보건법·안전보건규칙 / 표준: KS·KCS 표준시방서 / 게임: 이해를 돕기 위해 단순화한 부분. v10 · 한국어 버전 (다국어는 다음 단계)'));
 }
 // 게임 언어 바꾸기: 새로고침 없이 지금 화면을 다시 그린다
 async function chooseLang(code) {
@@ -847,9 +849,9 @@ function viewCountry(ci) {
   $('#viewBar')?.remove();
   let fi = 0;
   const bar = h('div', { id: 'viewBar', class: 'viewbar' },
-    h('button', { class: 'btn', onclick: () => { fi = (fi + list.length - 1) % list.length; S.focusOn(fi); } }, '◀'),
+    h('button', { class: 'btn', onclick: () => { fi = (fi + list.length - 1) % list.length; S.focusOn(fi); } }, '⟦back⟧'),
     h('b', {}, $t('main.viewCountry.2', { flag: c.flag, name: c.name })),
-    h('button', { class: 'btn', onclick: () => { fi = (fi + 1) % list.length; S.focusOn(fi); } }, '▶'),
+    h('button', { class: 'btn', onclick: () => { fi = (fi + 1) % list.length; S.focusOn(fi); } }, '⟦play⟧'),
     h('button', { class: 'btn primary', onclick: () => { syncScene(); } }, $t('main.viewCountry.1')));
   $('#app').append(bar);
 }
@@ -917,7 +919,7 @@ function onNetMessage(msg) {
     S.friendSay(msg.from, $t('main.onNetMessage.1'));
     A.sfx('coin'); save(); refreshAll();
   } else if (msg.type === 'chat') {
-    toast(`💬 ${msg.nick}: ${msg.text}`);
+    toast(`⟦chat⟧ ${msg.nick}: ${msg.text}`);
     S.friendSay(msg.from, msg.text); A.sfx('pop');
   }
 }

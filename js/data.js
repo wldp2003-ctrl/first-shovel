@@ -76,19 +76,19 @@ export const PHASES = ['기초', '골조', '외장', '지붕·마감'];
 
 // 상점
 export const TOOLS = [
-  { id: 'gloves', name: '목장갑', icon: '🧤', price: 40, desc: '내 몫 ×2', mult: 2 },
-  { id: 'drill', name: '전동드릴', icon: '🔩', price: 350, desc: '내 몫 ×2 (누적 ×4)', mult: 2 },
-  { id: 'nailgun', name: '네일건', icon: '🔫', price: 1600, desc: '내 몫 ×2 (누적 ×8)', mult: 2 },
+  { id: 'gloves', name: '목장갑', icon: '⟦ppe⟧', price: 40, desc: '내 몫 ×2', mult: 2 },
+  { id: 'drill', name: '전동드릴', icon: '⟦tool⟧', price: 350, desc: '내 몫 ×2 (누적 ×4)', mult: 2 },
+  { id: 'nailgun', name: '네일건', icon: '', price: 1600, desc: '내 몫 ×2 (누적 ×8)', mult: 2 },
 ];
 export const EQUIP = [
-  { id: 'cart', name: '손수레', icon: '🛒', price: 90, mult: 1.5, desc: '인부 몫 ×1.5' },
-  { id: 'forklift', name: '지게차', icon: '🚜', price: 450, mult: 2, desc: '인부 몫 ×2' },
-  { id: 'crane', name: '타워크레인', icon: '🏗️', price: 1800, mult: 3, desc: '인부 몫 ×3 · 현장에 세워져요 (풍속 10m/s 이상 운행 중지)' },
+  { id: 'cart', name: '손수레', icon: '⟦shop⟧', price: 90, mult: 1.5, desc: '인부 몫 ×1.5' },
+  { id: 'forklift', name: '지게차', icon: '⟦truck⟧', price: 450, mult: 2, desc: '인부 몫 ×2' },
+  { id: 'crane', name: '타워크레인', icon: '⟦site⟧', price: 1800, mult: 3, desc: '인부 몫 ×3 · 현장에 세워져요 (풍속 10m/s 이상 운행 중지)' },
 ];
 export const LATE_ITEMS = [
-  { id: 'pump', name: '콘크리트 펌프카', icon: '🚛', price: 4500, minStage: 6, desc: '인부 몫 ×1.3 — 높은 곳까지 콘크리트를 펌프로 올려요' },
-  { id: 'robot', name: '자동 시공 로봇', icon: '🤖', price: 9000, minStage: 10, desc: '작업 1회마다 +40블록 — 반복 작업을 로봇이 도와요' },
-  { id: 'laser', name: '레이저 레벨기', icon: '📐', price: 3000, minStage: 6, desc: '내 몫 ×1.5, 수평 맞추기가 쉬워져요' },
+  { id: 'pump', name: '콘크리트 펌프카', icon: '⟦truck⟧', price: 4500, minStage: 6, desc: '인부 몫 ×1.3 — 높은 곳까지 콘크리트를 펌프로 올려요' },
+  { id: 'robot', name: '자동 시공 로봇', icon: '', price: 9000, minStage: 10, desc: '작업 1회마다 +40블록 — 반복 작업을 로봇이 도와요' },
+  { id: 'laser', name: '레이저 레벨기', icon: '⟦tool⟧', price: 3000, minStage: 6, desc: '내 몫 ×1.5, 수평 맞추기가 쉬워져요' },
 ];
 export const hireCost = (n) => 30 + n * 12;
 export const MAX_WORKERS = 40;
@@ -268,7 +268,7 @@ export const CONFLICTS = [
 export const TALKS = [
   { ctx: 'complete', who: '김반장', lines: ['소장님! 준공 축하드려요!', '오늘 회식은 제가 쏩니다!'],
     ch: [
-      { t: '다들 고생 많았어요! 회식은 회사가 낼게요 😄', m: 12, r: '역시 우리 소장님! 다들 박수~ 👏' },
+      { t: '다들 고생 많았어요! 회식은 회사가 낼게요 ⟦face⟧', m: 12, r: '역시 우리 소장님! 다들 박수~ ' },
       { t: '고마워요. 다음 현장도 잘 부탁해요.', m: 6, r: '네! 다음 현장도 무사고로 갑시다!' },
       { t: '회식은 됐고 내일 바로 다음 현장 가요.', m: -6, r: '…네, 알겠습니다. (다들 조금 아쉬운 표정이다)' },
     ] },
@@ -298,8 +298,8 @@ export const TALKS = [
     ] },
   { ctx: 'any', who: '정대리', lines: ['점심 뭐 먹을까요?', '국밥? 짜장면? 아니면 백반?'],
     ch: [
-      { t: '든든하게 국밥 갑시다!', m: 6, r: '좋아요! 뜨끈하게 먹고 힘내요 🍲' },
-      { t: '오늘은 제가 피자 쏠게요!', m: 10, r: '와아! 소장님 최고! 🍕' },
+      { t: '든든하게 국밥 갑시다!', m: 6, r: '좋아요! 뜨끈하게 먹고 힘내요 ' },
+      { t: '오늘은 제가 피자 쏠게요!', m: 10, r: '와아! 소장님 최고! ' },
       { t: '시간 없어요. 빵으로 때워요.', m: -6, r: '아… 배고픈데…' },
     ] },
   { ctx: 'minigame', who: '이막내', lines: ['소장님, 하나 여쭤봐도 돼요?', '양중이랑 양생이 자꾸 헷갈려요.'],

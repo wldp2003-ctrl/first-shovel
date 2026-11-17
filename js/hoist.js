@@ -41,9 +41,9 @@ export function floorText(def, f, phaseName) {
 export function radioBanner(text, onGo) {
   $('#radio')?.remove();
   sfx('radio');
-  const el = h('div', { id: 'radio', class: 'radio' }, h('span', { class: 'ric' }, '📻'), h('div', { class: 'rtx' }, h('small', {}, $t('hoist.radioBanner.2')), h('b', {}, text)),
+  const el = h('div', { id: 'radio', class: 'radio' }, h('span', { class: 'ric' }, '⟦chat⟧'), h('div', { class: 'rtx' }, h('small', {}, $t('hoist.radioBanner.2')), h('b', {}, text)),
     onGo ? h('button', { class: 'btn primary', onclick: () => { el.remove(); onGo(); } }, $t('hoist.radioBanner.1')) : null,
-    h('button', { class: 'x', onclick: () => el.remove() }, '✕'));
+    h('button', { class: 'x', onclick: () => el.remove() }, '⟦cross⟧'));
   $('#app').append(el);
   setTimeout(() => el.classList.add('out'), 6500);
   setTimeout(() => el.remove(), 7000);
@@ -115,9 +115,9 @@ function floorGrid(ctx, built, target, onPick, { basement = false } = {}) {
     const evIn = evs.find((e) => e.floor >= b.from && e.floor <= b.to);
     const ok = b.from <= built;
     return h('button', { class: 'fbtn' + (evIn ? ' ev' : '') + (target != null && target >= b.from && target <= b.to ? ' tgt' : ''), disabled: !ok,
-      onclick: () => onPick(evIn ? evIn.floor : Math.min(b.to, built)) }, b.label, evIn ? h('i', {}, '🚨') : null);
+      onclick: () => onPick(evIn ? evIn.floor : Math.min(b.to, built)) }, b.label, evIn ? h('i', {}, '⟦warn⟧') : null);
   });
-  if (basement || evs.some((e) => e.floor === 0)) btns.unshift(h('button', { class: 'fbtn' + (evs.some((e) => e.floor === 0) ? ' ev' : ''), onclick: () => onPick(0) }, 'B1', evs.some((e) => e.floor === 0) ? h('i', {}, '🚨') : null));
+  if (basement || evs.some((e) => e.floor === 0)) btns.unshift(h('button', { class: 'fbtn' + (evs.some((e) => e.floor === 0) ? ' ev' : ''), onclick: () => onPick(0) }, 'B1', evs.some((e) => e.floor === 0) ? h('i', {}, '⟦warn⟧') : null));
   return h('div', { class: 'fgrid' }, btns);
 }
 
@@ -129,7 +129,7 @@ function hoistPanel(ctx, built, target) {
   const crowdEl = h('div', { class: 'crowd' });
   const renderCrowd = () => {
     crowdEl.innerHTML = '';
-    crowdEl.append(h('div', {}, '👷'.repeat(crowd), h('b', { class: crowd > HOIST_PLATE.people ? 'minus' : '' }, $t('hoist.renderCrowd.13', { crowd }))));
+    crowdEl.append(h('div', {}, '⟦worker⟧'.repeat(crowd), h('b', { class: crowd > HOIST_PLATE.people ? 'minus' : '' }, $t('hoist.renderCrowd.13', { crowd }))));
     if (crowd > HOIST_PLATE.people) crowdEl.append(h('button', { class: 'btn bad', onclick: () => { crowd = HOIST_PLATE.people - Math.floor(Math.random() * 2); sfx('tap'); fb.className = 'fb good'; fb.textContent = $t('hoist.renderCrowd.12'); renderCrowd(); } }, $t('hoist.renderCrowd.11', { v1: crowd - HOIST_PLATE.people })));
   };
   renderCrowd();
@@ -177,7 +177,7 @@ async function climb(ctx, f) {
   const { st } = ctx; const def = ctx.curDef();
   const cost = Math.min(st.actionsLeft, 4, Math.ceil(f / 6)); // 높을수록 오래 걸림(최대 작업 4회)
   const mor = Math.min(6, Math.floor(f / 4));
-  const el = h('div', { class: 'stairs' }, h('div', { class: 'big-ic' }, '🚶‍♂️🧗'), h('b', {}, $t('hoist.climb.4')), h('div', { class: 'pbar' }, h('i')));
+  const el = h('div', { class: 'stairs' }, h('div', { class: 'big-ic' }, '⟦walk⟧⟦stairs⟧'), h('b', {}, $t('hoist.climb.4')), h('div', { class: 'pbar' }, h('i')));
   $('#app').append(el);
   const ms = Math.min(2600, 500 + f * 120);
   const t0 = performance.now();
@@ -232,7 +232,7 @@ export function openFloor(ctx, f, opts = {}) {
   const spotPos = shuffle([[-7, -5], [-7, 4], [0, -5], [1, 5]])[0];
   const basement = f === 0;
   const w = openWalk({
-    title: `${opts.byHoist ? '🔼' : '🚶'} ${def.name} · ${label}`,
+    title: `${opts.byHoist ? '⟦up⟧' : '⟦walk⟧'} ${def.name} · ${label}`,
     info: d ? $t('hoist.openFloor.6', { v1: SHORT[d.id] }) : $t('hoist.openFloor.5'),
     bounds: B, start: { x: 9.5, z: 0 }, ground: basement ? 0x6d6a64 : 0xb0aca2, sky: basement ? 0x2a2c30 : (FLOORS[def.id]?.walk ? 0x9fd8f5 : 0xbfe2f5),
     actionLabel: $t('hoist.openFloor.4'),
@@ -253,7 +253,7 @@ export function openFloor(ctx, f, opts = {}) {
       if (d) {
         const [x, z] = d.prop === 'rail' ? [spotPos[0], B.z1 - 1.5] : spotPos;
         eventProp(api, d.prop, x, z);
-        api.addSpot({ x, z, r: 3, icon: '🚨', cls: 'alert', ev, act: $t('hoist.openFloor.1') });
+        api.addSpot({ x, z, r: 3, icon: '⟦warn⟧', cls: 'alert', ev, act: $t('hoist.openFloor.1') });
       }
     },
     onTick(dt, api) {
@@ -271,7 +271,7 @@ function situation(ctx, ev, onSolved) {
   const label = floorLabel(def.id, ev.floor);
   const field = st.track === 'field';
   let tries = 0;
-  const m = openModal({ title: `🚨 ${label} · ${SHORT[d.id]}`, cls: 'mg situ', body: '' });
+  const m = openModal({ title: `⟦warn⟧ ${label} · ${SHORT[d.id]}`, cls: 'mg situ', body: '' });
   const solved = () => {
     st.events = st.events.filter((x) => x !== ev);
     st.stats.eventsSolved = (st.stats.eventsSolved || 0) + 1;
@@ -288,7 +288,7 @@ function situation(ctx, ev, onSolved) {
     const acts = shuffle(d.f.acts);
     const btns = acts.map((a) => h('button', { class: 'btn actcard', onclick: (e) => {
       const ok = a === d.f.acts[0];
-      if (!ok) { tries++; sfx('bad'); e.currentTarget.classList.add('wrong'); e.currentTarget.disabled = true; fb.className = 'fb bad'; fb.innerHTML = ''; fb.append(h('div', {}, U.wrong), koOn() ? h('div', { class: 'tl-ko' }, FIELD_UI.ko.wrong) : null, whyLine(d.id) ? h('div', { class: 'tiny why' }, '💭 ' + whyLine(d.id)) : null); return; }
+      if (!ok) { tries++; sfx('bad'); e.currentTarget.classList.add('wrong'); e.currentTarget.disabled = true; fb.className = 'fb bad'; fb.innerHTML = ''; fb.append(h('div', {}, U.wrong), koOn() ? h('div', { class: 'tl-ko' }, FIELD_UI.ko.wrong) : null, whyLine(d.id) ? h('div', { class: 'tiny why' }, '⟦chat⟧ ' + whyLine(d.id)) : null); return; }
       btns.forEach((b) => (b.disabled = true)); sfx('good'); e.currentTarget.classList.add('right');
       const A = FIELD_ACTS[a];
       const reward = solved();
@@ -314,7 +314,7 @@ function situation(ctx, ev, onSolved) {
       fb.append(h('button', { class: 'btn primary', onclick: then }, $t('hoist.ask.8')));
     } }, o[k]));
     m.setBody(h('div', { class: 'col' },
-      h('div', { class: 'situ-text' }, `📻 ${d.radio.replace('{f}', label)}`),
+      h('div', { class: 'situ-text' }, `⟦chat⟧ ${d.radio.replace('{f}', label)}`),
       h('div', { class: 'step' }, stepLabel), h('div', { class: 'qtext' }, q), h('div', { class: 'col gap6' }, btns), fb));
   };
   ask(d.s.q, d.s.o, d.s.ex, () => ask(d.s.q2, d.s.o2, d.s.ex2, () => {

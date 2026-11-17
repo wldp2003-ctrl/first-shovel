@@ -29,6 +29,48 @@ const P = {
   time: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
   cert: '<rect x="4" y="3.5" width="16" height="13" rx="2"/><path d="M8 8h8M8 11h5"/><circle cx="15" cy="17.5" r="2.5"/><path d="M13.5 19.5 13 22l2-1 2 1-.5-2.5"/>',
   download: '<path d="M12 4v11"/><path d="M7 10.5 12 15.5l5-5"/><path d="M5 20h14"/>',
+  // v12.1 게임 화면용 (이모지 대신)
+  money: '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 9l2 7 1.5-5 1.5 5 2-7M8 12h8"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  sun: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
+  cloud: '<path d="M7 18.5h10a4 4 0 0 0 .4-8A6 6 0 0 0 6 10a4.3 4.3 0 0 0 1 8.5z"/>',
+  rain: '<path d="M7 14.5h10a3.5 3.5 0 0 0 .3-7A5.5 5.5 0 0 0 6.3 7.3 3.6 3.6 0 0 0 7 14.5z"/><path d="M8 17.5l-1 3M12 17.5l-1 3M16 17.5l-1 3"/>',
+  snow: '<path d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9"/><path d="M9.5 4.5 12 6l2.5-1.5M9.5 19.5 12 18l2.5 1.5"/>',
+  fog: '<path d="M7 10.5h10a3.5 3.5 0 0 0 .3-7"/><path d="M3.5 14h17M5.5 17.5h13M8 21h8"/>',
+  storm: '<path d="M7 13.5h10a3.5 3.5 0 0 0 .3-7A5.5 5.5 0 0 0 6.3 6.3 3.6 3.6 0 0 0 7 13.5z"/><path d="M12.5 13.5 10 18h4l-2.5 4"/>',
+  wind: '<path d="M3 8.5h11a3 3 0 1 0-3-3M3 12.5h16a3 3 0 1 1-3 3M3 16.5h8"/>',
+  drop: '<path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z"/>',
+  moon: '<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/>',
+  light: '<path d="M5 4h8l-1.5 5h-5z"/><path d="M7 9v11h3V9"/><path d="M16 5l4-1.5M16 8h4.5M16 11l4 1.5"/>',
+  idea: '<path d="M9 17.5h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.3 1 2.1v1.5h5V16c0-.8.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
+  book: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>',
+  note: '<rect x="5" y="3.5" width="14" height="17" rx="2"/><path d="M9 3.5h6v2.5H9zM8.5 10h7M8.5 13.5h7M8.5 17h4"/>',
+  edit: '<path d="M4 20l1-4.5L15.5 5a2.1 2.1 0 0 1 3 3L8 18.5z"/><path d="M13.5 7l3 3"/>',
+  play: '<path d="M7 4.5v15l12-7.5z"/>',
+  up: '<path d="M12 20V5M5.5 11 12 4.5 18.5 11"/>',
+  stairs: '<path d="M3 20h4.5v-4.5H12V11h4.5V6.5H21"/>',
+  worker: '<circle cx="12" cy="9.5" r="3.5"/><path d="M7.5 7.5a4.5 4 0 0 1 9 0z M6.5 7.5h11"/><path d="M5 21a7 6 0 0 1 14 0"/>',
+  warn: '<path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.5v.01"/>',
+  ban: '<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>',
+  door: '<path d="M5 21V3.5h11V21M3 21h18"/><path d="M13 12h.01"/>',
+  chat: '<path d="M4 5.5h16v10H10l-4.5 4v-4H4z"/>',
+  together: '<circle cx="8.5" cy="8" r="3"/><circle cx="16" cy="8" r="3"/><path d="M2.5 20a6 5.5 0 0 1 12 0M12 15.2a6 5.5 0 0 1 9.5 4.8"/>',
+  tool: '<path d="M14.5 6.5a4 4 0 0 0 5 5L12 19a2.1 2.1 0 0 1-3-3l7.5-7.5a4 4 0 0 0-5-5l2.5 2.5-1 2.5-2.5 1z"/>',
+  truck: '<path d="M2.5 6.5h11v10h-11zM13.5 10h4.5l3 3.5v3h-7.5"/><circle cx="6.5" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+  shop: '<path d="M3 4h2.5l2.2 11h10.6l2-8H6.5"/><circle cx="9" cy="19.5" r="1.5"/><circle cx="17" cy="19.5" r="1.5"/>',
+  gift: '<rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5V21h14v-8.5M12 8.5V21M12 8.5C10 4 6 5 7.5 7.5 8.5 8.5 12 8.5 12 8.5zM12 8.5c2-4.5 6-3.5 4.5-1C15.5 8.5 12 8.5 12 8.5z"/>',
+  hook: '<path d="M12 3v7"/><path d="M12 10a4.5 4.5 0 1 1-4.5 4.5"/><path d="M5.5 12.5l2 2 2-2"/>',
+  aid: '<rect x="3.5" y="6.5" width="17" height="13" rx="2.5"/><path d="M9 6.5V4h6v2.5M12 10v6M9 13h6"/>',
+  pause: '<path d="M8.5 5v14M15.5 5v14"/>',
+  test: '<path d="M9 3h6M10 3v6l-5 9.5A2 2 0 0 0 6.8 21h10.4a2 2 0 0 0 1.8-2.5L14 9V3"/><path d="M7.5 15h9"/>',
+  box: '<rect x="4.5" y="4.5" width="15" height="15" rx="3"/>',
+  dot: '<circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/>',
+  trash: '<path d="M4 6.5h16M9 6.5V4h6v2.5M6.5 6.5 7.5 21h9l1-14.5"/>',
+  walk: '<circle cx="13.5" cy="4.5" r="2"/><path d="M10 21l2.5-6.5 2.5 2V21M12.5 14.5 11 9l4 1.5 2.5 3M11 9l-3.5 2.5-1 3"/>',
+  face: '<circle cx="12" cy="12" r="8.5"/><path d="M9 10h.01M15 10h.01M8.5 14.5q3.5 3 7 0"/>',
+  'face-mid': '<circle cx="12" cy="12" r="8.5"/><path d="M9 10h.01M15 10h.01M9 15h6"/>',
+  'face-low': '<circle cx="12" cy="12" r="8.5"/><path d="M9 10h.01M15 10h.01M8.5 16.5q3.5-3 7 0"/>',
+  pin: '<path d="M12 21s-6.5-6.4-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.6 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.3"/>',
   // v13 위험 종류 (경고 노랑 삼각형 안에 넣어 씀)
   fall: '<circle cx="14" cy="5" r="2"/><path d="M13 8l-4 5 3 2-1 5"/><path d="M9 13l-3-1"/><path d="M12 15l4 1"/><path d="M3 21h8"/><path d="M19 9v9"/><path d="M17 16l2 2 2-2"/>',
   trip: '<circle cx="9" cy="5" r="2"/><path d="M9 8l2 5 5 2"/><path d="M11 13l-4 3-2 4"/><path d="M9 9l-4 2"/><rect x="14" y="17" width="7" height="3" rx="1"/>',
@@ -55,7 +97,7 @@ const P = {
 // 아이콘 SVG 문자열. size: 픽셀, cls: 추가 클래스
 export function icon(name, { size = 24, cls = '' } = {}) {
   const d = P[name] || '';
-  return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${d}</svg>`;
+  return `<svg class="ic ${cls}" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${d}</svg>`;
 }
 export const ICON_NAMES = Object.keys(P);
 

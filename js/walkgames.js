@@ -49,7 +49,7 @@ export function runPatrol({ stageMult = 1, onFinish }) {
       if (!spot) return;
       if (spot.hazard) {
         found++; foundList.push(spot.kind); sfx('good');
-        api.doneSpot(spot); spot.mark = api.label(`✅ ${HAZ[spot.kind].name}`, spot.x, 2.8, spot.z, 'mark done');
+        api.doneSpot(spot); spot.mark = api.label(`⟦check⟧ ${HAZ[spot.kind].name}`, spot.x, 2.8, spot.z, 'mark done');
         api.setInfo($t('walkgames.make.4', { v1: HAZ[spot.kind].name, v2: HAZ[spot.kind].fix, found }));
         if (found >= 5) setTimeout(() => finish(api), 500);
       } else {
@@ -106,7 +106,7 @@ export function runGlass({ stageMult = 1, lang = 'ko', onFinish }) {
       api.carrying = true;
       api.box(12, 0.05, 3, 0x7ad36b, 0, 0, -25);
       api.label($t('walkgames.runGlass.3'), 0, 1.5, -25, 'mark');
-      holes.forEach((p) => { props.hole(api, p.x, p.z, 2.4, 2.4, false); api.label('🕳️', p.x, 1.2, p.z, 'mark'); });
+      holes.forEach((p) => { props.hole(api, p.x, p.z, 2.4, 2.4, false); api.label('⟦fall⟧', p.x, 1.2, p.z, 'mark'); });
       props.pile(api, 3.5, -9); props.pile(api, -3.5, -13); props.pile(api, 1, -21, true);
       api.box(0.3, 3, 33, 0xd8d4c8, -6.1, 0, -10.5); api.box(0.3, 3, 33, 0xd8d4c8, 6.1, 0, -10.5);
       mate = api.person(0, 5.2, { vest: 0x3a7bd5 });

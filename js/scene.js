@@ -409,7 +409,7 @@ export function giftBubble(text, onClick) {
   const cands = people.filter((p) => !p.gift);
   const a = cands[Math.floor(Math.random() * cands.length)];
   if (!a) return false;
-  const g = document.createElement('div'); g.className = 'bubble gift pop'; g.textContent = '🎁 ' + text;
+  const g = document.createElement('div'); g.className = 'bubble gift pop'; g.textContent = '⟦gift⟧ ' + text;
   g.addEventListener('pointerdown', (e) => { e.stopPropagation(); g.remove(); a.gift = null; onClick?.(); });
   labelsEl.appendChild(g); a.gift = g;
   setTimeout(() => { if (a.gift === g) { g.remove(); a.gift = null; } }, 14000);

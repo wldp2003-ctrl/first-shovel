@@ -8,14 +8,14 @@ import { h, openModal, shuffle, sleep, $, toast, won } from './ui.js';
 import { sfx } from './audio.js';
 
 const FIX = {
-  gate: ['출입문이 열려 있었어요 → 잠갔어요', '잠겨 있어요 ✔'],
-  panel: ['분전반이 켜져 있었어요 → 작업 회로 차단 (조명·양수기 회로는 유지)', '차단되어 있어요 ✔'],
-  fire: ['용접 자리에 불씨가 남아 있었어요 → 끄고 소화기 위치 확인', '불씨 없음 · 소화기 제자리 ✔'],
-  bind: ['자재가 풀려 있었어요 → 끈으로 결속', '결속 상태 좋음 ✔'],
-  cover: ['개구부 덮개가 밀려 있었어요 → 고정', '덮개 고정 ✔'],
-  pump: ['배수로에 흙이 막혀 있었어요 → 정리, 양수기 작동 확인', '배수로 깨끗 ✔'],
-  crane: ['선회 브레이크가 걸려 있었어요 → 해제(프리 슬루) 요청·확인', '훅 올림 · 프리 슬루 ✔'],
-  roof: ['최상층 난간 한 칸이 풀려 있었어요 → 고정, 개구부 덮개 확인', '난간·덮개 이상 없음 ✔'],
+  gate: ['출입문이 열려 있었어요 → 잠갔어요', '잠겨 있어요 ⟦check⟧'],
+  panel: ['분전반이 켜져 있었어요 → 작업 회로 차단 (조명·양수기 회로는 유지)', '차단되어 있어요 ⟦check⟧'],
+  fire: ['용접 자리에 불씨가 남아 있었어요 → 끄고 소화기 위치 확인', '불씨 없음 · 소화기 제자리 ⟦check⟧'],
+  bind: ['자재가 풀려 있었어요 → 끈으로 결속', '결속 상태 좋음 ⟦check⟧'],
+  cover: ['개구부 덮개가 밀려 있었어요 → 고정', '덮개 고정 ⟦check⟧'],
+  pump: ['배수로에 흙이 막혀 있었어요 → 정리, 양수기 작동 확인', '배수로 깨끗 ⟦check⟧'],
+  crane: ['선회 브레이크가 걸려 있었어요 → 해제(프리 슬루) 요청·확인', '훅 올림 · 프리 슬루 ⟦check⟧'],
+  roof: ['최상층 난간 한 칸이 풀려 있었어요 → 고정, 개구부 덮개 확인', '난간·덮개 이상 없음 ⟦check⟧'],
 };
 
 export function shouldNight(ctx) {
@@ -30,7 +30,7 @@ export function nightCard(ctx, then) {
   st.nightDay = st.day; ctx.save();
   const why = tw.rain >= 1 || tw.wind >= 8 ? $t('night.nightCard.9', { v1: tw.rain >= 1 ? $t('night.nightCard.7', { rain: tw.rain }) : '', v2: tw.rain >= 1 && tw.wind >= 8 ? ' · ' : '', v3: tw.wind >= 8 ? $t('night.nightCard.8', { wind: tw.wind }) : '' }) : $t('night.nightCard.6');
   const m = openModal({ title: $t('night.nightCard.5'), body: h('div', { class: 'col' },
-    h('div', { class: 'night-art' }, '🌙 ✨ 🏗️ 🔦'),
+    h('div', { class: 'night-art' }, '⟦moon⟧ ⟦star⟧ ⟦site⟧ ⟦light⟧'),
     h('div', {}, $t('night.nightCard.4', { why })),
     h('div', { class: 'tiny muted' }, $t('night.nightCard.3')),
     h('div', { class: 'grid2' },
@@ -84,7 +84,7 @@ export function runNight(ctx, then) {
       api.box(1, 0.6, 1, 0x555555, pos.fire[0], 0, pos.fire[1]); api.box(0.4, 0.8, 0.4, 0xd83a2a, pos.fire[0] + 1.3, 0, pos.fire[1]);
       if (ctx.hasCrane()) props.crane(api, pos.crane[0], pos.crane[1] - 1, pos.crane[0] - 6, pos.crane[1] - 1);
       items.forEach((id) => api.addSpot({ x: pos[id][0], z: pos[id][1] - (id === 'gate' ? 1.5 : 0), r: 2.6, icon: NIGHT_ITEMS[id].ic, id, act: $t('night.tLabel.5') }));
-      api.addSpot({ x: stair[0], z: stair[1] + 3, r: 2.4, icon: '🧗', id: 'stairs', act: $t('night.tLabel.4') });
+      api.addSpot({ x: stair[0], z: stair[1] + 3, r: 2.4, icon: '⟦stairs⟧', id: 'stairs', act: $t('night.tLabel.4') });
       mate = api.person(1.5, 10.5, { vest: 0x3a7bd5 });
       if (Math.random() < 0.6) { cat = api.group(-12, 4); api.addBox(cat, 0.6, 0.35, 0.3, 0xe08a3a, 0, 0, 0); api.addBox(cat, 0.3, 0.3, 0.3, 0xe08a3a, 0.4, 0.3, 0); }
     },
@@ -102,10 +102,10 @@ export function runNight(ctx, then) {
       if (spot.id === 'stairs') return goRoof(api);
       const id = spot.id, isBad = bad.has(id);
       checked.push(id); if (isBad) fixed.push(id);
-      api.doneSpot(spot, isBad ? '🔧' : '✅');
+      api.doneSpot(spot, isBad ? '⟦tool⟧' : '⟦check⟧');
       sfx(isBad ? 'tamp' : 'good');
       api.setInfo(`${NIGHT_ITEMS[id].ic} ${tLabel(id)} — ${FIX[id][isBad ? 0 : 1]}`);
-      if (!field) setTimeout(() => !api.ended && api.setInfo(`💡 ${NIGHT_ITEMS[id].why}`), 2600);
+      if (!field) setTimeout(() => !api.ended && api.setInfo(`⟦idea⟧ ${NIGHT_ITEMS[id].why}`), 2600);
       if (checked.length === items.length) api.say(mate, $t('night.tLabel.2'), 3.5);
     },
     onTimeUp: (api) => { api.setInfo($t('night.tLabel.1')); setTimeout(() => goRoof(api), 1200); },
@@ -116,7 +116,7 @@ export function runNight(ctx, then) {
     if (went) return; went = true;
     api.end(true);
     if (quit) return finish();
-    const el = h('div', { class: 'stairs night' }, h('div', { class: 'big-ic' }, '🔦🧗'), h('b', {}, $t('night.goRoof.5')), h('div', { class: 'pbar' }, h('i')));
+    const el = h('div', { class: 'stairs night' }, h('div', { class: 'big-ic' }, '⟦light⟧⟦stairs⟧'), h('b', {}, $t('night.goRoof.5')), h('div', { class: 'pbar' }, h('i')));
     $('#app').append(el);
     for (let k = 0; k <= 10; k++) { el.querySelector('.pbar i').style.width = k * 10 + '%'; await sleep(140); }
     el.remove();
@@ -136,7 +136,7 @@ export function runNight(ctx, then) {
       onAction(spot, api2) {
         if (!spot) return;
         roofChecked = true; if (roofBad) fixed.push('roof');
-        api2.doneSpot(spot, roofBad ? '🔧' : '✅'); sfx('good');
+        api2.doneSpot(spot, roofBad ? '⟦tool⟧' : '⟦check⟧'); sfx('good');
         api2.setInfo(`${tLabel('roof')} — ${FIX.roof[roofBad ? 0 : 1]}`);
         dawn(api2);
       },

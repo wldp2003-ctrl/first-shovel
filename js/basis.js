@@ -85,11 +85,11 @@ export function basisCard(key, { stopLine = false } = {}) {
   const b = BASIS[key];
   if (!b) return null;
   return h('div', { class: 'basis' },
-    h('div', { class: 'bz-row' }, h('b', {}, '🔧 무슨 작업?'), h('span', {}, b.work)),
-    h('div', { class: 'bz-row' }, h('b', {}, '⚠️ 왜 위험?'), h('span', {}, b.why)),
-    h('div', { class: 'bz-src' }, h('b', {}, '📚 근거'),
+    h('div', { class: 'bz-row' }, h('b', {}, '⟦tool⟧ 무슨 작업?'), h('span', {}, b.work)),
+    h('div', { class: 'bz-row' }, h('b', {}, '⟦warn⟧ 왜 위험?'), h('span', {}, b.why)),
+    h('div', { class: 'bz-src' }, h('b', {}, '⟦book⟧ 근거'),
       ...b.src.map(([lv, t, chk]) => h('div', { class: 'bz-item' }, h('i', { class: 'bz ' + lv }, LV[lv]), chk ? h('i', { class: 'bz chk' }, '확인 중') : null, h('span', {}, t)))),
-    stopLine ? h('div', { class: 'bz-stop' }, '✋ 위험하면 멈추고 알려도 돼요 · 산업안전보건법 제52조') : null);
+    stopLine ? h('div', { class: 'bz-stop' }, '⟦stop⟧ 위험하면 멈추고 알려도 돼요 · 산업안전보건법 제52조') : null);
 }
 
 // 이유만 한 줄 (오답일 때 힌트)

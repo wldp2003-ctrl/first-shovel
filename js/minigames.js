@@ -461,7 +461,7 @@ function liteResult(m, { big, reward, lessonId, lang, good, extra }) {
   const L = FIELD_LESSON[lessonId];
   sfx(good ? 'fanfare' : 'coin');
   m.setBody(h('div', { class: 'col' }, h('div', { class: 'big-score' }, big), extra,
-    h('div', { class: 'lesson' }, h('b', {}, `💡 ${FIELD_UI[lang]?.learned || $t('minigames.liteResult.3')}`), h('div', {}, L[lang] || L.ko), koOn() ? h('div', { class: 'tl-ko' }, L.ko) : null),
+    h('div', { class: 'lesson' }, h('b', {}, `⟦idea⟧ ${FIELD_UI[lang]?.learned || $t('minigames.liteResult.3')}`), h('div', {}, L[lang] || L.ko), koOn() ? h('div', { class: 'tl-ko' }, L.ko) : null),
     basisCard(lessonId),
     h('div', { class: 'reward' }, $t('minigames.liteResult.2', { reward: won(reward) })), h('button', { class: 'btn primary big', onclick: () => m.close() }, $t('minigames.liteResult.1'))));
   m.el.dataset.done = '1';
@@ -530,7 +530,7 @@ export function runConflict(conf, onResult) {
 
 /* ================= 인부와 대화 (카톡풍) ================= */
 export function runTalk(talk, onResult) {
-  const m = openModal({ title: `💬 ${talk.who}`, body: '', cls: 'talk', closable: true });
+  const m = openModal({ title: `⟦chat⟧ ${talk.who}`, body: '', cls: 'talk', closable: true });
   const chat = h('div', { class: 'chat' });
   const choices = h('div', { class: 'col gap6' });
   m.setBody(h('div', { class: 'col' }, chat, choices));
