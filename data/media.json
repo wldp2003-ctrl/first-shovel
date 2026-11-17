@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-16",
+ "updated": "2026-11-17",
  "note": "앱에 쓰는 그림·사진·글꼴의 출처와 이용 조건. 실제 사진을 넣을 때는 촬영 동의·얼굴·회사명 가림 여부를 꼭 적는다(people 칸). 확인: node tools/smoke-v13.mjs 7번",
  "media": [
   {
@@ -242,10 +242,19 @@
    "reference": "원작 캐릭터 첫삽이 — 유명 캐릭터를 닮지 않게(디자인 가이드 0-7)"
   },
   {
+   "id": "site3d-v14",
+   "kind": "직접 만든 3D (three.js 블록)",
+   "file": "js/learn/site3d.js",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "블록 인물(실존 인물 아님)",
+   "reference": "직접 만든 3D 게임(지예건설)의 블록 방식"
+  },
+  {
    "id": "fonts",
    "kind": "글꼴",
    "file": "fonts/",
-   "author": "Pretendard(Kil Hyung-jin), Noto Sans(Google)",
+   "author": "Pretendard(Kil Hyung-jin), Noto Sans(Google), Black Han Sans(Zess Type)",
    "license": "SIL OFL 1.1 (fonts/OFL-*.txt)"
   }
  ]

@@ -8,7 +8,7 @@
 export const POSES = ['stand', 'wave', 'thumb', 'stop', 'proud'];
 export const FACES = ['basic', 'joy', 'surprise', 'worry', 'think', 'firm', 'proud'];
 const OUT = 6, IN = 4; // 바깥선·안쪽선 굵기 (200×240 기준)
-const C = { ink: 'var(--ink)', brand: 'var(--brand)', brandDark: 'var(--brand-dark)', skin: 'var(--skin)', bg: 'var(--bg)', soft: 'var(--bg-soft)', ink2: 'var(--ink-2)', mouth: 'var(--danger-dark)', edge: 'var(--stripe-edge)', steel: 'var(--locked)' };
+const C = { ink: 'var(--ink)', brand: 'var(--brand)', vest: 'var(--vest)', brandDark: 'var(--brand-dark)', skin: 'var(--skin)', bg: 'var(--bg)', soft: 'var(--bg-soft)', ink2: 'var(--ink-2)', mouth: 'var(--danger-dark)', edge: 'var(--stripe-edge)', steel: 'var(--locked)' };
 let uid = 0;
 
 // 앱 로고와 같은 삽 모양 (안전모 마크·로고·앱 아이콘 공통). (cx, top) 기준, 높이 h
@@ -54,7 +54,7 @@ const FACE = {
 };
 function face(name, o) {
   const f = FACE[name] || FACE.basic;
-  const cheeks = o.simple || o.mono ? '' : `<ellipse cx="71" cy="98" rx="8" ry="5" fill="${C.brand}" opacity=".4"/><ellipse cx="129" cy="98" rx="8" ry="5" fill="${C.brand}" opacity=".4"/>`;
+  const cheeks = o.simple || o.mono ? '' : `<ellipse cx="71" cy="98" rx="8" ry="5" fill="${C.vest}" opacity=".4"/><ellipse cx="129" cy="98" rx="8" ry="5" fill="${C.vest}" opacity=".4"/>`;
   return cheeks + (f.brows || '') + `<g class="m-eyes">${f.eyes}</g>` + f.mouth;
 }
 
@@ -89,7 +89,7 @@ function body(pose, o, id) {
   if (hasShovel) g += pose === 'proud' ? shovel(34, 92, 232, o) : shovel(36, 140, 230, o);
   // 몸통: 주황 조끼 + 흰 반사띠 2줄(회색 테두리)
   g += `<clipPath id="tc${id}"><path d="${TORSO}"/></clipPath>`;
-  g += `<path d="${TORSO}" fill="${o.mono ? C.bg : C.brand}"/>`;
+  g += `<path d="${TORSO}" fill="${o.mono ? C.bg : C.vest}"/>`;
   if (!o.simple && !o.mono) g += `<g clip-path="url(#tc${id})"><rect x="40" y="146" width="120" height="9" fill="${C.bg}" stroke="${C.edge}" stroke-width="2"/><rect x="40" y="164" width="120" height="9" fill="${C.bg}" stroke="${C.edge}" stroke-width="2"/></g>`;
   if (!o.simple) g += `<path d="M100 114 V192" stroke="${C.ink}" stroke-width="${IN}" stroke-linecap="round"/>`; // 조끼 여밈
   g += `<path d="${TORSO}" fill="none" stroke="${C.ink}" stroke-width="${OUT}" stroke-linejoin="round"/>`;

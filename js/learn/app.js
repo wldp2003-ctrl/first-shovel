@@ -4,6 +4,7 @@ import { art, dressFigure } from './art.js';
 import { icon, LESSON_ICON, LESSON_TONE } from './icons.js';
 import { logoMark, sapi, building } from './brand.js';
 import { sceneFloor, pair } from './scene-art.js';
+import { mountSite } from './site3d.js';
 import { sceneTbm, sceneScaffold, sceneLifting, sceneEquip, scenePour, sceneHot, STOP } from './scene-art2.js';
 
 // append(..., 조건 ? 요소 : null)에서 "null" 글자가 찍히지 않게
@@ -140,7 +141,10 @@ const dots = (n, i) => { const d = $('#dots'); if (!d) return; d.innerHTML = '';
 /* ---------------- 첫 화면: 현장 지도 (v13) ---------------- */
 function home(v) {
   v.dataset.say = !S.pre ? t('say.homeStart') : t('say.home');
-  v.append(unitCard(), siteMap());
+  // 3D 공사 현장 지도 (WebGL 을 못 쓰면 평면 길)
+  const site = h('div', { class: 'site3d', 'aria-label': t('map.title') });
+  v.append(unitCard(), site);
+  mountSite(site, { zones: siteZones(), onPick: (z) => (z.roof ? stopTell() : openScene(z.id)) }).then((r) => { if (!r && site.isConnected) site.replaceWith(siteMap()); });
   const td = todayScene(); if (td) v.append(todayCard(td));
   v.append(installTip());
   // 기초 레슨 6개 (v11 문장 그대로) — 글로 더 배우고 싶은 사람용
@@ -152,8 +156,24 @@ function home(v) {
       h('span', { class: 'lt' }, h('b', {}, `${x.no}. ${T(x.title)}`), h('small', {}, `${T(x.kind)} · ${t('home.minutes')}`)),
       h('span', { class: 'st' }, st === 'done' ? h('span', { class: 'done-ic', 'aria-label': t('home.statusDone') }, ic('check', { size: 20 })) : st === 'doing' ? h('span', { class: 'doing' }, t('home.statusDoing')) : ic('next', { size: 20 }))));
   });
-  v.append(h('details', { class: 'more-lessons', open: isPic() ? null : true }, h('summary', {}, ic('learn', { size: 20 }), h('span', {}, t('home.lessonsMore'))), isPic() ? null : h('p', { class: 'small' }, t('home.lessonsMoreNote')), list));
+  // 기초 레슨 6개 — 첫 화면에서 바로 (v14)
+  v.append(h('section', { class: 'lessons6' }, h('h2', { class: 'sec head' }, ic('learn', { size: 24 }), h('span', {}, t('home.lessons6'))), h('p', { class: 'small' }, t('home.lessons6Note')), list));
   v.append(h('p', { class: 'note' }, t('home.note')));
+}
+// 3D 지도 이름표는 짧게 (겹치지 않게)
+const SHORT = { tbm: '출근', floor: '골조 바닥', scaffold: '비계', lifting: '양중', equip: '장비', pour: '타설', hot: '용접·밀폐' };
+// 3D 지도 구역: 상태(완료·지금·잠김), 번호 표시 아이콘, 이름, 별
+function siteZones() {
+  const nx = nextScene(), all = allScenes();
+  const z = SC.scenes.map((sc, i) => {
+    const open = sceneOpen(i), b = S.scenes?.[sc.id]?.best, cur = nx?.id === sc.id;
+    const state = cur ? 'cur' : b ? 'done' : open ? 'cur' : 'lock';
+    return { id: sc.id, no: sc.no, state, label: `${sc.no}. ${sc.title}`, name: `${sc.no} ${SHORT[sc.id] || sc.title}`, icon: icon(cur ? 'star' : b ? 'check' : open ? 'star' : 'lock', { size: 28 }),
+      starsHtml: b ? stars(b.stars, 12).outerHTML : '', mascot: cur ? sapi({ size: 60, mood: 'wave' }) : '', tip: t('map.start') };
+  });
+  const st = S.stop?.done ? 'done' : all ? 'cur' : 'lock';
+  z.push({ roof: true, id: 'roof', state: st, label: t('stop.title'), name: t('stop.title'), icon: icon(S.stop?.done ? 'check' : all ? 'stop' : 'lock', { size: 28 }), mascot: st === 'cur' ? sapi({ size: 64, mood: 'wave' }) : '', tip: t('map.start') });
+  return z;
 }
 // 시안의 주황 현장 카드: 지금 할 일 하나 (그림 점검 → 다음 현장 → 멈추고 알려요 → 마지막 점검 → 확인서) + 듣기
 function unitCard() {
@@ -213,7 +233,7 @@ function todayScene() {
 }
 function todayCard(sc) {
   return h('button', { class: 'today', id: 'todayBtn', 'aria-label': t('today.title'), onclick: () => swipeSet(sc.id, { today: true }) },
-    h('span', { class: 'lic tone-yellow' }, ic('search')), h('span', { class: 'today-t' }, isPic() ? ic('time', { size: 20 }) : h('b', {}, t('today.title')), isPic() ? null : h('small', {}, t('today.sub'))), thumb(sc), ic('next'));
+    h('span', { class: 'lic tone-yellow' }, ic('search')), h('span', { class: 'today-t' }, h('b', {}, ic('time', { size: 18 }), ' ', t('today.title')), isPic() ? null : h('small', {}, t('today.sub'))), thumb(sc), ic('next'));
 }
 
 function optionList(q, order, onPick) {
@@ -232,7 +252,7 @@ function feedbackBar({ ok, title, sub, say, pics, btn, id, onNext }) {
     h('div', { class: 'fb-hd' }, h('span', { class: 'sapi-s', html: sapi({ size: 64, mood: ok ? 'cheer' : 'worry', cls: ok ? 'm-hop' : 'm-tilt' }) }),
       h('div', { class: 'grow' }, h('b', {}, h('span', { class: 'mk' }, ic(ok ? 'check' : 'cross', { size: 16 })), title), isPic() || !sub ? null : h('small', {}, sub)), say ? h('button', { class: 'q-say fb-say', 'aria-label': t('scene.listen'), onclick: () => speak(say) }, ic('sound', { size: 22 })) : null),
     pics ? h('div', { class: 'fb-pics' }, pics.map((x) => (typeof x === 'string' ? h('span', { class: 'pic', html: x }) : h('span', { class: 'pic ' + (x.ok ? 'ok' : 'no'), html: x.html }, h('span', { class: 'mk' }, ic(x.ok ? 'check' : 'cross', { size: 16 })))))) : null,
-    h('button', { class: 'btn big ' + (ok ? 'ok-btn' : 'no-btn'), id, 'aria-label': btn, onclick: () => { bar.remove(); document.body.classList.remove('has-fbar'); onNext(); } }, isPic() ? ic(ok ? 'next' : 'check') : h('span', {}, btn)));
+    h('button', { class: 'btn big ' + (ok ? 'ok-btn' : 'no-btn'), id, 'aria-label': btn, onclick: () => { bar.remove(); document.body.classList.remove('has-fbar'); onNext(); } }, ic(ok ? 'next' : 'check'), h('span', {}, btn)));
   document.body.append(bar); document.body.classList.add('has-fbar');
   if (ok) { buzz(15); beep(); } else buzz(40);
 }
@@ -300,7 +320,7 @@ function swipeSet(id, o = {}) {
     stage.append(h('div', { class: 'result' }, h('span', { class: 'sapi-s', html: sapi({ size: 64, mood: n === res.length ? 'cheer' : 'hi' }) }),
       isPic() ? null : h('div', { class: 'big' }, t('swipe.score', { n: res.length, s: n })),
       h('div', { class: 'nav2' }, h('button', { class: 'btn', id: 'swAgain', 'aria-label': t('scene.again'), onclick: () => swipeSet(id, o) }, ic('retry'), isPic() ? null : h('span', {}, t('scene.again'))),
-        h('button', { class: 'btn primary', id: 'swHome', 'aria-label': t('scene.home'), onclick: () => go('home') }, isPic() ? ic('learn') : h('span', {}, t('scene.home')), ic('next')))));
+        h('button', { class: 'btn primary', id: 'swHome', 'aria-label': t('scene.home'), onclick: () => go('home') }, ic('map'), h('span', {}, t('scene.home')), ic('next')))));
   }
   show();
 }
@@ -337,7 +357,7 @@ function runPicTest(kind) {
     if (kind === 'pre') {
       v.append(h('div', { class: 'result' }, h('span', { class: 'sapi-s', html: sapi({ size: 72, mood: 'hi' }) }), marks(rec),
         isPic() ? null : h('div', { class: 'big' }, t('test.score', { n: rec.n, s: rec.score })), isPic() ? null : h('p', {}, t('test.preDoneV13'))),
-        h('button', { class: 'btn primary big', id: 'toScene0', 'aria-label': t('test.toScene0'), onclick: () => openScene(SC.scenes[0].id) }, isPic() ? thumb(SC.scenes[0]) : h('span', {}, t('test.toScene0')), ic('next')));
+        h('button', { class: 'btn primary big', id: 'toScene0', 'aria-label': t('test.toScene0'), onclick: () => openScene(SC.scenes[0].id) }, thumb(SC.scenes[0]), h('span', {}, t('test.toScene0')), ic('next')));
     } else {
       const pre = S.pre?.kind === 'pic' ? S.pre : null;
       v.append(h('div', { class: 'result' }, pre ? marks(pre) : null, marks(rec),
@@ -374,7 +394,7 @@ function stopTell() {
       h('div', { class: 'haz-head' }, h('span', { class: 'sapi-s', html: sapi({ size: 48, mood: 'cheer' }) }), isPic() ? null : h('b', {}, T(line)), h('span', { class: 'grow' }), speakBtn(T0(line))),
       isPic() ? null : h('p', { class: 'small' }, t('stop.note')),
       isPic() ? null : basisFor(line.src),
-      h('button', { class: 'btn primary big', id: 'stopNext', 'aria-label': S.post ? t('scene.home') : t('home.post'), onclick: () => (S.post ? go('home') : runPicTest('post')) }, isPic() ? ic(S.post ? 'learn' : 'check') : h('span', {}, S.post ? t('scene.home') : t('home.post')), ic('next'))));
+      h('button', { class: 'btn primary big', id: 'stopNext', 'aria-label': S.post ? t('scene.home') : t('home.post'), onclick: () => (S.post ? go('home') : runPicTest('post')) }, ic(S.post ? 'map' : 'check'), h('span', {}, S.post ? t('scene.home') : t('home.post')), ic('next'))));
   }
 }
 
@@ -626,10 +646,7 @@ function dex() {
 // 설정: 소리(기본 꺼짐)·진동·기록 지우기
 function settingsBox() {
   const row = (name, key, label) => h('label', { class: 'set-row' }, ic(name), h('span', {}, label), h('input', { type: 'checkbox', role: 'switch', checked: UI[key] ? true : null, onchange: (e) => { UI[key] = e.target.checked; saveUI(); if (key === 'sound' && UI.sound) beep(); } }));
-  // 그림 / 글 모드 (상단 바에서 옮김)
-  const modeRow = h('div', { class: 'set-row mode-row' }, ic('eye'), h('span', {}, t('settings.mode')),
-    h('span', { class: 'mode-pick sm' }, [['pic', ['eye', 'finger'], t('intro.modePic')], ['text', ['textmode'], t('intro.modeText')]].map(([m, icn, lb]) => h('button', { class: 'mode-opt' + ((UI.mode || 'pic') === m ? ' sel' : ''), id: 'mode-' + m, 'data-mode': m, 'aria-pressed': String((UI.mode || 'pic') === m), 'aria-label': lb, onclick: () => { UI.mode = m; saveUI(); go('record'); } }, h('span', { class: 'mode-ics' }, icn.map((n) => ic(n, { size: 22 }))), h('b', {}, lb)))));
-  return h('div', { class: 'card-lite set' }, modeRow,
+  return h('div', { class: 'card-lite set' },
     row('sound', 'sound', t('settings.sound')), row('vibrate', 'vibrate', t('settings.vibrate')),
     h('div', { class: 'set-row' }, ic('globe'), h('span', {}, t('settings.lang')), h('b', {}, '한국어')),
     h('button', { class: 'btn danger', onclick: () => { if (confirm(t('settings.wipeAsk'))) { localStorage.removeItem(KEY); localStorage.removeItem(DONE_KEY); S = fresh(); UI.floorsSeen = 0; saveUI(); noteHour(); save(); go('home'); } } }, t('settings.wipe')));
@@ -734,8 +751,6 @@ function intro() {
     const langs = [['ko', '한국어', true], ['en', 'English', false], ['vi', 'Tiếng Việt', false], ['zh', '中文', false], ['ru', 'Русский', false]];
     v.append(h('div', { class: 'intro' }, h('span', { class: 'intro-cert' }, ic('globe', { size: 56 })), h('h2', {}, t('intro.langH'))),
       h('div', { class: 'opts langs' }, langs.map(([id, nm, ok]) => h('button', { class: 'opt' + (ok ? ' right sel' : ''), disabled: !ok, 'data-lang': id, lang: id }, h('span', { class: 'opt-t' }, nm), ok ? h('span', { class: 'mark-ok' }, ic('check', { size: 20 })) : h('small', { class: 'soon' }, t('intro.soon'))))),
-      h('h2', { class: 'mode-h' }, t('intro.modeH')),
-      h('div', { class: 'mode-pick' }, [['pic', ['eye', 'finger'], t('intro.modePic')], ['text', ['textmode'], t('intro.modeText')]].map(([m, icn, lb]) => h('button', { class: 'mode-opt' + ((UI.mode || 'pic') === m ? ' sel' : ''), 'data-mode': m, 'aria-pressed': String((UI.mode || 'pic') === m), onclick: () => { UI.mode = m; saveUI(); lang(); } }, h('span', { class: 'mode-ics' }, icn.map((n) => ic(n, { size: 30 }))), h('b', {}, lb)))),
       h('button', { class: 'btn primary big', id: 'langGo', onclick: () => runPicTest('pre') }, h('span', {}, t('intro.toPre')), ic('next')));
   };
   show();
@@ -761,7 +776,8 @@ function installTip() {
 
 /* ---------------- v13 현장 위험 찾기 ---------------- */
 // 그림 모드(기본): 글을 읽지 않아도 되게 — 손가락 안내, 그림·아이콘·색·표정으로만 진행. 글 모드: 같은 화면에 글을 함께
-const isPic = () => UI.mode !== 'text';
+// v14: 그림과 글을 항상 함께 — 글을 숨기는 그림 모드는 없앰 (교수님 말씀은 "그림을 함께")
+const isPic = () => false;
 const SC_ART = { sceneFloor, sceneTbm, sceneScaffold, sceneLifting, sceneEquip, scenePour, sceneHot };
 const HAZ_TYPES = ['fall', 'trip', 'pierce', 'struck', 'hit', 'caught', 'collapse', 'shock', 'fire', 'suffocate', 'heat'];
 const scene = (id) => SC.scenes.find((s) => s.id === id);
@@ -907,7 +923,7 @@ function openScene(id, o = {}) {
   // 결과 다음 버튼: 다음 장면 → (다 깼으면) 멈추고 알려요 → 처음으로
   function afterBtn() {
     const i = SC.scenes.indexOf(sc), nx = SC.scenes[i + 1];
-    const btn = (bid, label, fn) => h('button', { class: 'btn primary big done-go', id: bid, 'aria-label': label, onclick: fn }, isPic() ? ic('next') : h('span', {}, t('fb.continue')));
+    const btn = (bid, label, fn) => h('button', { class: 'btn primary big done-go', id: bid, 'aria-label': label, onclick: fn }, h('span', {}, t('fb.continue')), ic('next'));
     if (!o.today && nx && sceneOpen(i + 1)) return btn('sceneNext', `${nx.no}. ${nx.title}`, () => openScene(nx.id));
     if (!o.today && allScenes() && !S.stop?.done) return btn('sceneStop', t('stop.title'), stopTell);
     return btn('sceneHome', t('scene.home'), () => go('home'));
@@ -940,7 +956,7 @@ function hazCard(z, onNext, label) {
       h('span', { class: 'pair-arrow' }, ic('next')),
       h('figure', { class: 'good' }, h('div', { class: 'pic', html: pair(z.good) }), h('span', { class: 'mk mk-good' }, ic('check', { size: 18 })), isPic() ? null : h('figcaption', {}, t('scene.good')))),
     isPic() ? null : h('p', { class: 'haz-line' + (isDraft(z.line) ? ' draft' : '') }, T(z.line)),
-    h('button', { class: 'btn primary big', onclick: onNext }, isPic() ? ic('search') : h('span', {}, label), ic('next')));
+    h('button', { class: 'btn primary big', onclick: onNext }, ic('search'), h('span', {}, label), ic('next')));
 }
 // 그림 모드 / 글 모드 바꾸기 (상단 버튼)
 function modeBtn() {

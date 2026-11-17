@@ -5,9 +5,9 @@ const NAVY = 'var(--ink)', NAVY7 = 'var(--ink)', DIRT = 'var(--art-dirt)', DIRT2
 // 로고(v12.1): 주황 삽이 땅(남색 선)을 한 번 떠서 흙 한 덩이를 든 모습. 윤곽선은 남색
 // onBrand: 앱 아이콘용 — 주황 바탕 위에 흰 삽
 export function logoMark({ size = 96, onBrand = false } = {}) {
-  const blade = onBrand ? 'var(--bg)' : 'var(--brand)';
-  return `<svg width="${size}" height="${size}" viewBox="0 0 96 96" aria-hidden="true">${onBrand ? '<rect width="96" height="96" fill="var(--brand)"/>' : ''}
-  <g class="lg-ground"><path d="M12 78 Q48 70 84 78" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/></g>
+  const blade = 'var(--brand)';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 96 96" aria-hidden="true">${onBrand ? '<rect width="96" height="96" fill="var(--asphalt)"/><rect y="86" width="96" height="10" fill="var(--brand)"/>' : ''}
+  <g class="lg-ground"><path d="M12 78 Q48 70 84 78" fill="none" stroke="${onBrand ? 'var(--brand)' : 'var(--ink)'}" stroke-width="4.5" stroke-linecap="round"/></g>
   <g class="lg-shovel" transform="rotate(-38 48 48)">
     <path d="M38 9 H58" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/><path d="M38 9 H58" stroke="${blade}" stroke-width="4" stroke-linecap="round"/>
     <path d="M48 9 V50" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/><path d="M48 9 V50" stroke="${blade}" stroke-width="4" stroke-linecap="round"/>

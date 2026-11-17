@@ -25,7 +25,7 @@ export function openWalk(o) {
   const title = h('div', { class: 'walk-title' }, o.title || '');
   const info = h('div', { class: 'walk-info' }, o.info || '');
   const timerEl = h('div', { class: 'walk-timer hidden' });
-  const quit = h('button', { class: 'x walk-x', 'aria-label': $t('walk.openWalk.2') }, '⟦cross⟧');
+  const quit = h('button', { class: 'x walk-x', 'aria-label': $t('walk.openWalk.2') }, '✕');
   const actBtn = h('button', { class: 'walk-act', disabled: true }, o.actionLabel || $t('walk.openWalk.1'));
   const extra = h('div', { class: 'walk-extra' });
   const hud = h('div', { class: 'walk-hud' }, h('div', { class: 'walk-top' }, title, timerEl, quit), info);
@@ -103,10 +103,10 @@ export function openWalk(o) {
     },
     addSpot(s) {
       const spot = { r: 2.2, done: false, ...s };
-      if (s.icon !== null) spot.mark = api.label(s.icon ?? '⟦warn⟧', s.x, s.y ?? 2.6, s.z, 'mark' + (s.cls ? ' ' + s.cls : ''));
+      if (s.icon !== null) spot.mark = api.label(s.icon ?? '❗', s.x, s.y ?? 2.6, s.z, 'mark' + (s.cls ? ' ' + s.cls : ''));
       spots.push(spot); return spot;
     },
-    doneSpot(spot, icon = '⟦check⟧') {
+    doneSpot(spot, icon = '✅') {
       spot.done = true;
       if (spot.mark) { spot.mark.el.textContent = icon; spot.mark.el.classList.add('done'); }
     },

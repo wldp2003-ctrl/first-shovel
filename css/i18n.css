@@ -1,24 +1,24 @@
 /* ===== 다국어: 언어별 글꼴 순서 · 긴 글 줄바꿈 ===== */
 /* 제목 글꼴 Black Han Sans는 한글 전용 → 중국어는 Noto Sans SC, 베트남어·러시아어는 Noto Sans(성조·키릴 문자 지원) */
 :root {
-  --font-head: var(--font);
-  --font-body: var(--font);
+  --font-head: 'Black Han Sans', 'Noto Sans SC', 'Noto Sans', sans-serif;
+  --font-body: 'IBM Plex Sans KR', 'Noto Sans', 'Noto Sans SC', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
-body.lang-zh { --font-head: 'Noto Sans SC', sans-serif; --font-body: 'Noto Sans SC', system-ui, sans-serif; }
-body.lang-vi, body.lang-ru { --font-head: 'Noto Sans', sans-serif; --font-body: 'Noto Sans', system-ui, sans-serif; }
+body.lang-zh { --font-head: 'Noto Sans SC', 'Black Han Sans', sans-serif; --font-body: 'Noto Sans SC', 'IBM Plex Sans KR', system-ui, sans-serif; }
+body.lang-vi, body.lang-ru { --font-head: 'Noto Sans', 'Black Han Sans', sans-serif; --font-body: 'Noto Sans', 'IBM Plex Sans KR', system-ui, sans-serif; }
 /* Noto 제목은 굵게 (Black Han Sans처럼 보이게) */
 body.lang-zh .modal-title, body.lang-zh .sheet-head, body.lang-zh .walk-title, body.lang-zh .big-score, body.lang-zh .conf-title, body.lang-zh .term-big,
 body.lang-vi .modal-title, body.lang-vi .sheet-head, body.lang-vi .walk-title, body.lang-vi .big-score, body.lang-vi .conf-title,
 body.lang-ru .modal-title, body.lang-ru .sheet-head, body.lang-ru .walk-title, body.lang-ru .big-score, body.lang-ru .conf-title { font-weight: 800; }
 body.lang-zh .sheet-head b, body.lang-vi .sheet-head b, body.lang-ru .sheet-head b { font-weight: 800; }
 /* 한국어 로고 · 현장 말 퀴즈의 한국어 정답 · 한국어 함께 보기는 항상 한글 글꼴 */
-.logo, .term-big, .opt.term, .tl-ko { font-family: sans-serif; }
-.tl-ko { font-family: sans-serif; }
+.logo, .term-big, .opt.term, .tl-ko { font-family: 'Black Han Sans', 'IBM Plex Sans KR', sans-serif; }
+.tl-ko { font-family: 'IBM Plex Sans KR', sans-serif; }
 small.tl-ko { display: block; font-size: 11px; line-height: 1.3; color: var(--muted); font-weight: 400; margin-top: 1px; }
-.modal-title small.tl-ko, .situ-text small.tl-ko, #topbar small.tl-ko, .walk-hud small.tl-ko, .step small.tl-ko, .fb.night small.tl-ko, .stairs small.tl-ko, .radio small.tl-ko { color: var(--ink-2); }
-.btn.primary small.tl-ko, .btn.work small.tl-ko { color: var(--ink); }
+.modal-title small.tl-ko, .situ-text small.tl-ko, #topbar small.tl-ko, .walk-hud small.tl-ko, .step small.tl-ko, .fb.night small.tl-ko, .stairs small.tl-ko, .radio small.tl-ko { color: #c9ced6; }
+.btn.primary small.tl-ko, .btn.work small.tl-ko { color: #5a4a10; }
 .logo-sub:empty { display: none; }
-.logo-sub { color: var(--ink); font-weight: 800; font-size: 18px; text-shadow: none; margin-top: -4px; }
+.logo-sub { color: #fff; font-weight: 800; font-size: 18px; text-shadow: 0 2px 0 rgba(0,0,0,.4); margin-top: -4px; }
 
 /* 긴 글(러시아어·베트남어): 버튼·칩·카드가 글에 맞춰 늘어나고 줄바꿈 */
 .btn, .item .btn, .fbtn, .seg button, .track, .hide-spot, .actcard, .dish, .btn.pic { white-space: normal; overflow-wrap: anywhere; word-break: keep-all; height: auto; min-height: 0; line-height: 1.25; }
@@ -52,13 +52,13 @@ body.lang-ru .walk-act, body.lang-vi .walk-act { font-size: 12.5px; }
 
 /* 인트로 언어 선택 */
 .langpick { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
-.langpick .chip { background: var(--bg); color: var(--ink); border: 2px solid var(--line); font-weight: 700; padding: 6px 10px; }
+.langpick .chip { background: #fff; color: var(--ink); border: 2px solid var(--asphalt); font-weight: 700; padding: 6px 10px; }
 .langpick .chip.on { background: var(--yellow); }
 .i18n-note { margin-top: 4px; }
 
 /* 번역 점검 (개발 모드) */
-.i18n-check { position: absolute; right: 2px; top: 46%; z-index: 30; background: var(--bg-soft); color: var(--ink); border-color: var(--line); font-size: 11px; opacity: .85; }
-.i18n-miss { outline: 2px solid var(--danger) !important; outline-offset: 1px; background: var(--danger-dark) !important; }
+.i18n-check { position: absolute; right: 2px; top: 46%; z-index: 30; background: #b42a1d; border-color: #fff; font-size: 11px; opacity: .85; }
+.i18n-miss { outline: 2px solid #ff1a1a !important; outline-offset: 1px; background: rgba(255,0,0,.12) !important; }
 
 /* 계획·실적 칸: 글 길이에 맞춰 */
 .barrow { grid-template-columns: auto 1fr 36px; }

@@ -14,7 +14,7 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 export function resultCard(m, { big, reward, lesson, lessonId, basisKey, lang = 'ko', extra = null, good = true }) {
   const L = lessonId && FIELD_LESSON[lessonId];
   const lessonEl = L
-    ? h('div', { class: 'lesson' }, h('b', {}, `⟦idea⟧ ${FIELD_UI[lang]?.learned || $t('games2.resultCard.4')}`), h('div', {}, L[lang] || L.ko), koOn() ? h('div', { class: 'tl-ko' }, L.ko) : null)
+    ? h('div', { class: 'lesson' }, h('b', {}, `💡 ${FIELD_UI[lang]?.learned || $t('games2.resultCard.4')}`), h('div', {}, L[lang] || L.ko), koOn() ? h('div', { class: 'tl-ko' }, L.ko) : null)
     : h('div', { class: 'lesson' }, h('b', {}, $t('games2.resultCard.3')), h('div', {}, lesson));
   sfx(good ? 'fanfare' : 'coin');
   m.setBody(h('div', { class: 'col' },
@@ -363,7 +363,7 @@ export function runWindow({ stageMult = 1, lang = 'ko', onFinish }) {
     ctx.font = '12px sans-serif'; ctx.fillStyle = '#333'; ctx.fillText($t('games2.draw.4', { v1: Math.max(0, TIME - t).toFixed(0) }), 8, 18);
     const level = gust > 0 ? 1 : warn > 0 ? 0.6 : 0.15;
     ctx.fillStyle = '#ccc'; ctx.fillRect(200, 8, 90, 10); ctx.fillStyle = level > 0.9 ? '#e5483b' : level > 0.5 ? '#ffb020' : '#2fb35a'; ctx.fillRect(200, 8, 90 * level, 10);
-    ctx.fillStyle = '#333'; ctx.fillText('⟦wind⟧', 184, 18);
+    ctx.fillStyle = '#333'; ctx.fillText('🌬', 184, 18);
     if (gust > 0) { ctx.fillStyle = 'rgba(229,72,59,.85)'; ctx.fillRect(40, 140, 220, 34); ctx.fillStyle = '#fff'; ctx.font = 'bold 15px sans-serif'; ctx.textAlign = 'center'; ctx.fillText(paused ? $t('games2.draw.3') : $t('games2.draw.2'), 150, 162); ctx.textAlign = 'left'; }
     else if (warn > 0) { ctx.fillStyle = '#b8860b'; ctx.font = 'bold 13px sans-serif'; ctx.fillText($t('games2.draw.1'), 70, 42); }
   };
@@ -407,15 +407,15 @@ export function runWindow({ stageMult = 1, lang = 'ko', onFinish }) {
 
 /* ================= 현장 4. 소장님 피해 숨기 ================= */
 const HIDE_SPOTS = [
-  { ic: '', t: '그늘 휴게소', safe: true, ex: '그늘 휴게소는 쉬라고 만든 곳이에요.' },
-  { ic: '⟦site⟧', t: '컨테이너 사무실 안', safe: true, ex: '컨테이너 안은 안전해요.' },
-  { ic: '⟦drop⟧', t: '휴게실 정수기 옆', safe: true, ex: '물도 마시고 쉬기 좋아요.' },
-  { ic: '', t: '휴게 천막', safe: true, ex: '그늘진 휴게 천막, 좋아요.' },
-  { ic: '⟦site⟧', t: '크레인 짐 아래', safe: false, ex: '짐이 떨어질 수 있어요. 크레인 짐 아래는 절대 안 돼요!' },
-  { ic: '⟦fall⟧', t: '개구부 옆', safe: false, ex: '구멍 옆에서 졸다가 떨어질 수 있어요!' },
-  { ic: '⟦stairs⟧', t: '비계 위', safe: false, ex: '비계 위는 쉬는 곳이 아니에요. 떨어질 수 있어요!' },
-  { ic: '⟦truck⟧', t: '지게차 뒤', safe: false, ex: '후진하는 지게차는 뒤가 안 보여요!' },
-  { ic: '⟦site⟧', t: '쌓인 자재 사이', safe: false, ex: '자재가 무너질 수 있어요!' },
+  { ic: '⛱️', t: '그늘 휴게소', safe: true, ex: '그늘 휴게소는 쉬라고 만든 곳이에요.' },
+  { ic: '🏠', t: '컨테이너 사무실 안', safe: true, ex: '컨테이너 안은 안전해요.' },
+  { ic: '🚰', t: '휴게실 정수기 옆', safe: true, ex: '물도 마시고 쉬기 좋아요.' },
+  { ic: '⛺', t: '휴게 천막', safe: true, ex: '그늘진 휴게 천막, 좋아요.' },
+  { ic: '🏗️', t: '크레인 짐 아래', safe: false, ex: '짐이 떨어질 수 있어요. 크레인 짐 아래는 절대 안 돼요!' },
+  { ic: '🕳️', t: '개구부 옆', safe: false, ex: '구멍 옆에서 졸다가 떨어질 수 있어요!' },
+  { ic: '🧗', t: '비계 위', safe: false, ex: '비계 위는 쉬는 곳이 아니에요. 떨어질 수 있어요!' },
+  { ic: '🚜', t: '지게차 뒤', safe: false, ex: '후진하는 지게차는 뒤가 안 보여요!' },
+  { ic: '🧱', t: '쌓인 자재 사이', safe: false, ex: '자재가 무너질 수 있어요!' },
 ];
 export function runHide({ stageMult = 1, lang = 'ko', onFinish }) {
   const m = openModal({ title: $t('games2.runHide.1'), body: '', cls: 'mg' });
@@ -430,7 +430,7 @@ export function runHide({ stageMult = 1, lang = 'ko', onFinish }) {
     const it = setInterval(() => { left--; timer.textContent = $t('games2.next.9', { left }); if (left <= 0) { clearInterval(it); if (!chosen) { chosen = true; sfx('tap'); fb.textContent = $t('games2.next.8'); fb.append(h('button', { class: 'btn primary', onclick: next }, $t('games2.next.7'))); } } }, 1000);
     m.setBody(h('div', { class: 'col' },
       h('div', { class: 'qhead' }, h('span', {}, $t('games2.next.6', { round })), timer),
-      h('div', { class: 'hide-art' }, '⟦worker⟧⟦eye⟧ … ⟦walk⟧'),
+      h('div', { class: 'hide-art' }, '🧑‍💼👀 … 🚶'),
       h('div', { class: 'grid2' }, spots.map((s) => h('button', { class: 'btn hide-spot', onclick: (e) => {
         if (chosen) return; chosen = true; clearInterval(it);
         e.currentTarget.parentNode.querySelectorAll('button').forEach((b) => (b.disabled = true));
@@ -451,7 +451,7 @@ export function runHide({ stageMult = 1, lang = 'ko', onFinish }) {
 }
 
 /* ================= 현장 5. 맛있는 점심 (함바집) ================= */
-const DISHES = [['', '밥'], ['', '국'], ['', '김치'], ['', '계란말이'], ['', '생선구이'], ['', '제육볶음'], ['', '나물'], ['', '고구마']];
+const DISHES = [['🍚', '밥'], ['🍲', '국'], ['🥬', '김치'], ['🍳', '계란말이'], ['🐟', '생선구이'], ['🥩', '제육볶음'], ['🥗', '나물'], ['🍠', '고구마']];
 export function runLunch({ stageMult = 1, lang = 'ko', hot = false, onFinish }) {
   const m = openModal({ title: $t('games2.runLunch.4'), body: '', cls: 'mg' });
   const people = [$t('games2.runLunch.3'), $t('games2.runLunch.2'), $t('games2.runLunch.1')].map((who) => ({ who, want: shuffle(DISHES.map((d) => d[0])).slice(0, 3), got: [] }));
@@ -474,13 +474,13 @@ export function runLunch({ stageMult = 1, lang = 'ko', hot = false, onFinish }) 
     const renderTray = () => { trayEl.innerHTML = ''; p.got.forEach((d, k) => trayEl.append(h('button', { class: 'tray-item', onclick: () => { p.got.splice(k, 1); renderTray(); } }, d))); for (let k = p.got.length; k < max; k++) trayEl.append(h('span', { class: 'tray-slot' })); };
     renderTray();
     const opts = DISHES.map(([ic, name]) => h('button', { class: 'btn dish', onclick: () => { if (p.got.length < max && !p.got.includes(ic)) { p.got.push(ic); sfx('tap'); renderTray(); } } }, h('div', { class: 'big-ic' }, ic), h('small', {}, name)));
-    if (hot) opts.push(h('button', { class: 'btn dish water', onclick: () => { if (p.got.length < max && !p.got.includes('⟦drop⟧')) { p.got.push('⟦drop⟧'); sfx('tap'); renderTray(); } } }, h('div', { class: 'big-ic' }, '⟦drop⟧'), h('small', {}, $t('games2.renderTray.3'))));
+    if (hot) opts.push(h('button', { class: 'btn dish water', onclick: () => { if (p.got.length < max && !p.got.includes('💧')) { p.got.push('💧'); sfx('tap'); renderTray(); } } }, h('div', { class: 'big-ic' }, '💧'), h('small', {}, $t('games2.renderTray.3'))));
     m.setBody(h('div', { class: 'col' },
       h('div', { class: 'step' }, $t('games2.renderTray.2', { who: p.who, v2: idx + 1 })), trayEl,
       h('div', { class: 'dishes' }, opts),
       h('button', { class: 'btn primary big', onclick: () => {
         const ok = p.want.filter((d) => p.got.includes(d)).length;
-        right += ok; if (hot && p.got.includes('⟦drop⟧')) waterOk++;
+        right += ok; if (hot && p.got.includes('💧')) waterOk++;
         sfx(ok === 3 ? 'good' : 'tap'); idx++; tray();
       } }, $t('games2.renderTray.1'))));
   };

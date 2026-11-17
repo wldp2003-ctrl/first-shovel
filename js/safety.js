@@ -97,7 +97,7 @@ export function runSafetyCourse({ nick, lang: initLang, onDone, onNote }) {
   function stepTBM() {
     set(h('div', { class: 'col' },
       tline(lang, 'tbmTitle', 'h'),
-      h('div', { class: 'tbm-art' }, '⟦worker⟧⟦worker⟧⟦worker⟧ ⟦note⟧'),
+      h('div', { class: 'tbm-art' }, '👷‍♂️👷‍♀️👷 📋'),
       tline(lang, 'tbm1'), tline(lang, 'tbm2'), tline(lang, 'tbm3'),
       h('button', { class: 'btn primary big', onclick: () => stepQ(0) }, tline(lang, 'next'))));
   }
@@ -139,7 +139,7 @@ export function runSafetyCourse({ nick, lang: initLang, onDone, onNote }) {
       if (stage >= 1) for (let x = 0; x < 8; x++) cube(58 + x * 18, 134 - (stage === 1 ? bounce : 0), '#9d9d97');
       if (stage >= 2) for (let y = 0; y < 3; y++) for (let x = 0; x < 8; x++) { if (y < 2 && (x === 3 || x === 4)) continue; cube(58 + x * 18, 116 - y * 18 - (stage === 2 ? bounce : 0), '#9c6a3c'); }
       if (stage >= 3) for (let r = 0; r < 4; r++) for (let x = r; x < 9 - r; x++) cube(49 + x * 18, 62 - r * 14 - (stage === 3 ? bounce : 0), '#c8463c');
-      if (stage >= 3) { ctx.font = '28px sans-serif'; ctx.fillText('', 118, 140); }
+      if (stage >= 3) { ctx.font = '28px sans-serif'; ctx.fillText('🐶', 118, 140); }
     };
     const anim = () => { let b = 30; const it = setInterval(() => { b = Math.max(0, b - 4); draw(b); if (!b) clearInterval(it); }, 16); };
     draw();
