@@ -30,6 +30,7 @@ const P = {
   cert: '<rect x="4" y="3.5" width="16" height="13" rx="2"/><path d="M8 8h8M8 11h5"/><circle cx="15" cy="17.5" r="2.5"/><path d="M13.5 19.5 13 22l2-1 2 1-.5-2.5"/>',
   download: '<path d="M12 4v11"/><path d="M7 10.5 12 15.5l5-5"/><path d="M5 20h14"/>',
   // v12.1 게임 화면용 (이모지 대신)
+  map: '<path d="M3 6.5 9 4l6 2.5L21 4v13.5L15 20l-6-2.5L3 20z"/><path d="M9 4v13.5M15 6.5V20"/>',
   money: '<circle cx="12" cy="12" r="8.5"/><path d="M8.5 9l2 7 1.5-5 1.5 5 2-7M8 12h8"/>',
   calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   sun: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
