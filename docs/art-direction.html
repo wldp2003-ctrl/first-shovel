@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>첫 삽 v17 아트 방향 — 아이소메트릭 디오라마</title>
+<link rel="stylesheet" href="../fonts/fonts.css">
+<link rel="stylesheet" href="../css/tokens.css">
+<style>
+  body { margin: 0; font-family: var(--font); color: var(--ink); background: var(--bg-soft); line-height: 1.55; }
+  header { background: var(--asphalt); color: var(--bg); padding: 24px 20px 20px; border-bottom: 6px solid var(--brand); }
+  header h1 { font-family: var(--font-head); font-weight: 400; color: var(--brand); margin: 0 0 4px; font-size: 30px; }
+  header p { margin: 0; color: var(--on-asphalt-2); }
+  main { max-width: 980px; margin: 0 auto; padding: 20px; display: grid; gap: 20px; }
+  section { background: var(--bg); border: 2px solid var(--asphalt); border-radius: 16px; box-shadow: 0 3px 0 var(--asphalt); padding: 16px 18px; }
+  h2 { font-family: var(--font-head); font-weight: 400; margin: 0 0 10px; font-size: 22px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 700px) { .two { grid-template-columns: 1fr; } }
+  figure { margin: 0; } figure img { width: 100%; border-radius: 12px; border: 2px solid var(--line); background: linear-gradient(180deg, var(--art-sky), var(--bg-soft)); display: block; }
+  figcaption { font-size: 14px; color: var(--ink-2); margin-top: 6px; }
+  .sw { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+  .sw div { border: 2px solid var(--line); border-radius: 10px; overflow: hidden; font-size: 13px; }
+  .sw i { display: block; height: 46px; }
+  .sw span { display: block; padding: 4px 8px; } .sw small { display: block; padding: 0 8px 6px; color: var(--ink-2); }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; } td, th { border-top: 1px solid var(--line); padding: 6px 8px; text-align: left; vertical-align: top; } th { background: var(--bg-soft); }
+  .strata { display: grid; height: 90px; border-radius: 10px; overflow: hidden; border: 2px solid var(--asphalt); grid-template-rows: 1fr 2.4fr 2fr 1.5fr; }
+  .strata i { display: flex; align-items: center; padding-left: 10px; font-style: normal; font-size: 13px; color: var(--bg); }
+</style>
+</head>
+<body>
+<header><h1>첫 삽 — 아트 방향 (v17)</h1><p>아이소메트릭 디오라마: 하나의 공사 현장을 두께 있는 땅 블록 위에 올리고, 출근해서 한 바퀴 도는 동선을 따라 7구역을 배치합니다.</p></header>
+<main>
+<section>
+  <h2>한 장 요약</h2>
+  <div class="two">
+    <figure><img src="../assets/scenes/map.webp" alt="디오라마 지도 렌더링"><figcaption>지도: 정사영 카메라, 약 35° 내려보고 45° 돌린 시점. 옆면은 흙 단면 층("첫 삽"과 연결). 주황 점선 = 동선</figcaption></figure>
+    <figure><img src="../assets/scenes/tbm/v0.webp" alt="0구역 위험 찾기 장면"><figcaption>위험 찾기: 같은 소품 모델로 근로자 눈높이(1.7m)에서 미리 렌더링(1080×810 WebP). 누를 곳은 3D 위치에서 자동 계산</figcaption></figure>
+  </div>
+</section>
+<section>
+  <h2>참고한 특징 (이미지는 쓰지 않음)</h2>
+  <table>
+    <tr><th>특징</th><th>첫 삽에서</th></tr>
+    <tr><td>두께 있는 땅 블록, 떠 있는 디오라마</td><td>윗면 = 현장 바닥(흙·콘크리트·자갈 구역), 옆면 = 표토·흙·자갈·바위 층, 블록 밑 부드러운 그림자</td></tr>
+    <tr><td>소품이 촘촘한 장면</td><td>구역마다 진짜 현장 소품 6~15개(아래 목록). 빈 땅을 줄이고, 길가에 콘·바리케이드</td></tr>
+    <tr><td>부드러운 빛과 그림자</td><td>따뜻한 방향광 1(해) + 하늘빛 반구광, PCFSoft 그림자, 물체 밑 둥근 접지 그림자(구운 AO 대신), ACES 톤매핑</td></tr>
+    <tr><td>단순한 인형, 또렷한 보호구</td><td>노랑 안전모, 주황 조끼 + 흰 반사띠 2줄, 안전대는 굵은 노랑 끈 + 줄. 얼굴·글자·로고 없음</td></tr>
+    <tr><td>통일된 팔레트</td><td>모든 색은 <code>css/tokens.css</code> 토큰. v12.1 주황·남색(아스팔트)과 어울리는 따뜻한 흙색, 콘크리트 회색, 나무색</td></tr>
+  </table>
+</section>
+<section>
+  <h2>팔레트 (토큰)</h2>
+  <div class="sw">
+    <div><i style="background:var(--brand)"></i><span>--brand</span><small>안전모·지금 구역</small></div>
+    <div><i style="background:var(--vest)"></i><span>--vest</span><small>조끼·동선 점선</small></div>
+    <div><i style="background:var(--asphalt)"></i><span>--asphalt</span><small>윤곽·이름표·바퀴</small></div>
+    <div><i style="background:var(--art-ground)"></i><span>--art-ground</span><small>현장 바닥</small></div>
+    <div><i style="background:var(--art-dirt)"></i><span>--art-dirt</span><small>흙·굴착</small></div>
+    <div><i style="background:var(--art-concrete)"></i><span>--art-concrete</span><small>슬래브·패드</small></div>
+    <div><i style="background:var(--art-wood)"></i><span>--art-wood</span><small>발판·각재·합판</small></div>
+    <div><i style="background:var(--art-steel)"></i><span>--art-steel</span><small>강관·동바리</small></div>
+    <div><i style="background:var(--art-helmet)"></i><span>--art-helmet</span><small>장비·크레인·난간</small></div>
+    <div><i style="background:var(--art-sky)"></i><span>--art-sky</span><small>하늘·반구광</small></div>
+    <div><i style="background:var(--safe)"></i><span>--safe</span><small>안전·완료(초록 O)</small></div>
+    <div><i style="background:var(--danger)"></i><span>--danger</span><small>위험(빨강 X)</small></div>
+    <div><i style="background:var(--mandatory)"></i><span>--mandatory</span><small>꼭 할 것(파랑)</small></div>
+    <div><i style="background:var(--caution)"></i><span>--caution</span><small>주의·다시 볼 것</small></div>
+  </div>
+  <p style="margin:12px 0 6px">땅 블록 옆면 흙 단면</p>
+  <div class="strata"><i style="background:var(--art-dirt-dark)">표토</i><i style="background:var(--art-dirt)">흙</i><i style="background:var(--art-tan);color:var(--ink)">자갈</i><i style="background:var(--asphalt-2)">바위</i></div>
+</section>
+<section>
+  <h2>구역별 소품 목록 (js/learn/props3d.js)</h2>
+  <table>
+    <tr><th>구역 (동선 순서)</th><th>소품</th></tr>
+    <tr><td>0 출근·TBM</td><td>컨테이너 사무실, TBM 게시판, 줄 선 근로자 4명 + 반장, 보호구 표지(파랑 원)·주의 표지, 식수대, 간이 화장실, 팔레트, 콘, 정문</td></tr>
+    <tr><td>1 골조 바닥</td><td>기둥 + 슬래브(3.4m), 안전난간(앞쪽 일부 없음), 개구부·덮개, 기둥 철근, 합판·각재·철근 더미, 안전대 맨 근로자</td></tr>
+    <tr><td>2 비계</td><td>짓는 건물, 비계 4단(발판·난간 2줄·발끝막이판·가새), 고소작업대, 강관 더미, 콘</td></tr>
+    <tr><td>3 양중</td><td>타워크레인 + 매단 각재, 짐 아래 원형 통제(콘), 건설용 리프트, 지게차, 팔레트, 신호수</td></tr>
+    <tr><td>4 장비</td><td>판 구덩이 + 흙더미, 굴착기, 덤프, 롤러, 콘 줄, 신호수</td></tr>
+    <tr><td>5 타설</td><td>동바리 + 거푸집, 펌프카(붐 3단), 레미콘, 전봇대·전선</td></tr>
+    <tr><td>6 용접·밀폐</td><td>방화포 칸막이, 용접기, 불티, 소화기, 맨홀 + 삼각대 + 송풍기·덕트, 그늘막 + 물, 드럼</td></tr>
+    <tr><td>준공 · 야적장</td><td>다 지은 건물, 깃대 / 철근·각재·합판·강관·팔레트·컨테이너·수레·드럼</td></tr>
+  </table>
+</section>
+<section>
+  <h2>성능 규칙</h2>
+  <ul>
+    <li>같은 모양·색은 InstancedMesh 하나로 묶어서 그립니다. 지도 전체가 그리기 호출 수십 번 안에 들어갑니다.</li>
+    <li>위험 찾기 장면은 미리 렌더링한 WebP 이미지를 씁니다(장면 한 장 약 30KB). WebGL이 없으면 지도도 같은 각도로 미리 렌더링한 이미지(핀 위치 같음)를 씁니다.</li>
+    <li>3D 전체(엔진 + 모델 코드 + 이미지)는 8MB 이하로 유지합니다. 지금은 약 4MB입니다(이미지 2.3MB + 엔진·코드).</li>
+  </ul>
+</section>
+</main>
+</body>
+</html>

@@ -5,7 +5,7 @@ import { icon, LESSON_ICON, LESSON_TONE } from './icons.js';
 import { logoMark, sapi, building } from './brand.js';
 import { sceneFloor, pair, PAIR3D } from './scene-art.js';
 import { makeScene3D, renderPairs, hasGL, SCENE3D_IDS } from './scene3d.js';
-import { mountSite } from './site3d.js';
+import { mountSite, renderSiteStill } from './site3d.js';
 import { sceneTbm, sceneScaffold, sceneLifting, sceneEquip, scenePour, sceneHot, STOP } from './scene-art2.js';
 
 // append(..., 조건 ? 요소 : null)에서 "null" 글자가 찍히지 않게
@@ -36,6 +36,7 @@ const ic = (name, o) => h('span', { class: 'icw', html: icon(name, o) });
 const UIKEY = 'cheotsap.learn.ui';
 let UI = { openDay: '', floorsSeen: 0, days: [], sound: false, vibrate: true, mode: 'pic' };
 let SC = { scenes: [] }; // data/scenes.json (v13 현장 위험 찾기)
+let PRE = { zones: {} }; // data/prerender.json (v17 미리 렌더링한 장면·지도 이미지와 누를 곳)
 const loadUI = () => { try { Object.assign(UI, JSON.parse(localStorage.getItem(UIKEY) || '{}')); } catch {} };
 const saveUI = () => { try { localStorage.setItem(UIKEY, JSON.stringify(UI)); } catch {} };
 const dayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -145,9 +146,16 @@ function home(v) {
   v.dataset.say = !S.pre ? t('say.homeStart') : t('say.home');
   // 3D 공사 현장 지도 (WebGL 을 못 쓰면 평면 길)
   const site = h('div', { class: 'site3d', 'aria-label': t('map.title') });
-  v.append(unitCard(), site);
+  const nDone = SC.scenes.filter((x) => sceneDone(x.id)).length;
+  // v17: 지도가 무엇인지 한 줄 + 진행 (현장 한 바퀴 = 출근해서 현장을 도는 동선)
+  const head = h('div', { class: 'site-head' }, h('span', { class: 'sh-ic' }, ic('walk', { size: 22 })),
+    h('div', { class: 'sh-t' }, h('b', {}, t('map.loop')), h('small', {}, t('map.loopSub'))),
+    h('span', { class: 'sh-n t-num', 'aria-label': t('map.progress', { n: nDone, m: SC.scenes.length }) }, t('map.progress', { n: nDone, m: SC.scenes.length })));
+  v.append(unitCard(), head, site);
   warmPairs();
-  mountSite(site, { zones: siteZones(), onPick: (z) => (z.roof ? stopTell() : openScene(z.id)) }).then((r) => { if (!r && site.isConnected) site.replaceWith(siteMap()); });
+  const zs = siteZones();
+  const onPick = (z) => (z.roof ? stopTell() : z.state === 'done' ? openCard(z.id) : openScene(z.id));
+  mountSite(site, { zones: zs, onPick }).then((r) => { if (!r && site.isConnected) site.replaceWith(siteStill(zs, onPick)); });
   const td = todayScene(); if (td) v.append(todayCard(td));
   v.append(installTip());
   // 기초 레슨 6개 (v11 문장 그대로) — 글로 더 배우고 싶은 사람용
@@ -171,20 +179,33 @@ async function ensurePairs(id) {
 }
 const idle = (fn, ms) => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: ms }) : setTimeout(fn, ms));
 function warmPairs() { if (!hasGL()) return; const ids = SCENE3D_IDS.filter((i) => !pairsDone.has(i)); let k = 0; const step = () => { if (k >= ids.length) return; ensurePairs(ids[k++]).then(() => idle(step, 600)); }; idle(step, 1500); }
-// 3D 지도 이름표는 짧게 (겹치지 않게)
-const SHORT = { tbm: '출근', floor: '골조 바닥', scaffold: '비계', lifting: '양중', equip: '장비', pour: '타설', hot: '용접·밀폐' };
-// 3D 지도 구역: 상태(완료·지금·잠김), 번호 표시 아이콘, 이름, 별
+// v17 지도 구역: 장소 이름 + 하는 일 아이콘. 지금 = 첫삽이 + 깃발 "여기부터", 끝냄 = 초록 체크 깃발 + 별, 잠김 = 안개 + 작은 이름표·자물쇠
+const SHORT = { tbm: '출근·TBM', floor: '골조 바닥', scaffold: '비계', lifting: '양중', equip: '장비', pour: '타설', hot: '용접·밀폐' };
+const WORKIC = { tbm: 'together', floor: 'stairs', scaffold: 'up', lifting: 'hook', equip: 'truck', pour: 'drop', hot: 'fire' };
+const zoneName = (sc) => SHORT[sc.id] || sc.title;
 function siteZones() {
   const nx = nextScene(), all = allScenes();
+  const tag = (no, id, name, job, state, label, extra = '') => `<button class="zt-name" ${id ? `data-scene="${id}"` : 'id="roofBtn" data-scene=""'} ${state === 'lock' ? 'disabled' : ''} aria-label="${label}"><b class="zt-no">${no}</b>${icon(id ? WORKIC[id] : 'stop', { size: 15 })}<span>${name}</span>${state !== 'lock' && job ? `<small>${job}</small>` : ''}${state === 'lock' ? icon('lock', { size: 11 }) : ''}${extra}</button>`;
   const z = SC.scenes.map((sc, i) => {
     const open = sceneOpen(i), b = S.scenes?.[sc.id]?.best, cur = nx?.id === sc.id;
     const state = cur ? 'cur' : b ? 'done' : open ? 'cur' : 'lock';
-    return { id: sc.id, no: sc.no, state, label: `${sc.no}. ${sc.title}`, name: `${sc.no} ${SHORT[sc.id] || sc.title}`, icon: icon(cur ? 'star' : b ? 'check' : open ? 'star' : 'lock', { size: 28 }),
-      starsHtml: b ? stars(b.stars, 12).outerHTML : '', mascot: cur ? sapi({ size: 60, mood: 'wave' }) : '', tip: t('map.start') };
+    const label = `${sc.no}. ${sc.title} — ${t('job.' + sc.id)}`;
+    const top = state === 'cur' ? `<span class="zt-who">${sapi({ size: 50, mood: 'wave' })}</span><span class="zt-flag">${icon('flag', { size: 14 })}${t('map.here')}</span>`
+      : state === 'done' ? `<span class="zt-flag ok" aria-label="${b.stars}/3">${icon('check', { size: 12 })}</span>` : '';
+    return { id: sc.id, no: sc.no, state, label, html: top + tag(sc.no, sc.id, zoneName(sc), t('job.' + sc.id), state, label) };
   });
   const st = S.stop?.done ? 'done' : all ? 'cur' : 'lock';
-  z.push({ roof: true, id: 'roof', state: st, label: t('stop.title'), name: t('stop.title'), icon: icon(S.stop?.done ? 'check' : all ? 'stop' : 'lock', { size: 28 }), mascot: st === 'cur' ? sapi({ size: 64, mood: 'wave' }) : '', tip: t('map.start') });
+  z.push({ roof: true, id: 'roof', state: st, label: t('stop.title'), html: (st === 'cur' ? `<span class="zt-flag">${icon('flag', { size: 14 })}${t('map.here')}</span>` : st === 'done' ? `<span class="zt-flag ok">${icon('check', { size: 14 })}</span>` : '') + tag('', null, t('stop.short'), '', st, t('stop.title')) });
   return z;
+}
+// WebGL 을 못 쓰면: 같은 각도로 미리 렌더링한 지도 이미지 + 같은 이름표 (핀 위치 동일)
+function siteStill(zs, onPick) {
+  if (!PRE.map) return siteMap();
+  const wrap = h('div', { class: 'site3d still' }, h('img', { class: 'site-img', src: PRE.map.img, alt: t('map.title') }));
+  const marks = h('div', { class: 'site3d-marks' });
+  zs.forEach((zn, i) => { const pn = PRE.map.pins[i]; if (!pn) return; const el = h('div', { class: `z-mark ${zn.state}${zn.roof ? ' roof' : ''}`, 'data-zone': zn.id, style: `left:${pn.x}%;top:${pn.y}%`, html: zn.html }); el.querySelector('.zt-name')?.addEventListener('click', () => zn.state !== 'lock' && onPick(zn)); marks.append(el); });
+  wrap.append(marks);
+  return wrap;
 }
 // 시안의 주황 현장 카드: 지금 할 일 하나 (그림 점검 → 다음 현장 → 멈추고 알려요 → 마지막 점검 → 확인서) + 듣기
 function unitCard() {
@@ -579,6 +600,7 @@ const empty = (msg) => h('div', { class: 'empty' }, h('span', { class: 'sapi-s',
 
 /* ---------------- 다시 보기 ---------------- */
 function review(v) {
+  v.append(...cardShelf());
   // 해 본 장면에서 아직 못 찾은 위험
   const fs = foundSet(), tried = new Set(Object.keys(S.scenes || {}));
   const missed = allHazards().filter((z) => tried.has(z.sc.id) && !fs.has(z.id));
@@ -621,6 +643,7 @@ function record(v) {
   v.append(h('h2', { class: 'sec' }, t('record.scenes')),
     h('div', { class: 'rec-list' }, SC.scenes.map((sc) => { const r = S.scenes?.[sc.id];
       return h('div', { class: 'rec-row' }, thumb(sc), h('span', { class: 'rec-t' }, h('b', {}, `${sc.no}. ${sc.title}`), h('small', {}, r ? `${t('record.tries', { n: r.tries })} · ${mmss(r.timeMs)}` : t('record.notYet'))), h('span', { class: 'rec-s' }, r?.best ? stars(r.best.stars, 14) : '-')); })));
+  v.append(h('h2', { class: 'sec' }, t('record.change')), h('p', { class: 'small' }, t('record.changeNote')), zoneChange());
   v.append(h('h2', { class: 'sec' }, t('record.scores')),
     h('div', { class: 'cmp card-lite' }, h('div', {}, h('small', {}, t('test.preShort')), h('b', {}, S.pre ? `${S.pre.score}/${S.pre.n ?? S.pre.correct.length}` : '-')), ic('next'), h('div', { class: 'up' }, h('small', {}, t('test.postShort')), h('b', {}, S.post ? `${S.post.score}/${S.post.n ?? S.post.correct.length}` : '-'))),
     S.pre && S.post && S.pre.kind !== S.post.kind ? h('p', { class: 'small' }, t('record.kindNote')) : null);
@@ -803,16 +826,19 @@ const stars = (n, size = 28) => h('span', { class: 'stars', 'aria-label': `${n}/
 
 function openScene(id, o = {}) {
   const sc = scene(id), rec = SR(id);
+  // v17: 먼저 알고(미리 보기) → 찾고 → 정리(현장 안전 카드). 미리 보기에서 이번에 낼 위험을 정해 넘긴다
+  if (!o.go) { const pickIds = pickHz(sc, rec, o).map((z) => z.id); return previewScene(sc, pickIds, () => openScene(id, { ...o, go: true, hz: pickIds })); }
   const v = deep(isPic() ? `${sc.no}` : `${sc.no}. ${sc.title}`);
   markStudyDay();
   const t0 = Date.now();
   let spent = 0;
   let found = [], tapsMiss = 0, ended = false;
-  rec.tries++; save();
-  // 무작위 출제: 레이어로 그린 장면은 처음엔 위험 전부(측정용), 다시 할 때는 2~4개를 골라 낸다. 안 낸 위험은 안전한 모습으로 그려짐
   const pool = sc.hazards.filter((z) => shown(z.line));
-  const use3d = hasGL() && SCENE3D_IDS.includes(sc.id);
-  const hz = (sc.layered || use3d) && rec.tries > 1 && !o.all ? shuffle(pool).slice(0, Math.min(pool.length, 2 + Math.floor(Math.random() * (Math.min(4, pool.length) - 1)))).sort((a, b) => pool.indexOf(a) - pool.indexOf(b)) : pool;
+  const hz = o.hz ? pool.filter((z) => o.hz.includes(z.id)) : pickHz(sc, rec, o);
+  rec.tries++; save();
+  // v17: 미리 렌더링한 장면 이미지가 있으면 그것(가볍고 지도와 같은 그림), 없으면 실시간 3D
+  const preV = PRE.zones?.[sc.id]?.variants?.find((x) => x.on.length === hz.length && hz.every((z) => x.on.includes(z.id)));
+  const use3d = !preV && hasGL() && SCENE3D_IDS.includes(sc.id);
   const off = sc.hazards.filter((z) => !hz.includes(z)); // 꺼진 위험 = 이번엔 안전한 곳
   const total = hz.length;
   // 시안: 머리 = X(닫기) + 둥근 주황 진행 막대
@@ -822,9 +848,10 @@ function openScene(id, o = {}) {
   hd.append(h('button', { class: 'q-x', id: 'sceneClose', 'aria-label': t('common.close'), onclick: () => go(tab) }, ic('cross', { size: 26 })),
     h('div', { class: 'q-prog', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(total), 'aria-valuenow': '0' }, prog));
   // 찾은 칸: 찾으면 노랑(주의) 네모 + 체크, 아직은 회색 점선 네모
-  const slots = h('div', { class: 'haz-slots', 'aria-label': t('scene.count', { f: 0, n: total }) }, hz.map((z) => h('span', { class: 'haz-slot', 'data-id': z.id }, ic('check', { size: 20 }))));
+  // v17: 빈칸 = 미리 본 위험 종류 아이콘 (무엇을 찾는지 아는 상태에서 찾기) → 찾으면 노랑으로 채워짐
+  const slots = h('div', { class: 'haz-slots', 'aria-label': t('scene.count', { f: 0, n: total }) }, hz.map((z) => h('span', { class: 'haz-slot', 'data-id': z.id, title: SC.hazardTypes?.[z.type] || '' }, ic(HAZ_TYPES.includes(z.type) ? z.type : 'warn', { size: 22 }), h('i', { class: 'slot-ok' }, ic('check', { size: 12 })))));
   const box = h('div', { class: 'scene-box', html: SC_ART[sc.art](sc.layered ? hz.map((z) => z.id) : undefined) });
-  const ask = t('scene.askN', { n: hz.length });
+  const ask = t('scene.askTypes', { n: hz.length });
   v.dataset.say = `${sc.situation || ''} ${ask}`;
   const layer = h('div', { class: 'scene-layer' });
   box.append(layer);
@@ -835,6 +862,7 @@ function openScene(id, o = {}) {
   window.__learn.areaOf = (zid) => { const q = [...sc.hazards, ...sc.safe].find((x) => x.id === zid); return q ? A(q) : null; };
   window.__learn.ready3d = () => !use3d || !!A3;
   curV3?.dispose(); curV3 = null;
+  if (preV) { A3 = preV.areas; window.__learn.areas3d = A3; box.querySelector('svg')?.remove(); box.prepend(h('img', { class: 'scene-img', src: preV.img, alt: sc.situation || sc.title, draggable: 'false' })); box.classList.add('is3d'); }
   if (use3d) makeScene3D(sc.id, { on: hz.map((z) => z.id) }).then((v3) => {
     if (!v3) return; if (!box.isConnected) { v3.dispose(); return; }
     curV3 = v3; A3 = v3.areas(); window.__learn.areas3d = A3;
@@ -858,11 +886,13 @@ function openScene(id, o = {}) {
     const x = ((e.clientX - r.left) / r.width) * 400, y = ((e.clientY - r.top) / r.height) * 300;
     const near = (a) => Math.hypot(a.x - x, a.y - y) <= a.r;
     const z = hz.filter((q) => !found.includes(q.id) && near(A(q))).sort((p, q) => Math.hypot(A(p).x - x, A(p).y - y) - Math.hypot(A(q).x - x, A(q).y - y))[0];
-    if (z) { found.push(z.id); ring(A(z), 'hit'); slots.querySelector(`[data-id="${z.id}"]`).classList.add('on'); prog.style.width = `${(found.length / total) * 100}%`; prog.parentElement.setAttribute('aria-valuenow', String(found.length)); showHazard(z); return; }
+    if (z) { found.push(z.id); ring(A(z), 'hit'); armHint(); slots.querySelectorAll('.nudge').forEach((e) => e.classList.remove('nudge')); layer.querySelectorAll('.ring.hint').forEach((e) => e.remove()); slots.querySelector(`[data-id="${z.id}"]`).classList.add('on'); prog.style.width = `${(found.length / total) * 100}%`; prog.parentElement.setAttribute('aria-valuenow', String(found.length)); showHazard(z); return; }
     const sf = [...sc.safe, ...off].find((q) => near(A(q)));
     if (sf) { ring(A(sf), 'trap'); showSafe(off.includes(sf) ? { area: A(sf) } : sf); return; }
     tapsMiss++;
     const rp = h('span', { class: 'ripple', style: `left:${(x / 400) * 100}%;top:${(y / 300) * 100}%` }); layer.append(rp); setTimeout(() => rp.remove(), 500);
+    layer.querySelector('.ok-toast')?.remove();
+    const tt = h('span', { class: 'ok-toast', style: `left:${Math.min(80, Math.max(20, (x / 400) * 100))}%;top:${(y / 300) * 100}%` }, ic('check', { size: 14 }), t('scene.okHere')); layer.append(tt); setTimeout(() => tt.remove(), 1200);
   });
 
   // 시안: 찾음 → 아래에서 초록 피드백 바 (위험한 모습 X → 안전한 모습 체크 + 한 줄)
@@ -872,14 +902,26 @@ function openScene(id, o = {}) {
       btn: last ? t('scene.seeResult') : t('fb.continue'), id: 'hzNext', onNext: () => { if (last) finish(); } });
   }
   // 시안: 안전한 곳을 누름 → 아래에서 빨강 피드백 바 ("거긴 안전해요" + 아직 못 찾은 위험 하나를 힌트 그림으로)
+  // v17: 안전한 곳(함정)을 누름 → 벌점 없이 "여기는 괜찮아요" + 왜 괜찮은지 (정답 힌트는 주지 않음)
   function showSafe(sf) {
-    const hint = hz.find((q) => !found.includes(q.id));
-    feedbackBar({ ok: false, title: t('scene.trapTitle'), sub: (sf.name ? T(sf.name) + ' — ' : '') + t('scene.trapHint'), say: t('scene.trapTitle'),
-      pics: hint ? [{ html: pair(hint.good), ok: true }, { html: pair(hint.bad), ok: false }] : null, btn: t('fb.gotIt'), id: 'trapNext', onNext: () => {} });
+    feedbackBar({ ok: true, title: t('scene.okHere'), sub: (sf.name ? T(sf.name) + ' — ' : '') + t('scene.trapWhy'), say: `${t('scene.okHere')}. ${sf.name ? T0(sf.name) : ''}`,
+      pics: null, btn: t('scene.keep'), id: 'trapNext', onNext: () => {} });
   }
+  // v17 힌트: 30초 동안 못 찾으면 ① 빈칸 아이콘이 그 방향으로 흔들림 → 15초 더 ② 위치가 깜빡임 (② 를 쓰면 별 하나 줄어듦)
+  const hinted = new Set(); let hintT = 0;
+  function armHint() { clearTimeout(hintT); if (!ended) hintT = setTimeout(() => hint(1), 30000); }
+  function hint(lv) {
+    if (ended || !v.isConnected) return;
+    const z = hz.find((q) => !found.includes(q.id)); if (!z) return; const a = A(z);
+    if (lv === 1) { const dx = a.x - 200, dy = a.y - 150, L = Math.hypot(dx, dy) || 1, sl = slots.querySelector(`[data-id="${z.id}"]`);
+      sl.style.setProperty('--hx', `${((dx / L) * 7).toFixed(1)}px`); sl.style.setProperty('--hy', `${((dy / L) * 7).toFixed(1)}px`); sl.classList.add('nudge'); clearTimeout(hintT); hintT = setTimeout(() => hint(2), 15000); }
+    else { hinted.add(z.id); layer.querySelectorAll('.ring.hint').forEach((e) => e.remove()); ring(a, 'hint'); }
+  }
+  window.__learn.hint = (lv) => hint(lv);
+  armHint();
   // 끝: 놓친 곳을 보여 주고 별
   function finish() {
-    if (ended) return; ended = true;
+    if (ended) return; ended = true; clearTimeout(hintT);
     endBtn.remove();
     const ms = Date.now() - t0; rec.timeMs += ms; spent = ms;
     const missed = hz.filter((z) => !found.includes(z.id));
@@ -910,8 +952,9 @@ function openScene(id, o = {}) {
   }
   function result(missed, act) {
     v.dataset.say = '';
-    const n = found.length, st = n >= total ? 3 : n * 2 >= total ? 2 : 1;
-    rec.last = { found: [...found], total, active: hz.map((z) => z.id), stars: st, at: Date.now(), hour: new Date().getHours(), mode: UI.mode || 'pic', missTaps: tapsMiss, today: !!o.today, act };
+    const n = found.length, st = Math.max(1, (n >= total ? 3 : n * 2 >= total ? 2 : 1) - (hinted.size ? 1 : 0));
+    rec.last = { found: [...found], total, active: hz.map((z) => z.id), stars: st, at: Date.now(), hour: new Date().getHours(), mode: UI.mode || 'pic', missTaps: tapsMiss, today: !!o.today, act, hints: hinted.size };
+    if (!rec.first) rec.first = { found: n, total, at: Date.now() }; // 처음 찾은 수 (효과 비교용)
     rec.seen = [...new Set([...(rec.seen || []), ...found])];
     if (o.today) { UI.todayDone = dayStr(); saveUI(); }
     const firstClear = !rec.best;
@@ -928,14 +971,17 @@ function openScene(id, o = {}) {
     document.querySelector('.top.deep')?.classList.add('q-hide');
     v.dataset.say = sub;
     v.append(h('section', { class: 'done-v' },
-      h('div', { class: 'done-mascot', html: sapi({ size: 160, mood: st === 3 ? 'proud' : st === 2 ? 'cheer' : 'think', cls: st === 3 ? 'm-hop' : '' }) }),
-      h('span', { class: 'medal', 'aria-label': t('top.badges', { n: 1 }) }, ic('shovel', { size: 44 })),
+      h('div', { class: 'done-mascot', html: sapi({ size: 96, mood: st === 3 ? 'proud' : st === 2 ? 'cheer' : 'think', cls: st === 3 ? 'm-hop' : '' }) }),
       P ? stars(st, 34) : h('h1', {}, t('done.title', { no: sc.no })),
       P ? null : h('p', { class: 'done-sub' }, sub),
       h('div', { class: 'done-stats' },
         stat('s1', P ? ic('star', { size: 18 }) : t('done.stars'), String(st), t('done.stars') + ' ' + st),
         stat('s2', P ? ic('search', { size: 18 }) : t('done.found'), `${n}/${total}`, t('done.found') + ' ' + n + '/' + total),
         stat('s3', P ? ic('time', { size: 18 }) : t('done.time'), clock, t('done.time') + ' ' + clock)),
+      hinted.size ? h('p', { class: 'small hint-note' }, ic('idea', { size: 16 }), ' ', t('scene.hintUsed')) : null,
+      // v17 정리: 현장 안전 카드 (끝내면 자동으로)
+      h('h2', { class: 'sec card-sec' }, ic('cert', { size: 22 }), h('span', {}, t('card.made'))),
+      safetyCard(sc),
       afterBtn(),
       // 시안 아래 (스크롤): 놓친 위험 · 가요/멈춰요 · 다시 하기 · 근거
       missed.length ? h('div', { class: 'missed' }, P ? null : h('b', {}, t('scene.missed')),
@@ -954,6 +1000,160 @@ function openScene(id, o = {}) {
     if (!o.today && allScenes() && !S.stop?.done) return btn('sceneStop', t('stop.title'), stopTell);
     return btn('sceneHome', t('scene.home'), () => go('home'));
   }
+}
+
+/* ---------------- v17 먼저 알고 → 찾고 → 정리 ---------------- */
+// 이번에 낼 위험: 처음엔 전부(측정용), 다시 할 때는 무작위 2~4개. 미리 렌더링한 장면은 그 조합(variants) 중에서
+function pickHz(sc, rec, o = {}) {
+  const pool = sc.hazards.filter((z) => shown(z.line));
+  if (!rec.tries || o.all || !(sc.layered || hasGL() || PRE.zones?.[sc.id])) return pool;
+  const vs = (PRE.zones?.[sc.id]?.variants || []).filter((x) => x.on.length < pool.length && x.on.every((i) => pool.some((z) => z.id === i)));
+  if (vs.length) { const pk = vs[Math.floor(Math.random() * vs.length)]; return pool.filter((z) => pk.on.includes(z.id)); }
+  return shuffle(pool).slice(0, Math.min(pool.length, 2 + Math.floor(Math.random() * (Math.min(4, pool.length) - 1)))).sort((a, b) => pool.indexOf(a) - pool.indexOf(b));
+}
+// 근거 배지: 출처 id → 짧은 이름 (법령 조·기본서 쪽). 누르면 원문 인용
+function srcShort(id) {
+  const s = SRC[id]; if (!s) return id;
+  if (/기본서/.test(s.doc)) return t('basis.kb', { p: (s.loc.match(/^\d+쪽/) || [''])[0] });
+  const m = (s.loc || '').match(/제\d+조(의\d+)?/) || (s.doc || '').match(/제\d+조(의\d+)?/);
+  if (/기준에 관한 규칙/.test(s.doc)) return t('basis.rule', { a: m ? m[0] : '' });
+  if (/시행규칙/.test(s.doc)) return t('basis.byl', { a: (s.doc.match(/\[별표 \d+\]/) || [''])[0] });
+  return `${s.org} ${m ? m[0] : ''}`.trim();
+}
+function basisChips(ids, quoteBox) {
+  return h('span', { class: 'basis-chips' }, [...new Set(ids)].filter((i) => SRC[i]).map((i) => h('button', { class: 'basis-chip', 'data-src': i, 'aria-label': `${t('basis.label')}: ${srcShort(i)}`, onclick: (e) => { e.stopPropagation(); const s = SRC[i]; if (!quoteBox) return; const same = quoteBox.dataset.src === i && !quoteBox.hidden; quoteBox.hidden = same; quoteBox.dataset.src = i; quoteBox.innerHTML = ''; if (!same) quoteBox.append(h('b', {}, `${s.org} 「${s.doc}」 ${s.loc}`), h('q', {}, s.quote || ''), h('small', {}, t(GRADE[s.grade] || 'grade.0'))); } }, ic('book', { size: 12 }), srcShort(i))));
+}
+// ① 미리 보기: 여기서 하는 일 + 조심할 것 N가지(위험 종류 아이콘만, 위치·정답은 안 보여 줌)
+function previewScene(sc, ids, go_) {
+  const v = deep(`${sc.no}. ${sc.title}`);
+  const hz = sc.hazards.filter((z) => ids.includes(z.id)), i = SC.scenes.indexOf(sc);
+  const types = hz.map((z) => z.type), tnames = [...new Set(types)].map((ty) => SC.hazardTypes?.[ty] || ty);
+  const kb = [...new Set(hz.flatMap((z) => z.line.src))];
+  const say = `${t('work.' + sc.id)} ${t('pv.watch', { n: hz.length })} ${types.map((ty) => SC.hazardTypes?.[ty] || ty).join(', ')}.`;
+  v.dataset.say = say;
+  const top = h('figure', { class: 'pv-top' });
+  const zimg = PRE.zones?.[sc.id]?.zone;
+  if (zimg) top.append(h('img', { src: zimg, alt: sc.title }));
+  else { top.innerHTML = SC_ART[sc.art]().replace(/id="stp"/g, 'id="stp-pv"').replace(/url\(#stp\)/g, 'url(#stp-pv)'); if (hasGL()) renderSiteStill({ w: 780, h: 520, zone: i, fmt: 'image/jpeg', q: 0.85 }).then((r) => { if (top.isConnected) { top.innerHTML = ''; top.append(h('img', { src: r.url, alt: sc.title })); } }).catch(() => {}); }
+  top.append(h('figcaption', { class: 'pv-step' }, h('b', { class: 't-num' }, '1'), t('pv.step1'), h('i', {}, '→'), h('span', {}, '2 ' + t('pv.step2')), h('i', {}, '→'), h('span', {}, '3 ' + t('pv.step3'))));
+  const quote = h('div', { class: 'basis-quote', hidden: true });
+  const expert = hz.every((z) => z.line.status === '전문가확인');
+  v.append(top, h('section', { class: 'pv-card' },
+    h('div', { class: 'pv-work' }, h('span', { class: 'pv-wic' }, ic(WORKIC[sc.id] || 'worker', { size: 36 })), h('div', {}, h('small', {}, t('pv.work')), h('b', {}, t('work.' + sc.id)))),
+    h('h2', { class: 'pv-h' }, t('pv.watch', { n: hz.length })),
+    h('div', { class: 'pv-types' }, hz.map((z, k) => h('span', { class: 'pv-type', 'data-type': z.type }, h('em', { class: 't-num' }, String(k + 1)), hazIc(z.type, 30), h('small', {}, SC.hazardTypes?.[z.type] || z.type)))),
+    h('p', { class: 'pv-note' }, ic('search', { size: 16 }), ' ', t('pv.note')),
+    h('p', { class: 'pv-origin' }, t('pv.origin', { types: tnames.join('·') }), ' ', basisChips(kb, quote), expert ? h('span', { class: 'expert-chip' }, ic('check', { size: 12 }), t('basis.expert')) : null),
+    quote,
+    h('div', { class: 'pv-go' }, speakBtn(say), h('button', { class: 'btn primary big', id: 'previewGo', 'aria-label': t('pv.go'), onclick: go_ }, ic('search'), h('span', {}, t('pv.go')), ic('next')))));
+}
+// ③ 정리: 현장 안전 카드 한 장 = 한 구역 (장면 + 번호 핀, 위험(X) → 안전(O) + 한 줄 + 종류 아이콘 + 근거 배지)
+const cardHz = (sc) => sc.hazards.filter((z) => shown(z.line));
+async function cardSnap(sc) {
+  const all = cardHz(sc).map((z) => z.id), pv = PRE.zones?.[sc.id]?.variants?.find((x) => all.every((i) => x.on.includes(i)));
+  if (pv) return { img: pv.img, areas: pv.areas.hazards };
+  if (!hasGL() || !SCENE3D_IDS.includes(sc.id)) return null;
+  const v3 = await makeScene3D(sc.id, { on: all }); if (!v3) return null;
+  const r = { img: v3.canvas.toDataURL('image/jpeg', 0.85), areas: v3.areas().hazards }; v3.dispose(); return r;
+}
+function safetyCard(sc, { compact = false } = {}) {
+  const rec = S.scenes?.[sc.id], fs = foundSet(), hz = cardHz(sc), st = rec?.best?.stars || 0;
+  const snap = h('div', { class: 'sc-snap' }, h('span', { class: 'sc-snap-wait', html: SC_ART[sc.art]().replace(/id="stp"/g, 'id="stp-c' + sc.id + '"').replace(/url\(#stp\)/g, 'url(#stp-c' + sc.id + ')') }));
+  ensurePairs(sc.id).then(() => card.querySelectorAll('.sc-pic').forEach((el) => { el.innerHTML = pair(el.dataset.pic); }));
+  cardSnap(sc).then((r) => { if (!r || !snap.isConnected) return; snap.innerHTML = ''; snap.append(h('img', { src: r.img, alt: sc.title }));
+    hz.forEach((z, k) => { const a = r.areas[z.id]; if (a) snap.append(h('span', { class: 'sc-pin' + (fs.has(z.id) ? '' : ' miss'), style: `left:${(a.x / 400) * 100}%;top:${(a.y / 300) * 100}%` }, String(k + 1))); }); });
+  const quote = h('div', { class: 'basis-quote', hidden: true });
+  const expert = hz.every((z) => z.line.status === '전문가확인');
+  const card = h('article', { class: 'scard' + (compact ? ' compact' : ''), id: 'scard-' + sc.id, 'data-scene': sc.id },
+    h('header', { class: 'sc-head' }, h('span', { class: 'sc-ic' }, ic(WORKIC[sc.id] || 'worker', { size: 22 })), h('div', { class: 'grow' }, h('small', {}, t('card.kicker', { no: sc.no })), h('b', {}, `${zoneName(sc)} · ${t('job.' + sc.id)}`)), st ? stars(st, 16) : null),
+    snap,
+    h('ol', { class: 'sc-rows' }, hz.map((z, k) => {
+      const miss = !fs.has(z.id), ppe = z.act === 'ppe';
+      return h('li', { class: 'sc-row' + (miss ? ' miss' : ''), 'data-id': z.id },
+        miss ? h('span', { class: 'sc-again' }, ic('retry', { size: 12 }), t('card.again')) : null,
+        h('div', { class: 'sc-pair' }, h('b', { class: 'sc-no t-num' }, String(k + 1)),
+          h('span', { class: 'sc-fig bad' }, h('span', { class: 'sc-pic', 'data-pic': z.bad, html: pair(z.bad) }), h('i', { class: 'mk mk-bad', 'aria-label': t('scene.bad') }, ic('cross', { size: 14 }))),
+          h('span', { class: 'sc-arrow' }, ic('next', { size: 16 })),
+          h('span', { class: 'sc-fig good' }, h('span', { class: 'sc-pic', 'data-pic': z.good, html: pair(z.good) }), h('i', { class: 'mk mk-good', 'aria-label': t('scene.good') }, ic('check', { size: 14 })))),
+        h('div', { class: 'sc-line' }, h('span', { class: 'sc-type' + (ppe ? ' must' : '') }, hazIc(z.type, 16), h('small', {}, SC.hazardTypes?.[z.type] || '')), h('p', {}, T(z.line)), basisChips(z.line.src, quote)));
+    })),
+    quote,
+    expert ? h('p', { class: 'expert-chip' }, ic('check', { size: 12 }), t('basis.expert')) : null,
+    h('footer', { class: 'sc-foot' }, ic('stop', { size: 20 }), h('b', {}, t('card.stop'))));
+  return h('div', { class: 'scard-wrap' }, card,
+    h('div', { class: 'sc-actions' },
+      h('button', { class: 'btn', id: 'cardSave', 'aria-label': t('card.save'), onclick: () => saveCard(sc) }, ic('download'), h('span', {}, t('card.save'))),
+      speakBtn(hz.map((z, k) => `${k + 1}. ${T0(z.line)}`).join(' ') + ' ' + t('card.stop'))));
+}
+function openCard(id) {
+  const sc = scene(id); const v = deep(`${sc.no}. ${sc.title}`);
+  v.dataset.say = t('card.title');
+  v.append(h('h2', { class: 'sec card-sec' }, ic('cert', { size: 22 }), h('span', {}, t('card.title'))), safetyCard(sc),
+    h('div', { class: 'nav2 done-more' },
+      h('button', { class: 'btn primary', id: 'cardAgain', 'aria-label': t('card.replay'), onclick: () => openScene(id) }, ic('retry'), h('span', {}, t('card.replay'))),
+      h('button', { class: 'btn', id: 'swipeBtn', 'aria-label': t('swipe.title'), onclick: () => swipeSet(id) }, ic('stop', { size: 20 }), ic('check', { size: 20 }), h('span', {}, t('swipe.title')))),
+    sceneBasis(sc));
+}
+// 카드를 이미지(PNG)로: TBM 에서 반장에게 보여 줄 한 장. 개인정보(이름·기록) 없음
+const loadImg = (src) => new Promise((ok) => { if (!src) return ok(null); const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = src; });
+async function cardPNG(sc) {
+  await ensurePairs(sc.id);
+  const hz = cardHz(sc), fs = foundSet(), r = await cardSnap(sc);
+  const W = 1080, P = 48, ROW = 236, F = tok('--font') || 'sans-serif', FH = tok('--font-head') || F;
+  const H = 150 + 600 + hz.length * ROW + 160;
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
+  g.fillStyle = tok('--bg'); g.fillRect(0, 0, W, H);
+  // 머리: 아스팔트 띠 + 노랑 줄무늬
+  g.fillStyle = tok('--asphalt'); g.fillRect(0, 0, W, 130);
+  for (let x = -40; x < W; x += 48) { g.fillStyle = tok('--brand'); g.beginPath(); g.moveTo(x, 130); g.lineTo(x + 24, 130); g.lineTo(x + 40, 112); g.lineTo(x + 16, 112); g.fill(); }
+  g.fillStyle = tok('--brand'); g.font = `40px ${FH}`; g.fillText(`${sc.no}. ${zoneName(sc)} · ${t('job.' + sc.id)}`, P, 70);
+  g.fillStyle = tok('--on-asphalt-2'); g.font = `600 24px ${F}`; g.fillText(t('card.kicker', { no: sc.no }), P, 102);
+  // 장면 + 번호 핀
+  const im = await loadImg(r?.img); const sy = 150, sh = 600;
+  if (im) { g.drawImage(im, P, sy, W - 2 * P, sh); hz.forEach((z, k) => { const a = r.areas[z.id]; if (!a) return; const x = P + (a.x / 400) * (W - 2 * P), y = sy + (a.y / 300) * sh; g.fillStyle = tok(fs.has(z.id) ? '--danger' : '--caution'); g.strokeStyle = tok('--bg'); g.lineWidth = 5; g.beginPath(); g.arc(x, y, 26, 0, 7); g.fill(); g.stroke(); g.fillStyle = tok(fs.has(z.id) ? '--bg' : '--ink'); g.font = `30px ${FH}`; g.textAlign = 'center'; g.fillText(String(k + 1), x, y + 11); g.textAlign = 'left'; }); }
+  // 줄: 번호 · 위험(X) → 안전(O) · 한 줄 · 근거
+  const wrap = (text, x, y, w, lh) => { let line = '', yy = y; for (const wd of String(text).split(' ')) { const tryL = line ? line + ' ' + wd : wd; if (line && g.measureText(tryL).width > w) { g.fillText(line, x, yy); line = wd; yy += lh; } else line = tryL; } g.fillText(line, x, yy); return yy; };
+  for (const [k, z] of hz.entries()) {
+    const y = sy + sh + 24 + k * ROW, miss = !fs.has(z.id);
+    if (miss) { g.fillStyle = tok('--caution'); g.fillRect(0, y - 8, 14, ROW - 16); }
+    g.fillStyle = tok('--danger'); g.beginPath(); g.arc(P + 22, y + 30, 22, 0, 7); g.fill(); g.fillStyle = tok('--bg'); g.font = `28px ${FH}`; g.textAlign = 'center'; g.fillText(String(k + 1), P + 22, y + 40); g.textAlign = 'left';
+    const pics = [[z.bad, '--danger', 'x'], [z.good, '--safe-dark', 'o']];
+    for (const [j, [pid, col, mk]] of pics.entries()) { const x = P + 60 + j * 290, ii = await loadImg((pair(pid).match(/src="([^"]+)"/) || [])[1]); g.fillStyle = tok('--line'); g.fillRect(x, y, 270, 186); if (ii) g.drawImage(ii, x, y, 270, 186); g.strokeStyle = tok(col); g.lineWidth = 6; g.strokeRect(x, y, 270, 186); g.fillStyle = tok(col); g.beginPath(); g.arc(x + 246, y + 24, 20, 0, 7); g.fill(); g.strokeStyle = tok('--bg'); g.lineWidth = 5; g.beginPath(); if (mk === 'x') { g.moveTo(x + 238, y + 16); g.lineTo(x + 254, y + 32); g.moveTo(x + 254, y + 16); g.lineTo(x + 238, y + 32); } else g.arc(x + 246, y + 24, 9, 0, 7); g.stroke(); }
+    g.fillStyle = tok('--ink'); g.font = `800 30px ${F}`; const ty = wrap(T0(z.line), P + 650, y + 34, W - P - 650 - P, 40);
+    g.fillStyle = tok('--ink-2'); g.font = `500 22px ${F}`; wrap([SC.hazardTypes?.[z.type] || '', ...z.line.src.map(srcShort)].map((x) => x.replace(/ /g, ' ')).join(' · '), P + 650, ty + 40, W - P - 650 - P, 30);
+    if (miss) { g.fillStyle = tok('--caution-dark'); g.font = `800 22px ${F}`; g.fillText(t('card.again'), P + 650, y + 176); }
+  }
+  // 발: 멈추고 알려요
+  const fy = H - 130; g.fillStyle = tok('--asphalt'); g.fillRect(0, fy, W, 130);
+  g.fillStyle = tok('--danger'); g.beginPath(); g.arc(P + 34, fy + 64, 34, 0, 7); g.fill(); g.fillStyle = tok('--bg'); g.fillRect(P + 18, fy + 58, 32, 12);
+  g.fillStyle = tok('--bg'); g.font = `40px ${FH}`; g.fillText(t('card.stop'), P + 90, fy + 78);
+  g.fillStyle = tok('--on-asphalt-2'); g.font = `500 20px ${F}`; g.fillText(t('card.foot'), P + 90, fy + 110);
+  return c.toDataURL('image/png');
+}
+const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+async function saveCard(sc) {
+  const url = await cardPNG(sc), name = `cheotsap-card-${sc.no}.png`;
+  try { const blob = await (await fetch(url)).blob(), file = new File([blob], name, { type: 'image/png' }); if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: t('card.title') }); return; } } catch {}
+  const a = h('a', { href: url, download: name }); document.body.append(a); a.click(); a.remove();
+}
+// 다시 보기 탭 맨 위: "이것만은 꼭" 7장 요약 + 현장 안전 카드 모음
+function cardShelf() {
+  const must = SC.scenes.map((sc) => ({ sc, z: sc.hazards.find((z) => z.id === sc.must) || cardHz(sc)[0] })).filter((x) => x.z && shown(x.z.line));
+  const box = h('section', { class: 'must7' }, h('div', { class: 'must-h' }, h('h2', { class: 'sec' }, ic('star', { size: 22 }), h('span', {}, t('review.must'))), speakBtn(must.map(({ sc, z }) => `${sc.no}. ${T0(z.line)}`).join(' '))),
+    h('p', { class: 'small' }, t('review.mustNote')),
+    h('ol', { class: 'must-list' }, must.map(({ sc, z }) => h('li', { class: sceneDone(sc.id) ? 'on' : 'off' }, h('b', { class: 't-num' }, String(sc.no)), hazIc(z.type, 18), h('span', {}, T(z.line))))));
+  const grid = h('div', { class: 'card-grid' }, SC.scenes.map((sc) => { const d = sceneDone(sc.id), zimg = PRE.zones?.[sc.id]?.zone;
+    return h('button', { class: 'card-cell ' + (d ? 'on' : 'off'), 'data-scene': sc.id, disabled: !d, 'aria-label': `${sc.no}. ${zoneName(sc)}`, onclick: () => openCard(sc.id) },
+      zimg ? h('img', { src: zimg, alt: '' }) : h('span', { class: 'cc-art', html: SC_ART[sc.art]().replace(/id="stp"/g, 'id="stp-g' + sc.id + '"').replace(/url\(#stp\)/g, 'url(#stp-g' + sc.id + ')') }),
+      h('span', { class: 'cc-t' }, h('b', { class: 't-num' }, String(sc.no)), h('span', {}, zoneName(sc)), d ? stars(S.scenes[sc.id].best.stars, 11) : ic('lock', { size: 12 }))); }));
+  return [box, h('h2', { class: 'sec' }, ic('cert', { size: 22 }), h('span', {}, t('review.cards'))), grid];
+}
+// 내 기록: 구역별 처음 찾은 수 → 다시 찾은 수 (효과 증거)
+function zoneChange() {
+  const rows = SC.scenes.map((sc) => { const r = S.scenes?.[sc.id]; if (!r?.best) return null; const f = r.first || { found: r.best.found.length, total: r.last?.total || cardHz(sc).length };
+    const now = r.last || { found: r.best.found, total: f.total }; return h('div', { class: 'rec-row zc' }, h('span', { class: 'rec-t' }, h('b', {}, `${sc.no}. ${zoneName(sc)}`), h('small', {}, t('record.hints', { n: r.last?.hints || 0 }))),
+      h('span', { class: 'zc-v t-num' }, `${f.found}/${f.total}`), ic('next', { size: 16 }), h('span', { class: 'zc-v up t-num' }, `${now.found.length}/${now.total}`)); }).filter(Boolean);
+  return rows.length ? h('div', { class: 'rec-list' }, h('div', { class: 'zc-head small' }, h('span', {}, t('record.zone')), h('span', {}, t('record.first')), h('span', {}, t('record.latest'))), rows) : empty(t('record.empty'));
 }
 function sceneBasis(sc) { return basisFor([...sc.hazards.flatMap((z) => [...z.line.src, ...z.name.src]), ...sc.safe.flatMap((q) => q.name.src)]); }
 function basisFor(src) {
@@ -1021,6 +1221,7 @@ async function boot() {
   document.documentElement.classList.remove('boot');
   try { D = await (await fetch('./data/lessons.json')).json(); SRC = Object.fromEntries((await (await fetch('./data/sources.json')).json()).sources.map((s) => [s.id, s])); SC = await (await fetch('./data/scenes.json')).json(); }
   catch (e) { app().innerHTML = ''; app().append(h('p', { style: 'padding:24px' }, t('app.loadFail'))); return; }
+  try { PRE = await (await fetch('./data/prerender.json')).json(); for (const [zid, zp] of Object.entries(PRE.zones || {})) { const sc = SC.scenes.find((x) => x.id === zid); for (const z of sc?.hazards || []) if (zp.pairs?.[z.id]) { PAIR3D[z.bad] = zp.pairs[z.id].bad; PAIR3D[z.good] = zp.pairs[z.id].good; pairsDone.add(zid); } } } catch { PRE = { zones: {} }; }
   noteHour(); save();
   await op;
   const hs = location.hash.replace('#', '');
@@ -1029,6 +1230,6 @@ async function boot() {
   if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
 }
 // 자동 점검용 (tools/smoke-learn.mjs)
-window.__learn = { swipeSet: (id, o) => swipeSet(id, o), get SC() { return SC; }, openScene: (id, o) => openScene(id, o), goHome: () => go('home'), go: (x) => go(x), get S() { return S; }, get D() { return D; }, get SRC() { return SRC; }, get UI() { return UI; }, exportPayload, chars, lessonFacts, DEV, t };
+window.__learn = { swipeSet: (id, o) => swipeSet(id, o), get SC() { return SC; }, openScene: (id, o) => openScene(id, { go: true, ...o }), preview: (id) => openScene(id), openCard: (id) => openCard(id), cardPNG: (id) => cardPNG(scene(id)), get PRE() { return PRE; }, goHome: () => go('home'), go: (x) => go(x), get S() { return S; }, get D() { return D; }, get SRC() { return SRC; }, get UI() { return UI; }, exportPayload, chars, lessonFacts, DEV, t };
 if (DEV) document.documentElement.classList.add('dev');
 boot();

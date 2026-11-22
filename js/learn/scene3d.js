@@ -4,6 +4,7 @@
 //  - areas(): 위험·함정 위치를 화면(400×300 좌표)에 투영 → 누를 곳 (반지름 30 = 휴대전화에서 지름 약 54px)
 //  - pairs(): 위험마다 같은 장면을 가까이 찍은 두 장(위험 켬/끔) → dataURL
 // 색은 css/tokens.css 토큰(그림 팔레트 --art-* 포함)에서만. 글자·로고·실존 인물 없음.
+import * as Pr from './props3d.js';
 let THREE = null;
 const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#888888';
 export async function load3d() { if (!THREE) THREE = await import('../../vendor/three.module.js'); return THREE; }
@@ -38,7 +39,7 @@ function kit(root) {
     cyl: (r, h, m, x, y, z, seg = 10) => put(new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), typeof m === 'string' ? M(m) : m), x, y + h / 2, z),
     rod: (a, b, r, m) => { const A = new THREE.Vector3(...a), Bv = new THREE.Vector3(...b), len = A.distanceTo(Bv); const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), typeof m === 'string' ? M(m) : m); mesh.position.copy(A).add(Bv).multiplyScalar(0.5); mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), Bv.clone().sub(A).normalize()); mesh.castShadow = true; cur.add(mesh); return mesh; },
     cone: (r, h, m, x, y, z) => put(new THREE.Mesh(new THREE.ConeGeometry(r, h, 16), typeof m === 'string' ? M(m) : m), x, y + h / 2, z),
-    group: (fn, x = 0, y = 0, z = 0, ry = 0) => { const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.y = ry; const prev = cur; cur.add(g); cur = g; fn(); cur = prev; return g; },
+    group: (fn, x = 0, y = 0, z = 0, ry = 0, rx = 0) => { const g = new THREE.Group(); g.position.set(x, y, z); g.rotation.set(rx, ry, 0, 'YXZ'); const prev = cur; cur.add(g); cur = g; fn(); cur = prev; return g; },
   };
   return K;
 }
@@ -119,16 +120,20 @@ const SCENES = {
   tbm(K, H, S) {
     baseScene(K, K.scene, { ground: 'art-ground' });
     K.box(9, 2.7, 2.6, K.T(texFacade(1)), -1, 0, -4.5); K.box(9.2, 0.2, 2.8, '--art-concrete-dark', -1, 2.7, -4.5);
-    K.box(0.1, 1.8, 0.1, '--art-steel', 3.8, 0, -2.2); K.box(1.6, 1, 0.06, '--bg', 3.8, 1.3, -2.15);
+    // v17: 지도(site3d)와 같은 소품 — TBM 게시판, 보호구 표지, 식수대, 가림막, 자재, 콘 (props3d.js). 사람 앞(가운데)은 비워 둠
+    Pr.board(K, 3.9, -1.7, -0.35); Pr.sign(K, -4.3, -1.6, 'mandatory', 0.25); Pr.sign(K, 5.6, -2.6, 'caution', -0.4);
+    Pr.water(K, -4.8, 0.3); Pr.toilet(K, 7.2, -4.6, -0.3); Pr.extinguisher(K, 2.9, -2.2);
+    Pr.fence(K, -12, -8, 12, -8); Pr.pallet(K, -5.6, -2.8, 0.3); Pr.rebar(K, 4.2, 1.4, -0.5, 2.6); Pr.lumber(K, -3.6, 1.7, 0.35);
+    for (const [x, z] of [[-2.7, 2.6], [2.9, 2.5], [-4.6, 1.2]]) Pr.cone(K, x, z); Pr.barrow(K, 6.0, -0.6, 2.4);
     for (const [x, c] of [[-6, '--art-concrete'], [7, '--art-wall']]) K.box(4, 6, 4, K.T(texFacade(2)), x, 0, -14);
-    for (let x = -10; x <= 10; x += 2.2) K.box(2, 1.8, 0.08, '--art-wall', x, 0, -7.5);
+    Pr.towerCrane(K, -11, -16, 0.6, 18, 14, 9, 8);
     hz(K, H, '0-1', [-2.4, 1.62, 0], () => person(K, -2.4, 0, { helmet: false }), () => person(K, -2.4, 0, {}), { pos: [-2.2, 1.75, 1.9], look: [-2.4, 1.35, 0] });
     hz(K, H, '0-2', [-0.8, 1.62, 0], () => person(K, -0.8, 0, { strap: false }), () => person(K, -0.8, 0, {}), { pos: [-0.8, 1.7, 1.1], look: [-0.8, 1.6, 0] });
     hz(K, H, '0-3', [0.8, 0.12, 0], () => person(K, 0.8, 0, { shoes: 'sneaker' }), () => person(K, 0.8, 0, {}), { pos: [0.8, 0.7, 1.6], look: [0.8, 0.2, 0] });
     person(K, 2.4, 0, { helmet: 'white', pose: 'point', ry: -0.3 }); S['0-s1'] = [2.4, 1.2, 0];
     // 바닥의 철근 토막·못 박힌 각재 — 안전화를 신어야 하는 이유가 보이게 (v16)
     K.rod([0.5, 0.03, 0.45], [1.3, 0.03, 0.75], 0.02, '--art-rebar'); K.box(0.9, 0.06, 0.12, K.T(texPlywood()), 1.0, 0, 0.35, 0.4); for (let i = 0; i < 3; i++) K.cyl(0.006, 0.07, '--art-steel', 0.75 + i * 0.22, 0.06, 0.27 + i * 0.09);
-    return { cam: [0, 1.6, 5.6], look: [0, 1.05, -0.5], fov: 50 };
+    return { cam: [0, 1.7, 6.3], look: [0, 0.95, -0.8], fov: 58 };
   },
   // 1. 골조 층 바닥: 3층 슬래브 위에 서서 앞을 봄. 앞쪽 끝 아래로 땅이 보임
   floor(K, H, S) {
@@ -153,6 +158,9 @@ const SCENES = {
     hz(K, H, '1-5', [-5.6, 0.9, -4.6], () => { for (let i = 0; i < 6; i++) K.cyl(0.02, 1.3, '--art-rebar', -6 + (i % 3) * 0.35, 0, -4.8 + Math.floor(i / 3) * 0.35); },
       () => { for (let i = 0; i < 6; i++) { K.cyl(0.02, 1.25, '--art-rebar', -6 + (i % 3) * 0.35, 0, -4.8 + Math.floor(i / 3) * 0.35); K.cyl(0.06, 0.1, '--vest', -6 + (i % 3) * 0.35, 1.24, -4.8 + Math.floor(i / 3) * 0.35); } }, { pos: [-4.6, 1.5, -2.6], look: [-5.6, 0.9, -4.6] });
     K.box(1.5, 0.05, 1.5, K.T(texStripes()), 4.6, 0, 0.6); S['1-s1'] = [4.6, 0.03, 0.6];
+    // v17 지도와 같은 소품 (위험 자리는 비움)
+    Pr.rebar(K, -6.6, 0.8, 0.3, 3); Pr.pallet(K, -6.9, -2.2, 0.2); Pr.pipes(K, 6.8, 3.4, 0.2); Pr.drum(K, 7.6, -1.4, '--mandatory'); Pr.cone(K, 6.2, 1.8);
+    K.group(() => Pr.towerCrane(K, 0, 0, 0.5, 26, 14, 8, 14), -18, -9, -24); K.group(() => Pr.mixer(K, 0, 0, 0.4), 10, -9, -16);
     return { cam: [0, 1.6, 7.5], look: [0, 0.2, -3.4], fov: 56 };
   },
   // 2. 외부 비계·고소작업대: 땅에서 건물 외벽 쪽을 올려다봄
@@ -167,6 +175,7 @@ const SCENES = {
     hz(K, H, '2-1', [-2, 4.85, -1.1], () => { person(K, -0.2, -1.1, { ry: -1.2, pose: 'carry' }, 4.83); }, () => { plank(-3.2, -0.8, 4.8); person(K, -0.2, -1.1, { ry: -1.2, pose: 'carry' }, 4.83); }, { pos: [-2.0, 9.0, 0.8], look: [-2.0, 4.8, -1.1] });
     hz(K, H, '2-2', null, () => person(K, -6.6, -1.1, { ry: 0.2 }, 7.26), () => { person(K, -6.6, -1.1, { ry: 0.2, harness: true }, 7.26); K.rod([-6.6, 8.25, -1.25], [-6.4, 8.26, -0.5], 0.03, '--brand'); }, { pos: [-5.6, 8.8, 2.0], look: [-6.6, 8.1, -1.1] });
     person(K, 0.6, -1.1, { harness: true, pose: 'crouch' }, 2.46); K.rod([0.6, 3.2, -1.15], [0.8, 3.4, -0.5], 0.015, '--vest'); S['2-s1'] = [0.6, 3.1, -1.1];
+    Pr.pipes(K, 1.8, 5.2, 0.1); Pr.cone(K, -0.6, 5.8); Pr.sign(K, -10.8, 0.8, 'mandatory', 0.4); Pr.plywood(K, 9.4, 4.0, -0.3); Pr.barrow(K, -2.8, 6.8, 0.6); Pr.container(K, 13, -0.6, -0.2);
     hz(K, H, '2-3', null, () => person(K, -3.6, 0.4, { pose: 'walk', ry: 1.4 }), () => { person(K, -6.6, 3.4, { pose: 'walk', ry: 1.4 }); for (let x = -8; x <= 1.6; x += 1.2) K.cone(0.16, 0.5, '--vest', x, 0, 0.8); K.rod([-8, 0.45, 0.8], [1.6, 0.45, 0.8], 0.015, '--danger'); }, { pos: [-2.2, 2.0, 6.8], look: [-4.0, 2.0, 0.4] });
     // 고소작업대
     K.group(() => { K.box(2.6, 0.6, 1.4, '--vest', 6.6, 0.25, 0.8); for (const [x, z] of [[5.6, 0.2], [7.6, 0.2], [5.6, 1.4], [7.6, 1.4]]) K.cyl(0.22, 0.2, '--asphalt', x, 0.05, z);
@@ -202,6 +211,7 @@ const SCENES = {
     const fork = () => { K.box(1.2, 0.9, 2, '--vest', 4.4, 0.35, 3.2); K.box(1.1, 1.2, 0.9, '--asphalt-2', 4.4, 1.25, 3.6); K.box(0.08, 2.2, 0.08, '--art-steel', 4.0, 0.2, 2.1); K.box(0.08, 2.2, 0.08, '--art-steel', 4.8, 0.2, 2.1); K.box(1, 0.06, 1, '--art-steel', 4.4, 0.35, 1.6); K.box(1, 0.6, 1, K.T(texPlywood()), 4.4, 0.42, 1.6); for (const [x, z] of [[3.8, 2.6], [5, 2.6], [3.8, 3.9], [5, 3.9]]) K.cyl(0.28, 0.25, '--asphalt', x, 0.05, z); };
     hz(K, H, '3-4', [4.4, 1.1, 2.6], () => { fork(); person(K, 2.6, 2.2, { pose: 'walk', ry: -1.5 }); }, () => { fork(); person(K, 2.4, 3.6, { pose: 'flag', ry: 1.2 }); }, { pos: [3.2, 2.2, 7], look: [4.4, 0.9, 2.6] });
     person(K, -5.8, 1.6, { pose: 'flag', ry: 0.5 }); S['3-s1'] = [-5.8, 1.2, 1.6];
+    Pr.pallet(K, -2.2, 4.2, 0.2); Pr.lumber(K, -3.4, 5.6, 0.1); Pr.rebar(K, 7.8, 5.2, 0.4, 3); Pr.sign(K, -8.6, 3.4, 'caution', 0.4); Pr.drum(K, 7.4, -1.6, '--art-steel'); Pr.drum(K, 8.1, -1.1, '--art-steel'); Pr.fence(K, -14, -10, 14, -10);
     return { cam: [0, 1.6, 10], look: [0, 4.4, -2], fov: 62 };
   },
   // 4. 장비·토공사
@@ -230,6 +240,7 @@ const SCENES = {
     };
     hz(K, H, '4-4', [6.2, -1.5, 1.9], () => trench(true), () => trench(false), { pos: [6.4, 4.2, 9.6], look: [6.2, -1.6, 2.4] });
     person(K, -5, 2, { pose: 'flag', ry: 0.6 }); S['4-s1'] = [-5, 1.2, 2];
+    Pr.barrier(K, -1.4, 5.8, 0.2); Pr.drum(K, -8.4, 3.4, '--danger'); Pr.drum(K, -9.0, 4.0, '--mandatory'); Pr.container(K, -10, -9, 0.3); Pr.toilet(K, 12, -8, -0.4); Pr.fence(K, -16, -12, 16, -12);
     return { cam: [1.2, 3.6, 11.5], look: [1.2, 0.2, -0.8], fov: 62 };
   },
   // 5. 타설·동바리: 거푸집 아래와 위가 함께 보임
@@ -248,6 +259,7 @@ const SCENES = {
     hz(K, H, '5-4', [9.6, 8.6, -5.4], () => { K.rod([9, 1.9, -1.5], [9.6, 8.4, -4], 0.16, '--art-steel'); K.rod([9.6, 8.4, -4], [9.6, 8.9, -5.9], 0.12, '--art-steel'); },
       () => { K.rod([9, 1.9, -1.5], [8, 5.6, -2], 0.16, '--art-steel'); K.rod([8, 5.6, -2], [3, 5.2, -1.5], 0.12, '--art-steel'); }, { pos: [2.4, 5.0, 9.0], look: [8.0, 6.2, -3.6] });
     person(K, 5.6, 3.2, { ry: -0.4, pose: 'point' }); S['5-s1'] = [5.6, 1.2, 3.2];
+    Pr.rebar(K, -7.2, 3.0, 0.3, 3); Pr.plywood(K, -8.8, 0.6, 0.2); Pr.barrow(K, 7.8, 4.8, -0.6); Pr.cone(K, 3.2, 5.8); Pr.cone(K, -1.4, 6.0); K.group(() => Pr.mixer(K, 0, 0, 0.2), -9, 0, -7); Pr.fence(K, -16, -11, 16, -11);
     return { cam: [1.5, 1.6, 10.5], look: [1.5, 3.0, -1], fov: 64 };
   },
   // 6. 용접·밀폐공간·폭염
@@ -276,22 +288,30 @@ const SCENES = {
       () => { person(K, 5, -1.6, { pose: 'sit', ry: -0.4 }); for (const [x, z] of [[3.8, -2.8], [6.2, -2.8], [3.8, -0.4], [6.2, -0.4]]) K.cyl(0.04, 2.2, '--art-steel', x, 0, z); K.box(2.8, 0.06, 2.8, '--safe', 5, 2.2, -1.6); K.cyl(0.05, 0.22, '--art-shirt', 5.5, 0, -1.2); }, { pos: [4.0, 1.0, 2.6], look: [5.6, 2.8, -3.2] });
     // 함정: 방화포·소화기를 갖춘 용접
     person(K, -6.4, -2.6, { pose: 'weld', ry: 0.4 }); K.box(0.04, 1.6, 1.8, '--art-tan', -5.6, 0, -2.4); K.cyl(0.1, 0.55, '--danger', -7.2, 0, -2); S['6-s1'] = [-6.2, 0.8, -2.5];
+    Pr.drum(K, -5.2, 1.4, '--danger'); Pr.welder(K, -5.2, -0.4, 0.3); Pr.pallet(K, 7.6, 0.8, 0.2); Pr.sign(K, 7.0, -4.2, 'caution', -0.3); Pr.water(K, 7.4, -2.8);
     return { cam: [0.4, 1.7, 6.6], look: [0.4, 0.5, -0.6], fov: 66 };
   },
 };
 export const SCENE3D_IDS = Object.keys(SCENES);
 
 /* ---------------- 만들기 ---------------- */
+// 렌더 품질: 부드러운 그림자 + ACES 톤 (지도와 같은 빛)
+function look(r) { r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap; r.outputColorSpace = THREE.SRGBColorSpace; r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.08; }
+// 미리 렌더링용 한 장 (tools/render-scenes.mjs): 위험 켬 목록 on → { url, areas }
+export async function renderStill(id, { on, w = 1080, h = 810, fmt = 'image/webp', q = 0.84 } = {}) {
+  const v = await makeScene3D(id, { on, width: w, height: h, ratio: 1, shadow: 2048 }); if (!v) return null;
+  v.render(); const url = v.canvas.toDataURL(fmt, q), areas = v.areas(); v.dispose(); return { url, areas };
+}
 let pairRenderer = null;
-export async function makeScene3D(id, { on, width = 800, height = 600 } = {}) {
+export async function makeScene3D(id, { on, width = 800, height = 600, ratio = 0, shadow = 1024 } = {}) {
   if (!SCENES[id] || !hasGL()) return null;
   await load3d();
   const canvas = document.createElement('canvas'); canvas.className = 'scene3d';
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true }); } catch { return null; }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5)); renderer.setSize(width, height, false);
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap; renderer.outputColorSpace = THREE.SRGBColorSpace;
-  const built = build(id);
+  renderer.setPixelRatio(ratio || Math.min(window.devicePixelRatio || 1, 1.5)); renderer.setSize(width, height, false);
+  look(renderer);
+  const built = build(id, shadow);
   const { scene, camera, H, S } = built;
   const setOn = (ids) => { for (const [k, v] of Object.entries(H)) { const b = !ids || ids.includes(k); v.bad.visible = b; v.good.visible = !b; } };
   setOn(on);
@@ -305,12 +325,12 @@ export async function makeScene3D(id, { on, width = 800, height = 600 } = {}) {
     dispose: () => { renderer.dispose(); renderer.forceContextLoss?.(); },
   };
 }
-function build(id) {
+function build(id, shadow = 1024) {
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(tok('--art-sky'), 30, 90);
-  scene.add(new THREE.HemisphereLight(new THREE.Color(tok('--bg')), new THREE.Color(tok('--art-ground')), 1.1));
-  const sun = new THREE.DirectionalLight(new THREE.Color(tok('--bg')), 1.7);
-  sun.position.set(-12, 22, 14); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+  scene.add(new THREE.HemisphereLight(new THREE.Color(tok('--art-sky')), new THREE.Color(tok('--art-ground')), 1.25));
+  const sun = new THREE.DirectionalLight(new THREE.Color(tok('--bg')).lerp(new THREE.Color(tok('--brand')), 0.18), 2.0);
+  sun.position.set(-12, 22, 14); sun.castShadow = true; sun.shadow.mapSize.set(shadow, shadow); sun.shadow.radius = 3;
   Object.assign(sun.shadow.camera, { left: -18, right: 18, top: 18, bottom: -18, far: 70 }); sun.shadow.bias = -0.0006;
   scene.add(sun);
   const K = kit(scene); K.scene = scene;
@@ -327,14 +347,14 @@ function build(id) {
   return { scene, camera, H, S, cam: c };
 }
 // 위험마다 가까이 찍은 두 장 (위험 켬 / 끔) → { '0-1': { bad: dataURL, good: dataURL }, ... }
-export async function renderPairs(id, { w = 320, h = 220 } = {}) {
+export async function renderPairs(id, { w = 320, h = 220, fmt = 'image/jpeg', q = 0.82, ratio = 1.5 } = {}) {
   if (!SCENES[id] || !hasGL()) return null;
   await load3d();
   if (!pairRenderer) {
     try { pairRenderer = new THREE.WebGLRenderer({ canvas: document.createElement('canvas'), antialias: true, preserveDrawingBuffer: true }); } catch { return null; }
-    pairRenderer.shadowMap.enabled = true; pairRenderer.outputColorSpace = THREE.SRGBColorSpace;
+    look(pairRenderer);
   }
-  pairRenderer.setPixelRatio(1.5); pairRenderer.setSize(w, h, false);
+  pairRenderer.setPixelRatio(ratio); pairRenderer.setSize(w, h, false);
   const { scene, H, cam } = build(id);
   const camera = new THREE.PerspectiveCamera(50, w / h, 0.05, 200);
   const out = {};
@@ -343,9 +363,9 @@ export async function renderPairs(id, { w = 320, h = 220 } = {}) {
     if (hh.close) { camera.position.set(...hh.close.pos); camera.lookAt(...hh.close.look); }
     else { const from = new THREE.Vector3(...cam.cam); const dir = from.clone().sub(a).normalize(); camera.position.copy(a).addScaledVector(dir, Math.max(2.6, (hh.size || 1) * 1.2)).add(new THREE.Vector3(0, 0.5, 0)); camera.lookAt(a); }
     for (const v of Object.values(H)) { v.bad.visible = true; v.good.visible = false; }
-    pairRenderer.render(scene, camera); const bad = pairRenderer.domElement.toDataURL('image/jpeg', 0.82);
+    pairRenderer.render(scene, camera); const bad = pairRenderer.domElement.toDataURL(fmt, q);
     hh.bad.visible = false; hh.good.visible = true;
-    pairRenderer.render(scene, camera); const good = pairRenderer.domElement.toDataURL('image/jpeg', 0.82);
+    pairRenderer.render(scene, camera); const good = pairRenderer.domElement.toDataURL(fmt, q);
     out[k] = { bad, good };
   }
   return out;
