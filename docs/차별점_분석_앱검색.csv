@@ -1,0 +1,192 @@
+﻿스토어,id,이름,개발,최근 업데이트,자동 분류(제목·설명 키워드),최종 판정(검토자 1명)
+gp,kr.or.kosha.foreigner,FORS365,한국 산업안전보건공단,2026. 10. 14.,A 교육·학습,포함: 위와 같은 앱(Play)
+gp,com.workmetrics.onlineinduction,Induction,Workmetrics PTY Ltd (Onlineinduction.com),2026. 9. 22.,A 교육·학습,포함(경계): 인덕션 자료 전달
+gp,com.safetyculture.iauditor,Mitti (SafetyCulture 제공),SafetyCulture,2026. 11. 15.,A 교육·학습,"포함(경계): Mitti(SafetyCulture, 구 EdApp 교육 기능 통합 여부 확인 필요)"
+gp,com.spring_boat_37396,Safety Team,Safety Team Technologies,2026. 11. 17.,A 교육·학습,포함(경계): 위와 같은 앱(Play)
+gp,com.groundhogapps.safetytraininglms,Safety Training LMS Pro,GroundHog Apps,2026. 11. 3.,A 교육·학습,포함(경계): 안전교육 LMS
+gp,com.toolboxtalk,Toolbox Talks Safety Briefings,Construction Center of Excellence,2026. 5. 14.,E2 현장관리·서류,포함: 위와 같은 콘텐츠(Play)
+gp,com.itlog.ItlogSafeedu,스마트안전교육 - 건설현장 스마트 안전교육 솔루션,(주)ITLOG,2025. 10. 27.,A 교육·학습,포함: 건설 근로자 안전교육 동영상
+gp,com.itlog.PortalSafeedu,스마트안전교육포털 - 건설현장 스마트 안전교육 솔루션,(주)ITLOG,2026. 8. 31.,A 교육·학습,"포함: 위와 같은 회사, 교육 영상 시청"
+ios,1457992967,Best Built Plans,Simcoach Games,2019-05-26,A 교육·학습,포함: CPWR 작업계획 학습
+ios,6740485273,BuildWitt,BuildWitt,2026-11-11,A 교육·학습,"포함: 마이크로러닝 영상 1,700+"
+ios,6794476827,Echo 8 Safety Training,JunziTech Solutions LLC,2026-10-21,A 교육·학습,포함(경계): 현장 퀴즈
+ios,6754361419,FORS365,한국산업안전보건공단,2026-10-15,A 교육·학습,포함: 외국인 근로자 안전보건 자료(공단)
+ios,6817239346,GSTT,"ESAFE CO.,LTD",2026-10-21,A 교육·학습,포함: 외국인 대상 AI 다국어 교육 플랫폼
+ios,1551165511,GoContractor Connect,GoContractor,2026-09-09,A 교육·학습,포함(경계): 현장 오리엔테이션 전달
+ios,1299114197,ICRA For Construction,Simcoach Games,2019-08-28,A 교육·학습,포함: 병원 공사 위험 찾기 게임
+ios,6794745982,Inducty,Chris Galante,2026-11-22,A 교육·학습,포함(경계): 현장 인덕션 전달
+ios,1293760724,Lift Coach: Plan Your Lift,Simcoach Games,2019-07-11,A 교육·학습,포함: 들기 자세 게임
+ios,1249442413,Lift Coach: Plan Your Route,Simcoach Games,2019-07-11,A 교육·학습,포함: 운반 경로 퍼즐 게임
+ios,6761496438,Mobile Training by Safety 101,"ERP 101, LLC",2026-07-25,A 교육·학습,포함(경계): 교육 전달 앱
+ios,6478411544,NAHB Jobsite Safety Handbook,National Association of Home Builders,2026-02-02,A 교육·학습,포함: 현장 안전 핸드북
+ios,6760513480,Safety Moments App,Boson Technologies Inc.,2026-03-19,A 교육·학습,포함: 안전 모먼트 100개
+ios,6759353317,Safety Talks,Clayton Smith,2026-09-02,A 교육·학습,포함(경계): 관리자용 안전 이야기 소재
+ios,6447053706,Safety Team,"Safety Team Technologies, Inc.",2026-11-19,A 교육·학습,포함(경계): OSHA 교육 자동 배정
+ios,1447272619,Site Coach: Fall Hazards,Simcoach Games,2018-12-22,A 교육·학습,포함: 추락 위험 찾기 게임
+ios,1352508041,Site Coach: Ladder Safety,Simcoach Games,2018-05-10,A 교육·학습,포함: 사다리 위험 찾기 게임
+ios,1312987429,Site Coach: Start Smart,Simcoach Games,2018-05-25,A 교육·학습,포함: 장면 위험 찾기 게임
+ios,866246915,Toolbox Talks,Renton Technical College,2026-04-13,A 교육·학습,포함: 툴박스 토크 100+ (영·스페인어)
+ios,1287144166,United Association Safety VR,Bit Space Development Ltd.,2018-02-21,A 교육·학습,포함: 신규 진입자 VR
+ios,6749565624,hiWorker,Hilokal,2026-11-01,A 교육·학습,포함: AI 통역 + 안전교육 콘텐츠(14개 언어)
+ios,6752789899,안전동행플러스,"E-PYEONHAN AUTOMATION TECHNOLOGY CO., LTD.",2025-10-16,A 교육·학습,포함(경계): 안전보건교육 영상 시청 + 서명(법 이행 기록 중심)
+gp,dev.workers.gisul.aiai.twa,AI 안전비서,대전도시공사 기술사업팀,2026. 8. 19.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.bissafetysoftware.safetapp,BIS Safety,Health and Safety Compliance,2026. 11. 14.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.blueprintsafety.toolboxtalklibrary,Blueprint Safety Toolbox Talks,Blueprint Safety LLC,2026. 10. 26.,E5 기타(무관),제외: 기타(무관)
+gp,gov.cdc.niosh.mining.ToolboxTalks,CDC Toolbox Talks,Centers for Disease Control and Prevention,2018. 8. 2.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.sight35.cscs,Construction Health and Safety,Sight35,2026. 9. 8.,E3 자격시험 대비,제외: 자격시험 대비
+gp,com.kineticdataminds.construction_safety,Construction Safety - User,Kinetic Data Minds,2026. 1. 16.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.estudyme.cscs,Construction Safety Practice,Estudyme Studio,2022. 11. 4.,E3 자격시험 대비,제외: 자격시험 대비
+gp,app.vast.vast_safety_app,Construction SafetyApp,Premises Management Systems Pvt. Ltd.,2026. 11. 5.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.kineticdataminds.construction_safety_admin,Construction Safety_Manager,Kinetic Data Minds,2026. 1. 16.,E2 현장관리·서류,제외: 현장관리·서류
+gp,kr.co.gsneotek.hse,GSN안전보건,hse-gsneotek,2025. 8. 11.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.ideagen.workforcesafety,Ideagen Workforce Safety,Ideagen Limited,2026. 10. 21.,E1 이수증·출입·근태,제외: 이수증·출입·근태
+gp,com.safetyreports.jsa,Job Safety Analysis | JSA JHA,AlignOps,2026. 9. 12.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.kadrasafety.tbm,Kadra TBM,Safetyabc,2026. 10. 23.,E2 현장관리·서류,제외: 현장관리·서류
+gp,kr.co.to21.kcic_mobile,MSDS(물질안전보건자료),한국산업안전보건공단,2026. 8. 20.,E5 기타(무관),제외: 기타(무관)
+gp,co.startmobile.oshasafety,OSHA Safety Regulations Guide,Plainside Labs,2026. 8. 28.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.app.sygnal,SYGNAL - Gas Detector Training,SYGNAL,2026. 11. 18.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.drcts.safety_guard,Safety Guard,디알씨티에스주식회사,2026. 11. 16.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.safetymeetingpro,Safety Meeting Pro,Safety Meeting Developer,2026. 3. 24.,E3 자격시험 대비,제외: 자격시험 대비
+gp,com.mobeasyapp.app1010805528049,Safety Risk And Hazards,AAE DEV,2025. 9. 23.,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+gp,com.safetyreports.training,Safety Training App | SR,AlignOps,2026. 9. 12.,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+gp,com.duego.hyundai.imc.safety,Safety-IMC,Duego System,2026. 8. 27.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.duego.hyundai.isc.safety,Safety-ISC,Duego System,2026. 8. 27.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.safetymindai.traininghub,SafetyMind AI,SafetyMindAI,2026. 10. 7.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.safetyonsite.app,SafetyOnSite,Boretto HSE,2026. 7. 21.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.capitalconstructionsolutions.rancho,SafetyOne™,"Real Time Risk Solutions, LLC",2026. 11. 17.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.safetymint,Safetymint Safety Management,Niyati Technologies,2026. 2. 13.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.mppms.tbm,TBM AI 스마트 안전관리,엠폴시스템,2026. 11. 2.,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+gp,kr.movements.dtbm,TBM NaW,Movements Inc.,2026. 11. 18.,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+gp,com.toolboxtalkplanner.businesstrack,Toolbox Talk Planner,Unistep Corp,2026. 7. 13.,E5 기타(무관),제외: 기타(무관)
+gp,com.mycomply.sstauthenticator,Training Connect,myComplySoftware,2026. 7. 15.,E5 기타(무관),제외: 기타(무관)
+gp,com.ardhas.urcc,URCC HSE,Ardhas Technology,2026. 3. 19.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.eduapp.wprquiz,WPR Quiz: Safety Practice,kamran butt,2026. 11. 15.,E3 자격시험 대비,제외: 자격시험 대비
+gp,com.learnify.osha,Workplace Safety Test Prep,Learnify Limited,2026. 10. 11.,E3 자격시험 대비,제외: 자격시험 대비
+gp,kr.or.kosha.gse,건설안전패스,한국 산업안전보건공단,2026. 10. 14.,E1 이수증·출입·근태,제외: 이수증 발급·출역
+gp,kr.go.gg.gsds,경기 안전대동여지도,경기도청,2026. 6. 2.,E1 이수증·출입·근태,제외: 이수증·출입·근태
+gp,and.isce.app,스마트건설교육원,(재)스마트건설교육원,2026. 10. 30.,A 교육·학습,제외: 건설기술인 대상
+gp,com.clab.safety4worker,스마트위험성평가 안전지키미 (근로자용),(주)클라우드랩,2026. 10. 27.,A 교육·학습,제외: 위험성평가·TBM 공유(현장 관리)
+gp,com.hoodpub.safetysnap,안전 찰칵 - 건설 현장 안전점검 일지 무료,Hoodpub,2026. 3. 22.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.digiquitous.safetv.iot.safetvradarbeacon,안전TV 건설장비 근로자접근,Digiquitous Inc.,2026. 7. 28.,E1 이수증·출입·근태,제외: 이수증·출입·근태
+gp,com.digiquitous.safetv.iot.smartband,안전TV 근로자안전,Digiquitous Inc.,2025. 7. 23.,E1 이수증·출입·근태,제외: 이수증·출입·근태
+gp,com.safetymaster_app,"안전달인 - 건설현장관리,위험성평가,TBM,사진대지",(주) 인포에이엔에스,2026. 9. 10.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.digiquitous.safetv.iot.safetv_admin,안전함 관리자 중대재해,Digiquitous Inc.,2026. 11. 16.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.digiquitous.safetv.iot.smartbandguard,안전함 근로자 중대재해,Digiquitous Inc.,2026. 11. 16.,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+gp,expertsafety.lusoft.android,엑스퍼트 안전보건 시스템,엑스퍼트,2026. 2. 4.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.novusmay.safepro_new_ya,영암군청 안전보건관리시스템,Novusmay lnc.,2026. 7. 27.,E2 현장관리·서류,제외: 현장관리·서류
+gp,com.poscoenc.amswi,포근이: 포스코이앤씨 근로자 APP,(주)포스코이앤씨,2026. 11. 20.,E5 기타(무관),제외: 기타(무관)
+gp,com.prosafety,프로의안전,Lee kihwang,2026. 9. 23.,E2 현장관리·서류,제외: 현장관리·서류
+gp,kr.study.safetydocs,현장 안전서류 - TBM 순회점검 위험성평가,sonssi,2026. 10. 3.,E2 현장관리·서류,제외: 현장관리·서류
+ios,6801456776,AlpetaX-Safety,"UNION biometrics Co., Ltd.",2026-11-05,E1 이수증·출입·근태,제외: 이수증·출입·근태
+ios,1453290433,AnchoRock Safety,Novara Software LLC,2023-11-20,E2 현장관리·서류,제외: 현장관리·서류
+ios,6751707766,BCSP STSC Exam Test Prep 2027,Exam Prep OU,2026-11-14,E3 자격시험 대비,제외: 자격시험 대비
+ios,1577166710,BIS Safety,BIS Safety Software,2026-11-17,E2 현장관리·서류,제외: 현장관리·서류
+ios,6823666432,"Brahma Group, Inc Safety App",Liberty Industrial Group,2026-10-28,E2 현장관리·서류,제외: 현장관리·서류
+ios,1203393708,Build With Grandpa,Fairlady Media,2026-11-19,E5 기타(무관),제외: 기타(무관)
+ios,6774415738,Chapter 33 Assistant,DONOVAN MCQUILLEN,2026-10-30,E2 현장관리·서류,제외: 현장관리·서류
+ios,1572254490,City Construction Road Builder,Rashid Nisar,2022-04-20,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6821514261,ColabTools Plus,Fanicon Technologies Private Limited,2026-11-21,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,1602979838,Construction Guide,ahmed abdullahi,2024-03-13,E3 자격시험 대비,제외: 자격시험 대비
+ios,6474019534,Construction Health and Safety,Erdem Kara,2026-09-10,E3 자격시험 대비,제외: 자격시험 대비
+ios,6474693284,Construction Risk,Brickeye,2026-09-29,E2 현장관리·서류,제외: 현장관리·서류
+ios,1124826092,Construction Safety Practice,Hung Nguyen,2022-10-29,E3 자격시험 대비,제외: 자격시험 대비
+ios,1627257393,Construction Skill prep 2026,"Chengdu Youzou Information Technology Co., Ltd",2025-11-13,E3 자격시험 대비,제외: 자격시험 대비
+ios,6502633290,DAELIM SAFETY+,"Daelim Co., Ltd.",2024-07-25,E2 현장관리·서류,제외: 현장관리·서류
+ios,6803809683,DS-ONE,SEOIN KIM,2026-10-20,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6762704696,EA Safety Services LLC,EA Safety Services LLC,2026-10-22,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,992421340,EPRO Safety,"EPRO Safety Solutions, LLC.",2023-11-22,E5 기타(무관),제외: 기타(무관)
+ios,6759396750,Effective Safety,Phu Nguyen,2026-04-03,E2 현장관리·서류,제외: 현장관리·서류
+ios,6466793165,Finch - 핀치 (근로자용),SquareZero Inc.,2023-09-19,E5 기타(무관),제외: 기타(무관)
+ios,6827672905,GCCSWA,Good Catch Consultants,2026-11-20,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,1502890906,Genda Construction,D. GENDA CONSTRUCTION TECHNOLOGIES LTD,2026-11-17,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6456834556,GotSafety Lite,The Safety Pickle,2026-08-23,E5 기타(무관),제외: 기타(무관)
+ios,6749456741,HS&E Test Prep Practice 2026,YAUHEN BAHDANOVICH,2026-10-22,E3 자격시험 대비,제외: 자격시험 대비
+ios,6450402276,HamaH CS 작업자,RAYCOM,2026-10-22,E1 이수증·출입·근태,제외: 이수증·출입·근태
+ios,1503120602,HammerTech Mobile,HammerTech,2026-11-17,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,1496354612,Induction Manager,Clarati Co. Ltd.,2026-08-06,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6758177796,K-SAFEONE,(주)케이에스산업안전협회,2026-11-09,E2 현장관리·서류,제외: 현장관리·서류
+ios,6756901441,LOGISAFE,유로지스넷,2026-09-07,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6798764762,Legion Safe Solutions,Legion Software Solutions Inc,2026-11-10,E3 자격시험 대비,제외: 자격시험 대비
+ios,943834516,MSDS(물질안전보건자료),한국산업안전보건공단,2026-03-20,E5 기타(무관),제외: 기타(무관)
+ios,1530044252,MUST Safety Program,Copper Range Inc.,2026-05-01,E2 현장관리·서류,제외: 현장관리·서류
+ios,6478738950,My Safety Mate,PH Safety Solutions Pty Ltd,2026-08-29,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,978056741,Novara Flex: Safety Management,Novara Software LLC,2026-06-04,E2 현장관리·서류,제외: 현장관리·서류
+ios,6754949726,OSHA 10 & 30 Exam  2026,Mfeliz Web,2026-10-10,E3 자격시험 대비,제외: 자격시험 대비
+ios,6790308390,OSHA 10 & 30 Test Prep,MD Shahariar Nazim Joy,2026-07-21,E3 자격시험 대비,제외: 자격시험 대비
+ios,998180525,OSHA 10 Construction,James Kelly,2026-10-17,E3 자격시험 대비,제외: 자격시험 대비
+ios,6776229297,OSHA 10 Hour Safety Prep,fly sky pty ltd,2026-06-29,E3 자격시험 대비,제외: 자격시험 대비
+ios,6759304205,OSHA 30 Prep: Fall Safety 2026,Deeun Inc.,2026-05-26,E3 자격시험 대비,제외: 자격시험 대비
+ios,6761623340,OSHA Cloud,Black Bridge,2026-10-27,E2 현장관리·서류,제외: 현장관리·서류
+ios,6795914871,PRAFTA,SoonGi Yun,2026-11-10,E2 현장관리·서류,제외: 현장관리·서류
+ios,1598897078,Projects One Safety Online,Projects One Safety Online,2025-05-05,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6801558074,RAMS Assessor™,Bullion Apps Ltd,2026-10-06,E2 현장관리·서류,제외: 현장관리·서류
+ios,6746468027,SAFETY SNAP(더플래닛세이프티),"Warmblood Co., Ltd.",2026-01-20,E2 현장관리·서류,제외: 현장관리·서류
+ios,6818455128,SEEXR,SEEXR INC.,2026-11-12,E2 현장관리·서류,제외: 현장관리·서류
+ios,6557050402,SMARTy(스마티),Daewoo E&C,2026-09-08,E2 현장관리·서류,제외: 현장관리·서류
+ios,6799351415,SafeAR Studio,daehong kim,2026-09-18,A 교육·학습,제외: 현장 기록·공유
+ios,6795672007,SafeGora: OSHA Compliance,Prabhakar Reddy,2026-08-29,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6763495156,SafeticsTBM,Safetics,2026-05-14,E2 현장관리·서류,제외: 현장관리·서류
+ios,1327492805,Safety Advocate,Raphael Hamelain,2026-10-08,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,1465110811,Safety Meeting Pro,"Safety Meeting Outlines, Inc.",2022-08-11,E2 현장관리·서류,제외: 현장관리·서류
+ios,6749333665,Safety Parrot,Streamtech Engineering Ltd,2026-02-23,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6450683003,Safety Reports All in One | SR,"Safety-Reports.com, Inc.",2024-11-19,E2 현장관리·서류,제외: 현장관리·서류
+ios,1668997660,Safety Sherpa,"The Safety Sherpa, LLC",2024-04-16,E5 기타(무관),제외: 기타(무관)
+ios,6757388231,SafetyBriefer,SafetyBriefer LLC,2026-08-11,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6449014087,Sequence XT,HB NEXT,2026-11-19,E2 현장관리·서류,제외: 현장관리·서류
+ios,853487949,SignOnSite,SignOnSite,2026-09-27,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,1447766282,SiteForm,"SiteForm, Inc.",2026-11-05,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6783794663,SiteHub,JAMES BAMIDELE FRADGLEY,2026-09-15,E2 현장관리·서류,제외: 현장관리·서류
+ios,6770657006,SiteOffice,Lit Solutions Limited,2026-10-27,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6805511469,Stravil,Land Digital Ventures LLC,2026-09-01,E2 현장관리·서류,제외: 현장관리·서류
+ios,6788661794,TBM NaW,movements,2026-11-18,E2 현장관리·서류,제외: 현장관리·서류
+ios,6742133845,TBM ai,(주)함께,2026-07-24,E2 현장관리·서류,제외: 현장관리·서류
+ios,6790337032,The Dinner Table Tutor H&S,MITCHELL GUNN,2026-07-21,E3 자격시험 대비,제외: 자격시험 대비
+ios,6803707474,TriventGO,Trivent Safety Consulting,2026-10-02,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,1584530852,UK Construction Test,MastrAPI,2025-12-26,E3 자격시험 대비,제외: 자격시험 대비
+ios,6773558878,White Card Test - AU Safety,fly sky pty ltd,2026-07-08,E3 자격시험 대비,제외: 자격시험 대비
+ios,6793935485,White Card 시험 준비,MD Shahariar Nazim Joy,2026-08-04,E3 자격시험 대비,제외: 자격시험 대비
+ios,6760096691,Who's Safety,Roland Hubert,2026-10-28,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,1421651963,Zurel,ZurelSoft,2026-11-23,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,1360460625,Zurich Construction Solutions,"Real Time Risk Solutions, LLC",2026-10-07,E2 현장관리·서류,제외: 현장관리·서류
+ios,6477888951,aQuiRe Construction Academy,"CaHill Resources, LLC",2026-10-13,E2 현장관리·서류,제외: 현장관리·서류
+ios,6751865391,centerdisastersystem,주식회사 마유비,2025-11-06,E2 현장관리·서류,제외: 현장관리·서류
+ios,6785131521,"건설 영어, 건설 작업자 영어: 용어, 어휘, 어휘집",Nelly Latypova,2026-10-20,E2 현장관리·서류,제외: 현장관리·서류
+ios,6761975990,건설24,주식회사 한국디지털산업개발원,2026-11-20,E2 현장관리·서류,제외: 현장관리·서류
+ios,6761976560,건설24(관리자),주식회사 한국디지털산업개발원,2026-11-20,E2 현장관리·서류,제외: 현장관리·서류
+ios,6740196517,건설안전패스,한국산업안전보건공단,2026-10-15,E1 이수증·출입·근태,제외: 이수증 발급·출역(교육 콘텐츠 없음)
+ios,6830410455,건설톡,JinYouL You You,2026-11-22,E2 현장관리·서류,제외: 현장관리·서류
+ios,6792790023,금호건설 근로자 출입 시스템,Junggil Lee,2026-11-14,E1 이수증·출입·근태,제외: 이수증·출입·근태
+ios,6759547357,꼼꼼 - 건설현장 기술지도 관리 플랫폼,디에스건설안전,2026-10-29,E2 현장관리·서류,제외: 현장관리·서류
+ios,1630307073,나의 안전지킴이,it one,2026-11-09,E1 이수증·출입·근태,제외: 이수증·출입·근태
+ios,1621009357,메이사 가드 - 현장지도/위치공유/위험알림,Meissa Inc.,2026-10-15,E1 이수증·출입·근태,제외: 이수증·출입·근태
+ios,6805748003,반장노트,넥스트리,2026-11-19,E2 현장관리·서류,제외: 현장관리·서류
+ios,6800994790,백산이,"SAMWON TECH CO., LTD.",2026-10-10,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6822545174,세이프24,soonnyung kang,2026-10-28,E2 현장관리·서류,제외: 현장관리·서류
+ios,6739903483,세이프로,NOVUSMAY,2026-11-09,E2 현장관리·서류,제외: 현장관리·서류
+ios,1597719446,세이프에듀(SAIIFEDU),"주식회사 새임 (SEIIM Co.,Ltd.)",2023-05-20,E2 현장관리·서류,제외: 현장관리·서류
+ios,6746826879,세이플린,aromit,2026-09-17,E2 현장관리·서류,제외: 현장관리·서류
+ios,6740320682,세이플린-공공기관용,aromit,2026-09-17,E2 현장관리·서류,제외: 현장관리·서류
+ios,6747611104,슈퍼세이프,Hyundai Research Institute,2026-11-02,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,1632536540,스마트건설교육원,smarteducation,2022-07-14,A 교육·학습,제외: 건설기술인 법정교육 기관(근로자 대상 아님)
+ios,6450326163,스마트위험성평가 안전지키미 (근로자용),"Cloud Lab Co., Ltd",2026-11-02,A 교육·학습,제외: 위험성평가·TBM 공유(현장 관리)
+ios,6499140833,스마트위험성평가V2 (현장관리자용),"Cloud Lab Co., Ltd",2026-10-29,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6763029823,안전ON (안전온),Family Peace,2026-09-29,E2 현장관리·서류,제외: 현장관리·서류
+ios,6749530888,"안전달인 (현장사진, 사진대지, TBM)","Dongjin, Inc.",2026-09-10,E2 현장관리·서류,제외: 현장관리·서류
+ios,6785765250,안전비서,san kim,2026-09-11,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6780982005,안전인,CleanMission,2026-06-19,A 교육·학습,제외: 관리자용 법규 AI
+ios,6505025326,안전짱 관리자,gwangyoung kim,2025-11-17,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6768152705,안전해YOU,"E-PYEONHAN AUTOMATION TECHNOLOGY CO., LTD.",2026-10-06,E2 현장관리·서류,제외: 현장관리·서류
+ios,6804603833,안톡 - 음성 TBM 일지·교육일지,Bitflip,2026-11-18,E2 현장관리·서류,제외: 현장관리·서류
+ios,1526255215,엘다임 플러스(ELDIGM plus),Seoung Joo Lee,2026-09-11,E1 이수증·출입·근태,제외: 이수증·출입·근태
+ios,1672928638,오늘의작업장 - 빠르게 시작하는 안전보건관리체계,퍼플카우 오늘의작업장,2026-11-12,E2 현장관리·서류,제외: 현장관리·서류
+ios,6612021249,윈하이텍TBM,joonggil shin,2026-11-23,A 교육·학습,제외: 교육 단어가 있으나 관리·기록 도구
+ios,6749345755,제로가드2.0,U&E,2026-04-16,E2 현장관리·서류,제외: 현장관리·서류
+ios,6757688234,중처봇 - AI안전봇,Young Joon Kim,2026-01-13,E2 현장관리·서류,제외: 현장관리·서류
+ios,6761396526,킵미ERP,EUIJE JO,2026-11-13,E2 현장관리·서류,제외: 현장관리·서류
+ios,6473818090,페더,SquareZero Inc.,2024-05-03,E1 이수증·출입·근태,제외: 이수증·출입·근태
+ios,6736601848,프로의안전,KIHWANG LEE,2026-09-28,E2 현장관리·서류,제외: 현장관리·서류
+ios,6812253111,필독,"UPSIGHT Co., Ltd.",2026-11-13,E2 현장관리·서류,제외: 현장관리·서류
+ios,6477903915,핵심안전보건,"Hyundai Engineering Co., Ltd.",2026-07-30,E5 기타(무관),제외: 기타(무관)
+ios,6792450712,현장 안전 Prep 건설,MD Shahariar Nazim Joy,2026-07-29,E3 자격시험 대비,제외: 자격시험 대비
+ios,6802364076,현장 안전점검 일지,京昌 陈,2026-09-05,E2 현장관리·서류,제외: 현장관리·서류
+ios,6480398386,현장통2.0,통하는사람들,2026-11-18,E2 현장관리·서류,제외: 현장관리·서류
