@@ -1,6 +1,6 @@
 {
  "version": "v13",
- "updated": "2026-11-16",
+ "updated": "2026-11-24",
  "note": "장면 위 좌표는 그림 viewBox(0~400, 0~300) 기준. r 30 = 휴대전화 390px 폭에서 지름 약 54px(48px 이상). 그림을 실제 사진으로 바꾸면 image와 좌표만 다시 찍는다. 문장은 {t, src, status} — v11.1 근거 규칙 그대로",
  "hazardTypes": {
   "fall": "떨어짐",
@@ -50,7 +50,21 @@
        "kb-p7"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "아침 TBM(작업 전 안전 모임)에 **근로자**가 서 있어요.",
+      "src": [
+       "rule-32",
+       "kb-p7"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "office",
+      "stand"
+     ],
+     "diffPart": "머리"
     },
     {
      "id": "0-2",
@@ -76,7 +90,20 @@
        "kb-p57"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**근로자**가 **안전모**를 쓰고 TBM에 서 있어요.",
+      "src": [
+       "kb-p57"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "office",
+      "stand"
+     ],
+     "diffPart": "턱끈"
     },
     {
      "id": "0-3",
@@ -102,7 +129,20 @@
        "rule-32"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "근로자가 **자재 토막**이 놓인 바닥에 서 있어요.",
+      "src": [
+       "rule-32"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "office",
+      "stand"
+     ],
+     "diffPart": "신발"
     }
    ],
    "safe": [
@@ -159,7 +199,20 @@
       ],
       "status": "원문확인"
      },
-     "act": "tell"
+     "act": "tell",
+     "situation": {
+      "t": "골조 층 바닥에 **바닥 구멍**(개구부) 자리가 있어요.",
+      "src": [
+       "rule-43"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "hole",
+      "walk"
+     ],
+     "diffPart": "구멍 덮개"
     },
     {
      "id": "1-2",
@@ -187,7 +240,21 @@
       ],
       "status": "원문확인"
      },
-     "act": "tell"
+     "act": "tell",
+     "situation": {
+      "t": "근로자가 3층 **바닥 끝**에 서서 아래를 가리켜요.",
+      "src": [
+       "rule-43",
+       "kb-p55"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "edge",
+      "stand"
+     ],
+     "diffPart": "바닥 끝 난간"
     },
     {
      "id": "1-3",
@@ -214,7 +281,20 @@
       ],
       "status": "원문확인"
      },
-     "act": "ppe"
+     "act": "ppe",
+     "situation": {
+      "t": "근로자가 **생명줄**(안전대 고리를 거는 줄) 옆에서 자재를 들고 걸어요.",
+      "src": [
+       "kb-p51"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "edge",
+      "carry"
+     ],
+     "diffPart": "안전대와 고리"
     },
     {
      "id": "1-4",
@@ -240,7 +320,20 @@
       ],
       "status": "원문확인"
      },
-     "act": "tell"
+     "act": "tell",
+     "situation": {
+      "t": "근로자가 자재를 들고 **통로**(걸어 다니는 길)로 가요.",
+      "src": [
+       "kb-p57b"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "path",
+      "carry"
+     ],
+     "diffPart": "통로 위 자재"
     },
     {
      "id": "1-5",
@@ -266,7 +359,20 @@
       ],
       "status": "원문확인"
      },
-     "act": "tell"
+     "act": "tell",
+     "situation": {
+      "t": "바닥에 **철근**이 위로 솟아 있어요.",
+      "src": [
+       "kb-p51b"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "rebar",
+      "walk"
+     ],
+     "diffPart": "철근 끝"
     }
    ],
    "safe": [
@@ -325,7 +431,21 @@
        "rule-42"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "근로자가 **비계 작업발판**(올라서서 일하는 바닥) 위에서 합판을 옮겨요.",
+      "src": [
+       "kb-p55b",
+       "rule-42"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "scaffold",
+      "carry"
+     ],
+     "diffPart": "발판 한 칸"
     },
     {
      "id": "2-2",
@@ -353,7 +473,21 @@
        "rule-44"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**근로자**가 비계 맨 위층에서 일해요.",
+      "src": [
+       "kb-p55",
+       "rule-44"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "scaffold",
+      "work"
+     ],
+     "diffPart": "안전대와 고리"
     },
     {
      "id": "2-3",
@@ -381,7 +515,21 @@
        "rule-14"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "근로자가 **비계** 아래쪽 길로 지나가요.",
+      "src": [
+       "kb-p55",
+       "rule-14"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "scaffold",
+      "walk"
+     ],
+     "diffPart": "비계 아래 길"
     },
     {
      "id": "2-4",
@@ -407,7 +555,20 @@
        "kb-p67"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "근로자가 **고소작업대**(사람을 높이 올리는 장비) 위에서 일해요.",
+      "src": [
+       "kb-p67"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "awp",
+      "work"
+     ],
+     "diffPart": "안전대와 고리"
     },
     {
      "id": "2-5",
@@ -433,7 +594,20 @@
        "kb-p55c"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "근로자가 **이동식 비계**(바퀴 달린 비계) 위에 올라가 있어요.",
+      "src": [
+       "kb-p55c"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "tower",
+      "work"
+     ],
+     "diffPart": "바퀴"
     }
    ],
    "safe": [
@@ -494,7 +668,21 @@
        "rule-14"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "크레인이 **철근 묶음**을 매달아 옮겨요. 근로자가 근처를 걸어요.",
+      "src": [
+       "kb-p53",
+       "kb-p56"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "crane",
+      "walk"
+     ],
+     "diffPart": "매단 짐 아래"
     },
     {
      "id": "3-2",
@@ -520,7 +708,20 @@
        "kb-p53b"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "크레인이 **각재 묶음**을 매달아 올려요.",
+      "src": [
+       "kb-p53b"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "crane",
+      "stand"
+     ],
+     "diffPart": "줄 거는 법"
     },
     {
      "id": "3-3",
@@ -547,7 +748,20 @@
        "hoist-b3-14"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "3층 **리프트 출입문** 앞으로 근로자가 손수레를 밀고 가요.",
+      "src": [
+       "kb-p12"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "lift",
+      "push"
+     ],
+     "diffPart": "운반구 위치"
     },
     {
      "id": "3-4",
@@ -575,7 +789,105 @@
        "kb-p54"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**지게차**가 짐을 싣고 움직여요.",
+      "src": [
+       "kb-p53",
+       "kb-p54"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "forklift",
+      "walk"
+     ],
+     "diffPart": "신호수"
+    },
+    {
+     "id": "3-5",
+     "type": "collapse",
+     "area": {
+      "x": 70,
+      "y": 150,
+      "r": 30
+     },
+     "bad": "overloadBad",
+     "good": "overloadGood",
+     "act": "tell",
+     "name": {
+      "t": "적재하중을 넘겨 가득 실은 운반구",
+      "src": [
+       "rule-135",
+       "hoist-b3-16"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "운반구에는 표시된 무게까지만 실어요",
+      "src": [
+       "rule-135",
+       "hoist-b3-16"
+      ],
+      "status": "원문확인"
+     },
+     "situation": {
+      "t": "2층에서 **리프트 운반구**(사람·자재를 싣는 칸)에 자재를 실어요.",
+      "src": [
+       "rule-135",
+       "hoist-b3-16"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "lift",
+      "load"
+     ],
+     "diffPart": "실은 양"
+    },
+    {
+     "id": "3-6",
+     "type": "caught",
+     "area": {
+      "x": 60,
+      "y": 230,
+      "r": 30
+     },
+     "bad": "pitBad",
+     "good": "pitGood",
+     "act": "away",
+     "name": {
+      "t": "리프트 방호울 안에 들어간 사람",
+      "src": [
+       "rule-20",
+       "hoist-b3-14b"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "리프트 방호울 안으로 들어가지 않아요",
+      "src": [
+       "rule-20",
+       "kb-p12"
+      ],
+      "status": "원문확인"
+     },
+     "situation": {
+      "t": "지상 **리프트 방호울**(바닥 둘레 철망 울) 근처에 근로자가 있어요.",
+      "src": [
+       "rule-20",
+       "hoist-b3-14b"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "lift",
+      "enter"
+     ],
+     "diffPart": "방호울 문과 사람"
     }
    ],
    "safe": [
@@ -634,7 +946,21 @@
        "kb-p53"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**굴착기**가 땅을 파고 있어요. 근로자가 근처에 있어요.",
+      "src": [
+       "kb-p59",
+       "kb-p53"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "excavator",
+      "stand"
+     ],
+     "diffPart": "굴착기 도는 범위"
     },
     {
      "id": "4-2",
@@ -660,7 +986,20 @@
        "kb-p53c"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**덤프트럭**과 **굴착기**가 나란히 서 있어요.",
+      "src": [
+       "kb-p53c"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "truck",
+      "stand"
+     ],
+     "diffPart": "장비 사이"
     },
     {
      "id": "4-3",
@@ -688,7 +1027,21 @@
        "kb-p59"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**롤러**(땅 다지는 장비)가 뒤로 움직이고 있어요.",
+      "src": [
+       "kb-p67b",
+       "kb-p59"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "roller",
+      "walk"
+     ],
+     "diffPart": "롤러 뒤"
     },
     {
      "id": "4-4",
@@ -714,7 +1067,20 @@
        "kb-p59"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "근로자가 **구덩이** 바닥에서 일해요.",
+      "src": [
+       "kb-p59"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "trench",
+      "work"
+     ],
+     "diffPart": "흙벽 기울기"
     }
    ],
    "safe": [
@@ -774,7 +1140,21 @@
        "kb-p7"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "근로자가 **동바리**(거푸집을 받치는 기둥) 아래에 서 있어요.",
+      "src": [
+       "rule-334",
+       "kb-p52"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "shore",
+      "stand"
+     ],
+     "diffPart": "동바리 하나"
     },
     {
      "id": "5-2",
@@ -802,7 +1182,21 @@
        "kb-p52"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**거푸집** 위에 콘크리트를 붓고 있어요.",
+      "src": [
+       "rule-334",
+       "kb-p52"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "slab",
+      "drop"
+     ],
+     "diffPart": "콘크리트 모양"
     },
     {
      "id": "5-3",
@@ -828,7 +1222,20 @@
        "kb-p52b"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**동바리**가 거푸집을 받치고 있어요.",
+      "src": [
+       "kb-p52b"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "shore",
+      "stand"
+     ],
+     "diffPart": "동바리 이음"
     },
     {
      "id": "5-4",
@@ -854,7 +1261,20 @@
        "rule-335"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**펌프카** 붐 위로 **전선**이 지나가요.",
+      "src": [
+       "rule-335"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "boom",
+      "stand"
+     ],
+     "diffPart": "붐과 전선 거리"
     }
    ],
    "safe": [
@@ -914,7 +1334,21 @@
        "kb-p57"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**근로자**가 용접을 하고 있어요. 옆에 불티가 튀어요.",
+      "src": [
+       "rule-241",
+       "kb-p57"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "spark",
+      "work"
+     ],
+     "diffPart": "불티 옆 물건"
     },
     {
      "id": "6-2",
@@ -943,7 +1377,21 @@
        "kb-p57"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "**맨홀**(땅속 공간 입구) 뚜껑이 열려 있어요.",
+      "src": [
+       "rule-619-2",
+       "rule-620"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "manhole",
+      "enter"
+     ],
+     "diffPart": "들어가기 전 준비"
     },
     {
      "id": "6-3",
@@ -971,7 +1419,21 @@
        "kb-p7"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "바닥에 **전선**이 깔려 있어요.",
+      "src": [
+       "rule-313",
+       "kb-p7"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "cable",
+      "walk"
+     ],
+     "diffPart": "전선 피복"
     },
     {
      "id": "6-4",
@@ -999,7 +1461,21 @@
        "rule-560"
       ],
       "status": "원문확인"
-     }
+     },
+     "situation": {
+      "t": "더운 날 근로자가 **쉬고** 있어요.",
+      "src": [
+       "rule-567",
+       "rule-560"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "sun",
+      "rest"
+     ],
+     "diffPart": "쉬는 곳"
     }
    ],
    "safe": [

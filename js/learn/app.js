@@ -37,6 +37,7 @@ const UIKEY = 'cheotsap.learn.ui';
 let UI = { openDay: '', floorsSeen: 0, days: [], sound: false, vibrate: true, mode: 'pic' };
 let SC = { scenes: [] }; // data/scenes.json (v13 현장 위험 찾기)
 let PRE = { zones: {} }; // data/prerender.json (v17 미리 렌더링한 장면·지도 이미지와 누를 곳)
+const PMETA = {}; // v19: 위험 id → { focus, marks, diff } (비교 그림 위 % 좌표)
 const loadUI = () => { try { Object.assign(UI, JSON.parse(localStorage.getItem(UIKEY) || '{}')); } catch {} };
 const saveUI = () => { try { localStorage.setItem(UIKEY, JSON.stringify(UI)); } catch {} };
 const dayStr = (d = new Date()) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -175,7 +176,7 @@ function home(v) {
 const pairsDone = new Set(); let curV3 = null;
 async function ensurePairs(id) {
   if (pairsDone.has(id) || !hasGL()) return; pairsDone.add(id);
-  try { const r = await renderPairs(id); const sc = scene(id); if (!r || !sc) return; for (const z of sc.hazards) if (r[z.id]) { PAIR3D[z.bad] = r[z.id].bad; PAIR3D[z.good] = r[z.id].good; } } catch { pairsDone.delete(id); }
+  try { const r = await renderPairs(id); const sc = scene(id); if (!r || !sc) return; for (const z of sc.hazards) if (r[z.id]) { PAIR3D[z.bad] = r[z.id].bad; PAIR3D[z.good] = r[z.id].good; if (r[z.id].meta && !PMETA[z.id]) PMETA[z.id] = r[z.id].meta; } } catch { pairsDone.delete(id); }
 }
 const idle = (fn, ms) => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: ms }) : setTimeout(fn, ms));
 function warmPairs() { if (!hasGL()) return; const ids = SCENE3D_IDS.filter((i) => !pairsDone.has(i)); let k = 0; const step = () => { if (k >= ids.length) return; ensurePairs(ids[k++]).then(() => idle(step, 600)); }; idle(step, 1500); }
@@ -296,6 +297,57 @@ function confetti() {
 // 화면을 떠나면 피드백 바 정리
 window.addEventListener('popstate', () => { document.querySelector('.fbar')?.remove(); document.body.classList.remove('has-fbar'); });
 
+
+/* ---------------- v19 글 → 그림 → 선택 ---------------- */
+// 상황 문장: "**사물**" 을 굵게 + 번호(그림 속 같은 번호 표식과 연결). 원문확인 이상만
+const sitText = (z) => (shown(z.situation) ? T(z.situation).replace(/\*\*/g, '') : '');
+function sitLine(z, { short = false } = {}) {
+  if (!shown(z.situation)) return null;
+  const p = h('p', { class: 'sit' + (short ? ' short' : '') + (isDraft(z.situation) ? ' draft' : '') }); let n = 0;
+  T(z.situation).split(/(\*\*[^*]+\*\*)/).forEach((part) => { if (/^\*\*/.test(part)) { n++; p.append(h('b', { class: 'sit-k' }, h('i', { class: 'sit-n t-num', 'aria-hidden': 'true' }, String(n)), part.slice(2, -2))); } else if (part) p.append(part); });
+  return p;
+}
+// 그림 문장 띠: [누가] [어디서] [무엇을] ? — 글을 못 읽어도 무엇을 보는지
+function iconStrip(z) {
+  const [a, b, c] = z.iconStrip || ['worker', 'site', 'stand'];
+  return h('div', { class: 'istrip', role: 'img', 'aria-label': sitText(z) || T0(z.name) }, h('span', { class: 'is-ic' }, ic(a, { size: 26 })), h('span', { class: 'is-plus' }, '+'), h('span', { class: 'is-ic place' }, ic(b, { size: 26 })), h('span', { class: 'is-plus' }, '+'), h('span', { class: 'is-ic' }, ic(c, { size: 26 })), h('span', { class: 'is-q' }, '?'));
+}
+// 그림 + 번호 표식 + 주목 영역 스포트라이트(주변 30% 어둡게, 주황 점선 원이 한 번 그려짐). 판단할 사물 전체를 가리킴(틀린 곳 하나만 가리키지 않음)
+function stagePic(z, side, { onReady } = {}) {
+  const m = PMETA[z.id], wrap = h('div', { class: 'stg' }, h('span', { class: 'pic', html: pair(z[side]) }));
+  if (m) (m.marks || []).forEach((p, k) => { if (p) wrap.append(h('i', { class: 'stg-n t-num', style: `left:${p.x}%;top:${p.y}%`, 'aria-hidden': 'true' }, String(k + 1))); });
+  const play = () => {
+    wrap.querySelector('.stg-spot')?.remove();
+    const f = m?.focus; if (!f) { onReady?.(); return; }
+    const spot = h('div', { class: 'stg-spot', style: `--fx:${f.x}%;--fy:${f.y}%;--fr:${f.r}%`, 'aria-hidden': 'true' });
+    spot.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none"><ellipse cx="${f.x}" cy="${f.y}" rx="${f.r}" ry="${f.r * 1.45}" pathLength="100"/></svg>`;
+    wrap.append(spot);
+    if (reduceMotion()) { spot.classList.add('still'); onReady?.(); return; }
+    setTimeout(() => spot.classList.add('on'), 500); // 0.5초 그림 전체 → 스포트라이트
+    setTimeout(() => { spot.classList.add('done'); onReady?.(); }, 1600);
+  };
+  wrap._play = play; return wrap;
+}
+// "왜" 화면: 위험한 모습 / 안전한 모습 나란히 + 차이 부분 확대 원(돋보기) + 한 줄 이유 + 근거
+function zoomPic(z, side) {
+  const m = PMETA[z.id], f = h('figure', { class: 'why-fig ' + side }, h('span', { class: 'pic', html: pair(z[side]) }), h('span', { class: 'mk ' + (side === 'bad' ? 'mk-bad' : 'mk-good') }, ic(side === 'bad' ? 'cross' : 'check', { size: 16 })));
+  const d = m?.diff, src = (pair(z[side]).match(/src="([^"]+)"/) || [])[1];
+  if (d && src) {
+    f.append(h('i', { class: 'why-ring', style: `left:${d.x}%;top:${d.y}%;--dr:${d.r}%` }));
+    const lens = h('i', { class: 'why-lens', style: `background-image:url("${src}");background-position:calc(17cqw - ${d.x} * 2.4cqw) calc(17cqw - ${d.y} * ${(2.4 * 372 / 540).toFixed(4)}cqw)` }); f.append(lens); // 차이 부분을 가운데로 2.4배
+  }
+  return f;
+}
+function whyBox(z, ok, onNext) {
+  const quote = h('div', { class: 'basis-quote', hidden: true });
+  return h('div', { class: 'why ' + (ok ? 'ok' : 'no'), role: 'status' },
+    h('div', { class: 'why-hd' }, h('span', { class: 'mk' }, ic(ok ? 'check' : 'cross', { size: 18 })), h('b', {}, ok ? t('v19.right') : t('v19.wrong')), h('span', { class: 'grow' }), speakBtn(`${T0(z.name)}. ${T0(z.line)}`)),
+    h('div', { class: 'why-pair' }, zoomPic(z, 'bad'), zoomPic(z, 'good')),
+    h('p', { class: 'why-line' }, hazIc(z.type, 18), h('span', {}, h('b', {}, T(z.name)), ' — ', T(z.line))),
+    h('div', { class: 'why-basis' }, basisChips(z.line.src, quote)), quote,
+    h('button', { class: 'btn primary big', id: 'whyNext', 'aria-label': t('v19.next'), onclick: onNext }, h('span', {}, t('v19.next')), ic('next')));
+}
+
 /* ---------------- v13 가요 / 멈춰요 (출근 전 1분) ---------------- */
 // 그림 한 장씩: 위험하면 왼쪽(멈춰요, 손바닥), 안전하면 오른쪽(가요, 체크). 손가락으로 밀거나 아래 버튼. 틀려도 벌 없이 바른 쪽을 보여 주고 넘어감
 function swipeCards(sc) {
@@ -314,14 +366,23 @@ function swipeSet(id, o = {}) {
   const stage = h('div', { class: 'sw-stage' });
   const bStop = h('button', { class: 'sw-btn stop', id: 'swStop', 'aria-label': t('swipe.stop'), onclick: () => answer('bad') }, ic('stop', { size: 30 }), isPic() ? null : h('b', {}, t('swipe.stop')));
   const bGo = h('button', { class: 'sw-btn go', id: 'swGo', 'aria-label': t('swipe.go'), onclick: () => answer('good') }, ic('check', { size: 30 }), isPic() ? null : h('b', {}, t('swipe.go')));
-  v.append(h('div', { class: 'sw-head' }, h('span', { class: 'sw-l' }, ic('back', { size: 18 }), ic('stop', { size: 22 })), isPic() ? h('span', { class: 'sw-mid' }, ic('finger', { size: 24 })) : h('p', { class: 'scene-ask' }, t('swipe.ask')), h('span', { class: 'sw-r' }, ic('check', { size: 22 }), ic('next', { size: 18 }))),
-    dotsRow, stage, h('div', { class: 'sw-btns' }, bStop, bGo));
+  const sit = h('div', { class: 'sw-sit' });
+  v.append(h('div', { class: 'sw-head' }, h('span', { class: 'sw-l' }, ic('back', { size: 18 }), ic('stop', { size: 22 })), isPic() ? h('span', { class: 'sw-mid' }, ic('finger', { size: 24 })) : h('p', { class: 'scene-ask small' }, t('v19.swipeHint')), h('span', { class: 'sw-r' }, ic('check', { size: 22 }), ic('next', { size: 18 }))),
+    dotsRow, sit, stage, h('div', { class: 'sw-btns' }, bStop, bGo));
   let busy = false;
+  const lock = (on) => { bStop.disabled = on; bGo.disabled = on; };
   function show() {
     stage.innerHTML = '';
     if (i >= cards.length) return end();
     const c = cards[i];
-    const card = h('div', { class: 'sw-card', 'data-side': c.side }, h('span', { class: 'pic', html: pair(c.z[c.side]) }));
+    // v19: ① 글로 상황 한 번 (그림 문장 띠 + 상황 문장 + 질문) → ② 그림에서 보는 곳(스포트라이트) → ③ 고르기
+    sit.innerHTML = ''; sit.append(iconStrip(c.z), sitLine(c.z) || '', h('p', { class: 'sw-q' }, t('v19.ask')),
+      h('button', { class: 'btn ghost sm', id: 'swReplay', 'aria-label': t('v19.replay'), onclick: () => st._play() }, ic('eye', { size: 18 }), h('span', {}, t('v19.replay'))));
+    v.dataset.say = `${sitText(c.z)} ${t('v19.ask')}`;
+    lock(true); busy = true;
+    const st = stagePic(c.z, c.side, { onReady: () => { lock(false); busy = false; } });
+    const card = h('div', { class: 'sw-card', 'data-side': c.side }, st);
+    setTimeout(() => st._play(), 0);
     // 손가락으로 밀기
     let x0 = null, dx = 0;
     card.addEventListener('pointerdown', (e) => { if (busy) return; x0 = e.clientX; card.setPointerCapture?.(e.pointerId); card.style.transition = 'none'; });
@@ -340,8 +401,8 @@ function swipeSet(id, o = {}) {
     if (ok) { buzz(15); beep(); }
     // 틀리면 바른 쪽 버튼을 잠깐 표시
     if (!ok) (c.side === 'bad' ? bStop : bGo).classList.add('hint');
-    card.classList.add(side === 'bad' ? 'out-l' : 'out-r');
-    setTimeout(() => { bStop.classList.remove('hint'); bGo.classList.remove('hint'); i++; busy = false; show(); }, reduceMotion() ? 200 : ok ? 520 : 1100);
+    // v19: 맞아도 틀려도 "왜" — 위험/안전 두 장 + 차이 부분 확대 원 + 한 줄 이유 + 근거. 여기서 처음으로 틀린 곳을 정확히 가리킴
+    setTimeout(() => { stage.innerHTML = ''; lock(true); v.classList.add('why-on'); stage.append(whyBox(c.z, ok, () => { v.classList.remove('why-on'); bStop.classList.remove('hint'); bGo.classList.remove('hint'); i++; busy = false; show(); })); }, reduceMotion() ? 150 : 450);
   }
   function end() {
     const n = res.filter((r) => r.ok).length;
@@ -1075,7 +1136,7 @@ function safetyCard(sc, { compact = false } = {}) {
           h('span', { class: 'sc-fig bad' }, h('span', { class: 'sc-pic', 'data-pic': z.bad, html: pair(z.bad) }), h('i', { class: 'mk mk-bad', 'aria-label': t('scene.bad') }, ic('cross', { size: 14 }))),
           h('span', { class: 'sc-arrow' }, ic('next', { size: 16 })),
           h('span', { class: 'sc-fig good' }, h('span', { class: 'sc-pic', 'data-pic': z.good, html: pair(z.good) }), h('i', { class: 'mk mk-good', 'aria-label': t('scene.good') }, ic('check', { size: 14 })))),
-        h('div', { class: 'sc-line' }, h('span', { class: 'sc-type' + (ppe ? ' must' : '') }, hazIc(z.type, 16), h('small', {}, SC.hazardTypes?.[z.type] || '')), h('p', {}, T(z.line)), basisChips(z.line.src, quote)));
+        h('div', { class: 'sc-line' }, h('span', { class: 'sc-type' + (ppe ? ' must' : '') }, hazIc(z.type, 16), h('small', {}, SC.hazardTypes?.[z.type] || '')), sitLine(z, { short: true }), h('p', {}, T(z.line)), basisChips(z.line.src, quote)));
     })),
     quote,
     expert ? h('p', { class: 'expert-chip' }, ic('check', { size: 12 }), t('basis.expert')) : null,
@@ -1176,11 +1237,9 @@ const foundSet = () => new Set(Object.values(S.scenes || {}).flatMap((r) => [...
 // 찾은 위험 카드: 위험한 모습 → 안전한 모습 + 한 줄(글 모드) + 듣기 (장면·도감·다시 보기에서 같이 씀)
 function hazCard(z, onNext, label) {
   return h('div', { class: 'haz-card' },
-    h('div', { class: 'haz-head' }, hazIc(z.type), isPic() ? null : h('b', { class: isDraft(z.name) ? 'draft' : '' }, T(z.name)), h('span', { class: 'grow' }), speakBtn(T0(z.line))),
-    h('div', { class: 'pair' },
-      h('figure', { class: 'bad' }, h('div', { class: 'pic', html: pair(z.bad) }), h('span', { class: 'mk mk-bad' }, ic('cross', { size: 18 })), isPic() ? null : h('figcaption', {}, t('scene.bad'))),
-      h('span', { class: 'pair-arrow' }, ic('next')),
-      h('figure', { class: 'good' }, h('div', { class: 'pic', html: pair(z.good) }), h('span', { class: 'mk mk-good' }, ic('check', { size: 18 })), isPic() ? null : h('figcaption', {}, t('scene.good')))),
+    h('div', { class: 'haz-head' }, hazIc(z.type), isPic() ? null : h('b', { class: isDraft(z.name) ? 'draft' : '' }, T(z.name)), h('span', { class: 'grow' }), speakBtn(`${sitText(z)} ${T0(z.line)}`)),
+    sitLine(z, { short: true }),
+    h('div', { class: 'why-pair' }, zoomPic(z, 'bad'), zoomPic(z, 'good')),
     isPic() ? null : h('p', { class: 'haz-line' + (isDraft(z.line) ? ' draft' : '') }, T(z.line)),
     h('button', { class: 'btn primary big', onclick: onNext }, ic('search'), h('span', {}, label), ic('next')));
 }
@@ -1221,7 +1280,7 @@ async function boot() {
   document.documentElement.classList.remove('boot');
   try { D = await (await fetch('./data/lessons.json')).json(); SRC = Object.fromEntries((await (await fetch('./data/sources.json')).json()).sources.map((s) => [s.id, s])); SC = await (await fetch('./data/scenes.json')).json(); }
   catch (e) { app().innerHTML = ''; app().append(h('p', { style: 'padding:24px' }, t('app.loadFail'))); return; }
-  try { PRE = await (await fetch('./data/prerender.json')).json(); for (const [zid, zp] of Object.entries(PRE.zones || {})) { const sc = SC.scenes.find((x) => x.id === zid); for (const z of sc?.hazards || []) if (zp.pairs?.[z.id]) { PAIR3D[z.bad] = zp.pairs[z.id].bad; PAIR3D[z.good] = zp.pairs[z.id].good; pairsDone.add(zid); } } } catch { PRE = { zones: {} }; }
+  try { PRE = await (await fetch('./data/prerender.json')).json(); for (const [zid, zp] of Object.entries(PRE.zones || {})) { const sc = SC.scenes.find((x) => x.id === zid); for (const z of sc?.hazards || []) if (zp.pairs?.[z.id]) { PAIR3D[z.bad] = zp.pairs[z.id].bad; PAIR3D[z.good] = zp.pairs[z.id].good; if (zp.pairs[z.id].meta) PMETA[z.id] = zp.pairs[z.id].meta; pairsDone.add(zid); } } } catch { PRE = { zones: {} }; }
   noteHour(); save();
   await op;
   const hs = location.hash.replace('#', '');

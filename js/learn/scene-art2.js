@@ -119,7 +119,7 @@ export function sceneHot() {
 export const SPOTS = {
   tbm: { '0-1': [130, 230], '0-2': [205, 222], '0-3': [280, 262], s: [355, 232] },
   scaffold: { '2-1': [100, 120], '2-2': [68, 32], '2-3': [118, 268], '2-4': [321, 150], '2-5': [208, 238], s: [140, 172] },
-  lifting: { '3-1': [158, 258], '3-2': [218, 92], '3-3': [240, 196], '3-4': [92, 220], s: [30, 262] },
+  lifting: { '3-1': [158, 258], '3-2': [218, 92], '3-3': [240, 196], '3-4': [92, 220], '3-5': [40, 140], '3-6': [52, 236], s: [30, 262] },
   equip: { '4-1': [48, 220], '4-2': [212, 148], '4-3': [128, 268], '4-4': [292, 252], s: [368, 172] },
   pour: { '5-1': [114, 222], '5-2': [170, 116], '5-3': [200, 200], '5-4': [362, 50], s: [22, 240] },
   hot: { '6-1': [96, 178], '6-2': [205, 228], '6-3': [80, 266], '6-4': [330, 270], s: [312, 176] },
@@ -130,6 +130,11 @@ const headClose = (ok) => `<rect x="44" y="96" width="72" height="14" rx="6" fil
   + `<g transform="rotate(${ok ? 0 : -14} 80 46)"><path d="M52 50 a28 26 0 0 1 56 0z" fill="${YEL}" stroke="${INK}" stroke-width="1.6"/><rect x="46" y="47" width="68" height="7" rx="3.5" fill="${YEL}" stroke="${INK}" stroke-width="1.4"/></g>`
   + (ok ? `<path d="M57 54 Q60 86 80 89 Q100 86 103 54" stroke="${INK}" stroke-width="2.6" fill="none"/><rect x="75" y="85" width="10" height="7" rx="2" fill="${INK}"/>`
         : `<path d="M55 58 q-4 16 2 32" stroke="${INK}" stroke-width="2.6" fill="none"/><path d="M101 50 q8 14 4 34" stroke="${INK}" stroke-width="2.6" fill="none"/><rect x="100" y="82" width="9" height="6" rx="2" fill="${INK}"/>`);
+// v19 리프트 그림 도우미: 운반구(노랑 테 + 철망), 시멘트 포대 쌓기, 방호울(문 열림/닫힘)
+const cage2 = (x, y, w, h) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${YEL}" stroke-width="3"/>` + Array.from({ length: Math.floor(w / 8) }, (_, i) => `<line x1="${x + 4 + i * 8}" y1="${y}" x2="${x + 4 + i * 8}" y2="${y + h}" stroke="${STEEL}" stroke-width=".8"/>`).join('') + `<rect x="${x}" y="${y + h - 4}" width="${w}" height="4" fill="${STEEL}"/>`;
+const bags = (x, y, cols, rows) => Array.from({ length: cols * rows }, (_, i) => `<rect x="${x + (i % cols) * 14}" y="${y - 9 - Math.floor(i / cols) * 9}" width="13" height="8" rx="2" fill="var(--art-wall)" stroke="${INK}" stroke-width=".8"/>`).join('');
+const fenceBox = (x, y, w, h, open) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="none" stroke="${YEL}" stroke-width="2.4"/>` + Array.from({ length: Math.floor(w / 7) }, (_, i) => `<line x1="${x + 3 + i * 7}" y1="${y}" x2="${x + 3 + i * 7}" y2="${y + h}" stroke="${STEEL}" stroke-width=".7"/>`).join('')
+  + (open ? `<rect x="${x + w - 32}" y="${y}" width="26" height="${h}" fill="var(--bg)"/><rect x="${x + w - 6}" y="${y + 2}" width="22" height="${h - 2}" fill="none" stroke="${YEL}" stroke-width="2.4" transform="skewY(-12)"/>` : `<rect x="${x + w - 32}" y="${y}" width="26" height="${h}" fill="none" stroke="${YEL}" stroke-width="3"/>`);
 /* ---------- 위험한 모습 / 안전한 모습 (160×110) ---------- */
 export const PAIR2 = {
   // 장면 0
@@ -155,6 +160,11 @@ export const PAIR2 = {
   underLoadGood: () => S160(g160() + hook(60, 0, 20) + load2(60, 26, 56) + `<path d="M24 92 h72" stroke="${RED}" stroke-width="3" stroke-dasharray="6 4"/>` + P(132, 96, { scale: 0.8 })),
   slingBad: () => S160(hook(80, 0, 26) + load1(80, 32, 64)),
   slingGood: () => S160(hook(80, 0, 26) + load2(80, 32, 64)),
+  // v19 리프트 운반구(철망 상자): 과적재 / 하부 방호울
+  overloadBad: () => S160(g160() + cage2(30, 14, 100, 78) + bags(38, 88, 6, 7) + P(140, 96, { scale: 0.7 })),
+  overloadGood: () => S160(g160() + cage2(30, 14, 100, 78) + bags(64, 88, 2, 2) + P(140, 96, { scale: 0.7 })),
+  pitBad: () => S160(g160() + cage2(40, 0, 70, 30) + fenceBox(20, 50, 120, 42, true) + P(76, 92, { scale: 0.6 })),
+  pitGood: () => S160(g160() + cage2(40, 0, 70, 30) + fenceBox(20, 50, 120, 42, false) + P(146, 96, { scale: 0.6 })),
   liftDoorBad: () => S160(g160() + `<rect x="70" y="0" width="6" height="92" fill="${STEEL}"/><rect x="34" y="34" width="36" height="40" fill="${YEL}" stroke="${INK}"/><rect x="38" y="38" width="14" height="32" fill="var(--art-dark)"/><rect x="22" y="38" width="14" height="32" fill="${YEL}" stroke="${INK}"/><path d="M52 26 l-5 7 h10z" fill="${INK}"/>`),
   liftDoorGood: () => S160(g160() + `<rect x="70" y="0" width="6" height="92" fill="${STEEL}"/><rect x="34" y="34" width="36" height="40" fill="${YEL}" stroke="${INK}"/><rect x="38" y="38" width="28" height="32" fill="var(--art-glass)" stroke="${INK}"/><path d="M52 26 l-5 7 h10z" fill="${INK}"/>`),
   noSignalBad: () => S160(g160() + `<rect x="20" y="64" width="56" height="20" rx="3" fill="${ORANGE}" stroke="${INK}"/><rect x="26" y="48" width="22" height="16" fill="${ORANGE}" stroke="${INK}"/><circle cx="32" cy="88" r="6" fill="${INK}"/><circle cx="66" cy="88" r="6" fill="${INK}"/>` + P(110, 96, { scale: 0.75 }) + `<path d="M78 74 h20" stroke="${RED}" stroke-width="2.4"/>`),

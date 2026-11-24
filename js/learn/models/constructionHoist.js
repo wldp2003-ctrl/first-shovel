@@ -161,14 +161,15 @@ export function makeConstructionHoist(THREE, M, opts = {}, RB = null) {
     rod(a, [-0.9, y, 0.05], 0.035, GALV, ties); rod(b, [0.9, y, 0.05], 0.035, GALV, ties); rod([-0.9, y, 0.05], [0.9, y, 0.05], 0.03, GALV, ties); rod([0, y, mastZ - m / 2], [0, y, 0.05], 0.03, GALV, ties);
     for (const x of [-0.9, 0.9]) box(0.25, 0.25, 0.03, GALV, x, y - 0.125, 0.015, ties); } // 슬래브 고정판
   // 하부 방호울 (높이 1.8m, 출입문 1개) + 완충기
-  const enc = node('base_enclosure', root); const ex = twin ? W * 2 + m + 1.0 : W + m + 1.2, ez0 = gateZ + 0.15, ez1 = mastZ + D / 2 + 0.6, eH = HOIST.enclosureH;
+  const enc = node('base_enclosure', root); let encDoor = null; const ex = twin ? W * 2 + m + 1.0 : W + m + 1.2, ez0 = gateZ + 0.15, ez1 = mastZ + D / 2 + 0.6, eH = HOIST.enclosureH;
   const fence = (a, b, skipMid) => { const len = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(len / 2)); for (let i = 0; i <= n; i++) box(0.06, eH, 0.06, 'paint:yellow', a[0] + (b[0] - a[0]) * i / n, 0, a[1] + (b[1] - a[1]) * i / n, enc);
-    for (let i = 0; i < n; i++) { if (skipMid && i === Math.floor(n / 2)) continue; const x0 = a[0] + (b[0] - a[0]) * i / n, z0 = a[1] + (b[1] - a[1]) * i / n, x1 = a[0] + (b[0] - a[0]) * (i + 1) / n, z1 = a[1] + (b[1] - a[1]) * (i + 1) / n, sl = Math.hypot(x1 - x0, z1 - z0);
+    for (let i = 0; i < n; i++) { if (skipMid && i === Math.floor(n / 2)) { const xa = a[0] + (b[0] - a[0]) * i / n, xb = a[0] + (b[0] - a[0]) * (i + 1) / n; encDoor = { x0: xa, x1: xb, z: a[1] }; continue; } const x0 = a[0] + (b[0] - a[0]) * i / n, z0 = a[1] + (b[1] - a[1]) * i / n, x1 = a[0] + (b[0] - a[0]) * (i + 1) / n, z1 = a[1] + (b[1] - a[1]) * (i + 1) / n, sl = Math.hypot(x1 - x0, z1 - z0);
       if (lod === 'near') { const p = meshPanel(THREE, M, sl - 0.06, eH - 0.12, 'steel'); p.position.set((x0 + x1) / 2, eH / 2 + 0.04, (z0 + z1) / 2); p.rotation.y = -Math.atan2(z1 - z0, x1 - x0); enc.add(p); }
       else { const p = box(sl - 0.06, eH - 0.1, 0.02, M('steel', { transparent: true, opacity: 0.4 }), (x0 + x1) / 2, 0.05, (z0 + z1) / 2, enc); p.rotation.y = -Math.atan2(z1 - z0, x1 - x0); }
       if (lod === 'near') rod([x0, eH, z0], [x1, eH, z1], 0.025, 'paint:yellow', enc); } };
   fence([-ex / 2, ez1], [ex / 2, ez1], true); fence([-ex / 2, ez0], [-ex / 2, ez1]); fence([ex / 2, ez0], [ex / 2, ez1]);
-  box(1.0, eH - 0.1, 0.05, 'paint:yellow', 0, 0.05, ez1 + 0.05, enc).name = 'base_enclosure_door'; // 방호울 출입문 (닫힘)
+  // 방호울 출입문 (철망 + 노랑 테, 닫힘). 장면에서 열고 닫을 때는 이 노드를 숨기고 makeEnclosureDoor 로 따로 그림
+  const ed = makeEnclosureDoor(THREE, M, { w: encDoor.x1 - encDoor.x0 - 0.08, h: eH - 0.1, lod }, RB); ed.position.set(encDoor.x0 + 0.04, 0.05, encDoor.z + 0.05); enc.add(ed);
   const shelf = node('protection_canopy', root), sy = 2.6, sw = 2.0; shelf.visible = lod === 'near'; // 지도에서는 방호울을 가려서 생략
   const plate = (w, d, x, z, rx, rz) => { const m = box(w, 0.05, d, 'plywood', x, sy, z, shelf); m.rotation.set(rx, 0, rz); return m; };
   plate(ex + sw * 2, sw, 0, ez1 + sw / 2, 0.12, 0); plate(sw, ez1 - ez0, -ex / 2 - sw / 2, (ez0 + ez1) / 2, 0, -0.12); plate(sw, ez1 - ez0, ex / 2 + sw / 2, (ez0 + ez1) / 2, 0, 0.12);
@@ -199,6 +200,17 @@ export function makeConstructionHoist(THREE, M, opts = {}, RB = null) {
   if (lod === 'near') box(0.7, 0.6, 0.7, 'paint:dark', cx(1) + 0.2, 0, cageZ + 0.6, cab); // 케이블 바스켓
   if (lod === 'near') for (let y = 3; y < top - 1; y += 6) { const ring = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.015, 6, 14), M(GALV)); ring.position.set(m / 2 + 0.15, y, mastZ + m / 2 + 0.1); ring.rotation.y = Math.PI / 2; cab.add(ring); }
   root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-  root.userData = { gateZ, cageZ, mastZ, cx };
+  root.userData = { gateZ, cageZ, mastZ, cx, encDoor: { ...encDoor, z: encDoor.z + 0.05, w: encDoor.x1 - encDoor.x0 - 0.08, h: eH - 0.1 } };
   return root;
+}
+
+// 하부 방호울 출입문: 왼쪽 경첩(x=0)에서 +x 로 w, 높이 h. open = 바깥(+z)으로 90° 열림
+export function makeEnclosureDoor(THREE, M, o = {}, RB = null) {
+  const { box } = kit(THREE, M, RB, o.lod === 'far');
+  const { w = 1.8, h = 1.7, open = false, lod = 'near' } = o;
+  const g = new THREE.Group(); g.name = 'base_enclosure_door'; g.rotation.y = open ? -Math.PI / 2 + 0.15 : 0;
+  for (const x of [0.03, w - 0.03]) box(0.06, h, 0.06, 'paint:yellow', x, 0, 0, g);
+  for (const y of [0, h - 0.06, h / 2]) box(w, 0.06, 0.06, 'paint:yellow', w / 2, y, 0, g);
+  if (lod === 'near') { const p = meshPanel(THREE, M, w - 0.1, h - 0.1, 'steel'); p.position.set(w / 2, h / 2, 0); g.add(p); }
+  return g;
 }

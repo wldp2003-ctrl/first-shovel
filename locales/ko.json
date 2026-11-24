@@ -2109,5 +2109,11 @@
  "learn.record.zone": "구역",
  "learn.record.first": "처음",
  "learn.record.latest": "최근",
- "learn.record.hints": "힌트 {n}번"
+ "learn.record.hints": "힌트 {n}번",
+ "learn.v19.ask": "이 모습은 안전한가요?",
+ "learn.v19.replay": "다시 보기",
+ "learn.v19.next": "다음",
+ "learn.v19.right": "맞았어요",
+ "learn.v19.wrong": "다시 볼까요",
+ "learn.v19.swipeHint": "위험하면 왼쪽(멈춰요), 안전하면 오른쪽(가요)으로 밀어요."
 }

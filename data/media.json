@@ -109,7 +109,11 @@
     "liftDoorBad",
     "liftDoorGood",
     "noSignalBad",
-    "noSignalGood"
+    "noSignalGood",
+    "overloadBad",
+    "overloadGood",
+    "pitBad",
+    "pitGood"
    ],
    "author": "첫 삽 프로젝트",
    "license": "자체 제작",

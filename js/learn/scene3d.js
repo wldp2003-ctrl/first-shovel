@@ -8,7 +8,7 @@ import * as Pr from './props3d.js';
 import { loadKit, MODELS } from './materials.js';
 import { makeWorker } from './models/worker.js';
 import * as SF from './models/safety.js';
-import { makeConstructionHoist, makeCage } from './models/constructionHoist.js';
+import { makeConstructionHoist, makeCage, makeEnclosureDoor } from './models/constructionHoist.js';
 let THREE = null, KIT = null, RB = null;
 // v18: 하나의 PBR 재질 세트(materials.js) + 하늘 HDRI 환경광 + 모서리 베벨 + CC0 모델(Kenney) + 코드 근로자(models/worker.js)
 const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#888888';
@@ -91,6 +91,18 @@ function hz(K, list, id, anchor, bad, good, close) {
   list[id] = { anchor, bad: gb, good: gg, close };
 }
 
+/* ---------------- v19 번호 표식: 상황 문장의 굵은 사물(①②…)이 그림 속 어디인지 (3D 위치, 굵은 말 순서대로) ---------------- */
+// 두 모습(위험/안전)에 모두 있는 사물만 가리킨다 — 표식이 답을 알려 주지 않게. 위치가 화면 밖이면 그 표식은 빠짐
+const MARKS = {
+  '0-1': [[-2.4, 1.45, 0]], '0-2': [[-0.8, 1.38, 0.12], [-0.8, 1.82, 0]], '0-3': [[1.0, 0.08, 0.4]],
+  '1-1': [[-2.8, 0.05, 2.0]], '1-2': [[1.5, 0.05, -7.95]], '1-3': [[7.4, 1.9, -6.6]], '1-4': [[-1.0, 0.08, 3.3]], '1-5': [[-5.6, 1.0, -4.6]],
+  '2-4': [[4.7, 5.3, 0.7]], '2-5': [[-5.9, 0.45, 5.05]],
+  '3-1': [[0, 4.85, -2]], '3-2': [[4.4, 8.0, -3]], '3-4': [[4.4, 1.9, 3.2]],
+  '4-1': [[-4.2, 2.6, -1.6]], '4-2': [[3.2, 2.4, -6], [7.6, 2.6, -5]], '4-3': [[10.4, 1.3, -1.6]], '4-4': [[6.2, 0.05, 0.7]],
+  '5-1': [[-3, 2.4, 1]], '5-2': [[-2, 3.45, -2]], '5-3': [[3, 2.2, 1]], '5-4': [[9, 2.2, -1.5], [6, 9.4, -6.3]],
+  '6-1': [[-3.8, 1.2, -0.4]], '6-2': [[1.4, 0.1, 1.2]], '6-3': [[0.6, 0.55, 2.8]], '6-4': [[5, 1.1, -1.6]],
+};
+
 /* ---------------- 장면 7곳 (단위 m, y 위) ---------------- */
 const SCENES = {
   // 0. 출근·TBM: 사무실 컨테이너 앞에 줄 선 4명
@@ -129,7 +141,7 @@ const SCENES = {
     // 1-1: 구멍은 같고 덮개(노랑·검정 표시)만 바꿈
     hz(K, H, '1-1', [-2.8, 0.02, 2.0], () => SF.opening(K, -2.8, 2.0, 1.3, 1.3, { cover: false }), () => SF.opening(K, -2.8, 2.0, 1.3, 1.3, { cover: true, coverMat: K.T(texStripes()) }), { pos: [-2.0, 1.6, 4.8], look: [-2.8, 0, 2.0] });
     // 1-2: 사람은 같고 안전난간(상부·중간 난간대 + 발끝막이판)만 바꿈
-    hz(K, H, '1-2', [1.5, 0.9, -7.4], () => person(K, 1.5, -7.35, { ry: Math.PI, pose: 'point' }), () => { SF.guardrail(K, [-3, -7.9], [6, -7.9]); person(K, 1.5, -7.35, { ry: Math.PI, pose: 'point' }); }, { pos: [3.8, 2.6, -4.0], look: [1.2, -1.6, -8.8] });
+    hz(K, H, '1-2', [1.5, 0.9, -7.4], () => person(K, 1.5, -7.35, { ry: Math.PI, pose: 'point' }), () => { SF.guardrail(K, [-3, -7.9], [6, -7.9]); person(K, 1.5, -7.35, { ry: Math.PI, pose: 'point' }); }, { pos: [3.1, 1.6, -4.9], look: [1.4, 0.8, -7.7] });
     K.rod([5.2, 1.9, -6.6], [8.6, 1.9, -6.6], 0.012, '--art-steel'); K.box(0.1, 2, 0.1, '--art-steel', 5.2, 0, -6.6); K.box(0.1, 2, 0.1, '--art-steel', 8.6, 0, -6.6);
     hz(K, H, '1-3', null, () => person(K, 6.6, -6.2, { pose: 'carry', ry: -1.2 }), () => person(K, 6.6, -6.2, { pose: 'carry', ry: -1.2, hookW: [6.7, 1.9, -6.6] }), { pos: [5.2, 1.9, -3.6], look: [6.6, 1.2, -6.3] });
     hz(K, H, '1-4', [1.0, 0.35, 3.2], () => { K.box(2.4, 0.18, 1.2, K.T(texPlywood()), 1.2, 0, 3.3, 0.2); K.box(2.4, 0.18, 1.2, K.T(texPlywood()), 1.3, 0.18, 3.2, -0.1); for (let i = 0; i < 4; i++) K.rod([0, 0.42, 2.6 + i * 0.12], [2.6, 0.42, 3.4 + i * 0.12], 0.03, '--art-steel'); person(K, -1.2, 3.3, { pose: 'carry', ry: Math.PI / 2 }); },
@@ -149,16 +161,16 @@ const SCENES = {
     // v18 시스템 비계 코드 모델: 4칸(2.4m) × 3단(2.4·4.8·7.2), 바깥쪽 안전난간. 2-1 자리(가운데 칸 2단) 발판만 위험/안전으로 바꿈
     const SC = { n: 4, bayW: 2.4, depth: 1.2, lifts: [2.4, 4.8, 7.2], skip: [[2, 1]] };
     SF.systemScaffold(K, -8, -1.7, SC);
-    hz(K, H, '2-1', [-2, 4.85, -1.1], () => person(K, -0.2, -1.1, { ry: -1.2, pose: 'carry' }, 4.845), () => { SF.deck(K, -8, -1.7, 2, 4.8, 2.4, 1.2); person(K, -0.2, -1.1, { ry: -1.2, pose: 'carry' }, 4.845); }, { pos: [-2.0, 7.6, 3.2], look: [-2.0, 4.7, -1.1] });
-    hz(K, H, '2-2', null, () => person(K, -6.6, -1.1, { ry: 0.2 }, 7.245), () => person(K, -6.6, -1.1, { ry: 0.2, hookW: [-6.3, 8.25, -0.47] }, 7.245), { pos: [-5.6, 8.8, 2.0], look: [-6.6, 8.1, -1.1] });
+    hz(K, H, '2-1', [-2, 4.85, -1.1], () => person(K, -0.2, -1.1, { ry: -1.2, pose: 'carry' }, 4.845), () => { SF.deck(K, -8, -1.7, 2, 4.8, 2.4, 1.2); person(K, -0.2, -1.1, { ry: -1.2, pose: 'carry' }, 4.845); }, { pos: [-5.6, 6.45, -1.05], look: [-1.0, 4.55, -1.15], marks: [[-3.5, 4.87, -1.35]], diff: [-2.0, 4.85, -1.1] });
+    hz(K, H, '2-2', null, () => person(K, -6.6, -1.1, { ry: 0.2 }, 7.245), () => person(K, -6.6, -1.1, { ry: 0.2, hookW: [-6.3, 8.25, -0.47] }, 7.245), { pos: [-5.6, 8.8, 2.0], look: [-6.6, 8.1, -1.1], marks: [[-6.6, 7.95, -1.1]] });
     person(K, 0.6, -1.1, { pose: 'crouch', hookW: [0.85, 3.45, -0.47] }, 2.445); S['2-s1'] = [0.6, 3.1, -1.1];
-    Pr.pipes(K, 1.8, 5.2, 0.1); Pr.cone(K, -0.6, 5.8); Pr.sign(K, -10.8, 0.8, 'mandatory', 0.4); Pr.plywood(K, 9.4, 4.0, -0.3); Pr.barrow(K, -2.8, 6.8, 0.6); Pr.container(K, 13, -0.6, -0.2);
-    hz(K, H, '2-3', null, () => person(K, -3.6, 0.4, { pose: 'walk', ry: 1.4 }), () => { person(K, -6.6, 3.4, { pose: 'walk', ry: 1.4 }); for (let x = -8; x <= 1.6; x += 1.2) K.cone(0.16, 0.5, '--vest', x, 0, 0.8); K.rod([-8, 0.45, 0.8], [1.6, 0.45, 0.8], 0.015, '--danger'); }, { pos: [-2.2, 2.0, 6.8], look: [-4.0, 2.0, 0.4] });
+    Pr.pipes(K, 10.6, 6.2, 0.1); Pr.cone(K, 9.0, 5.6); Pr.sign(K, -10.8, 0.8, 'mandatory', 0.4); Pr.plywood(K, 9.4, 4.0, -0.3); Pr.barrow(K, 11.8, 4.2, 0.6); // v19: 2-3 구도 앞을 비움 Pr.container(K, 13, -0.6, -0.2);
+    hz(K, H, '2-3', null, () => person(K, -3.6, 0.4, { pose: 'walk', ry: 1.4 }), () => { person(K, -6.6, 3.4, { pose: 'walk', ry: 1.4 }); for (let x = -8; x <= 1.6; x += 1.2) K.cone(0.16, 0.5, '--vest', x, 0, 0.8); K.rod([-8, 0.45, 0.8], [1.6, 0.45, 0.8], 0.015, '--danger'); }, { pos: [-2.0, 1.55, 3.3], look: [-3.8, 2.3, 0.1], marks: [[-4.6, 3.0, -0.5]], focus: [-3.7, 1.9, -0.1], fr: 1.5, diff: [-3.6, 1.2, 0.4] });
     // 고소작업대
     K.group(() => { K.box(2.6, 0.6, 1.4, '--vest', 6.6, 0.25, 0.8); for (const [x, z] of [[5.6, 0.2], [7.6, 0.2], [5.6, 1.4], [7.6, 1.4]]) K.cyl(0.22, 0.2, '--asphalt', x, 0.05, z);
     K.rod([6.6, 0.8, 0.8], [6.1, 4.8, 0.2], 0.12, '--art-steel'); K.box(1.6, 0.1, 1, '--art-steel', 6.1, 4.8, 0.2);
     for (const [x, z] of [[5.3, -0.3], [6.9, -0.3], [5.3, 0.7], [6.9, 0.7]]) K.box(0.05, 1.1, 0.05, '--art-helmet', x, 4.9, z); K.box(1.6, 0.05, 1, '--art-helmet', 6.1, 5.95, 0.2); }, -1.4, 0, 0);
-    hz(K, H, '2-4', null, () => person(K, 4.7, 0.2, { ry: -0.4 }, 4.9), () => person(K, 4.7, 0.2, { ry: -0.4, hookW: [4.0, 5.97, -0.3] }, 4.9), { pos: [3.2, 6.9, 3.6], look: [4.7, 5.9, 0.2] });
+    hz(K, H, '2-4', null, () => person(K, 4.7, 0.2, { ry: -0.4 }, 4.9), () => person(K, 4.7, 0.2, { ry: -0.4, hookW: [4.0, 5.97, -0.3] }, 4.9), { pos: [3.8, 6.5, 2.3], look: [4.7, 5.7, 0.2] });
     // 이동식 비계 (코드): 아웃트리거는 두 모습 모두, 바퀴 잠금(브레이크 + 고임목)만 바꿈
     const tower = (locked) => { SF.mobileTower(K, -5.9, 4.4, { locked, h: 3.8 }); person(K, -5.9, 4.4, {}, 3.85); };
     hz(K, H, '2-5', [-5.9, 0.4, 4.4], () => tower(false), () => tower(true), { pos: [-4.7, 0.9, 6.5], look: [-5.9, 0.25, 4.4] });
@@ -170,7 +182,7 @@ const SCENES = {
     // v19.1: 짓고 있는 건물 골조 (슬래브 3m 간격, 앞면 z=-3) — 리프트가 붙을 층과 슬래브 끝이 보이게
     const con = K.T(texSpeckle('art-concrete'));
     for (const y of [3, 6, 9, 12, 15]) K.box(12, 0.25, 6, con, -7, y - 0.25, -6);
-    for (const x of [-12.8, -7, -1.2]) for (const z of [-3.2, -8.8]) // 기둥은 리프트 발판을 피해서 K.box(0.45, 15, 0.45, '--art-concrete-dark', x, 0, z);
+    for (const x of [-12.8, -7, -1.2]) for (const z of [-3.2, -8.8]) K.box(0.45, 15, 0.45, '--art-concrete-dark', x, 0, z); // 기둥은 리프트 발판을 피해서
     K.box(12, 15, 0.2, K.T(texFacade(3)), -7, 0, -9.0); // 뒤쪽 외벽
     // 타워크레인 (v18 CC0 모델, 지브 아랫면 약 21.6m): 기둥 (8.3, -3.9), 지브가 두 짐 (0,-2)·(4.4,-3) 위를 지남
     Pr.towerCrane(K, 8.3, -3.9, -2.918, 22.3, 0, 0, 0);
@@ -178,25 +190,37 @@ const SCENES = {
     K.rod([0, 21.6, -2], [0, 6.2, -2], 0.02, '--asphalt'); K.box(0.4, 0.4, 0.4, '--asphalt', 0, 5.9, -2);
     K.rod([0, 5.9, -2], [-0.9, 4.9, -2], 0.015, '--asphalt'); K.rod([0, 5.9, -2], [0.9, 4.9, -2], 0.015, '--asphalt');
     for (let i = 0; i < 5; i++) K.rod([-1.1, 4.75 + i * 0.07, -2.2 + i * 0.1], [1.1, 4.75 + i * 0.07, -2.2 + i * 0.1], 0.03, '--art-rebar');
-    hz(K, H, '3-1', null, () => person(K, 0, -1.8, { pose: 'walk', ry: 1.5 }), () => { person(K, 3.8, 0.8, { pose: 'walk', ry: 1.5 }); for (let a = 0; a < 6.28; a += 0.7) K.cone(0.16, 0.5, '--vest', Math.cos(a) * 2.2, 0, -2 + Math.sin(a) * 2.2); }, { pos: [-2.6, 1.0, 4.4], look: [0.2, 3.0, -1.9] });
+    hz(K, H, '3-1', null, () => person(K, 0, -1.8, { pose: 'walk', ry: 1.5 }), () => { person(K, 3.8, 0.8, { pose: 'walk', ry: 1.5 }); for (let a = 0; a < 6.28; a += 0.7) K.cone(0.16, 0.5, '--vest', Math.cos(a) * 2.2, 0, -2 + Math.sin(a) * 2.2); }, { pos: [0.5, 1.3, 6.4], look: [-0.2, 2.75, -1.9] });
     hz(K, H, '3-2', [4.4, 8.6, -3], () => { K.rod([4.4, 21.6, -3], [4.4, 9.5, -3], 0.02, '--asphalt'); K.rod([4.4, 9.5, -3], [3.6, 8.4, -3], 0.015, '--asphalt'); K.box(2.4, 0.4, 0.6, K.T(texPlywood()), 4.4, 7.7, -3).rotation.z = -0.6; },
       () => { K.rod([4.4, 21.6, -3], [4.4, 9.8, -3], 0.02, '--asphalt'); K.rod([4.4, 9.8, -3], [3.5, 8.6, -3], 0.015, '--asphalt'); K.rod([4.4, 9.8, -3], [5.3, 8.6, -3], 0.015, '--asphalt'); K.box(2.4, 0.4, 0.6, K.T(texPlywood()), 4.4, 8.3, -3); }, { pos: [3, 9.6, 2], look: [4.4, 8.6, -3] });
     // 건설용 리프트 (v19.1 랙앤피니언식, models/constructionHoist.js): 마스트 x=-7, 건물 앞면 z=-3. 오른쪽 운반구가 3-3 의 대상
     const HO = { floors: [3, 6, 9, 12], top: 16.5, bridge: 1.2 };
-    const hoist = makeConstructionHoist(THREE, KIT.mat, { ...HO, cages: [null, 0], gates: { '1:1': true } }, RB); hoist.position.set(-7, 0, -3); K.cur.add(hoist);
+    const hoist = makeConstructionHoist(THREE, KIT.mat, { ...HO, cages: [null, null], gates: { '1:1': true, '-1:0': true } }, RB); hoist.position.set(-7, 0, -3); K.cur.add(hoist);
     // 슬래브 끝 안전난간 (리프트 발판 자리만 비움) — 장면의 판단 대상은 리프트 출입문 하나
     for (const y of [3, 6, 9, 12]) { SF.guardrail(K, [-12.9, -2.95], [-10.1, -2.95], {}, y); SF.guardrail(K, [-7.8, -2.95], [-6.2, -2.95], {}, y); SF.guardrail(K, [-3.9, -2.95], [-1.1, -2.95], {}, y); }
     const hu = hoist.userData, cageX = -7 + hu.cx(1), cageZ = -3 + hu.cageZ;
     const cageAt = (y, frontOpen = false) => { const c = makeCage(THREE, KIT.mat, { side: -1, frontOpen }, RB); c.position.set(cageX, y, cageZ); K.cur.add(c); K.rod([cageX + 0.6, y - 0.3, cageZ + 0.5], [cageX + 0.6, 0.7, cageZ + 0.55], 0.028, 'rubber'); return c; }; // 운반구 + 아래로 늘어진 전원 케이블
     // 3-3: 3층(슬래브 6m) 출입문은 열려 있고 근로자가 손수레를 밀고 다가감 — 위험: 운반구는 한 층 위(9m, 바닥과 케이블이 빈 승강로 위로 보임) / 안전: 운반구가 이 층에 도착(문 열림)
     person(K, cageX - 0.95, -3.95, { pose: 'walk', ry: 0.05 }, 6); K.group(() => Pr.barrow(K, 0, 0, 0.05), cageX - 0.9, 6, -2.8);
-    hz(K, H, '3-3', [cageX, 7.0, -1.8], () => cageAt(9), () => cageAt(6, true), { pos: [cageX + 0.3, 7.7, -6.1], look: [cageX + 0.05, 7.1, -1.8] });
+    hz(K, H, '3-3', [cageX, 7.0, -1.8], () => cageAt(9), () => cageAt(6, true), { pos: [cageX + 0.3, 7.7, -6.1], look: [cageX + 0.05, 7.1, -1.8], marks: [[cageX, 8.3, -1.8]] });
+    // 3-5 과적재: 왼쪽 운반구가 2층(슬래브 3m)에 도착, 앞문(경사로)이 내려와 있음. 위험: 시멘트 포대를 지붕 가까이까지 가득 / 안전: 팔레트 하나
+    const LX = -7 + hu.cx(-1);
+    { const c = makeCage(THREE, KIT.mat, { side: 1, frontOpen: true }, RB); c.position.set(LX, 3, cageZ); K.cur.add(c); K.rod([LX - 0.6, 2.7, cageZ + 0.5], [LX - 0.6, 0.7, cageZ + 0.55], 0.028, 'rubber'); }
+    const bags = (x, z, n) => { K.box(1.0, 0.14, 0.9, '--art-wood', x, 3, z); for (let k = 0; k < n; k++) for (const dx of [-0.24, 0.24]) K.box(0.46, 0.15, 0.86, '--art-wall', x + dx, 3.14 + k * 0.155, z); };
+    person(K, LX - 0.8, -3.75, { pose: 'stand', ry: 0.15 }, 3);
+    hz(K, H, '3-5', [LX, 4.2, cageZ], () => { for (const dx of [-0.95, 0.15, 1.05]) bags(LX + dx, cageZ + 0.05, 11); }, () => bags(LX, cageZ + 0.05, 3),
+      { pos: [LX + 0.55, 4.6, -6.0], look: [LX, 4.0, cageZ], marks: [[LX + 1.1, 5.35, cageZ - 0.7]], diff: [LX, 4.3, cageZ] });
+    // 3-6 하부 방호울: 위험: 방호울 문이 열려 있고 근로자가 운반구 아래(완충기 옆)에 들어가 서 있음 / 안전: 문 닫힘, 근로자는 울 밖
+    const ED = hu.encDoor, edX = -7 + ED.x0 + 0.04, edZ = -3 + ED.z; hoist.getObjectByName('base_enclosure_door').visible = false;
+    const door = (open) => { const d = makeEnclosureDoor(THREE, KIT.mat, { w: ED.w, h: ED.h, open }, RB); d.position.set(edX, 0.05, edZ); K.cur.add(d); };
+    hz(K, H, '3-6', [LX + 0.4, 1.0, cageZ + 0.1], () => { door(true); person(K, LX + 0.5, cageZ + 0.15, { pose: 'stand', ry: 0.4 }); }, () => { door(false); person(K, edX + 2.6, edZ + 1.5, { pose: 'stand', ry: 0.4 }); },
+      { pos: [-6.2, 1.6, 5.2], look: [-7.9, 1.2, -0.6], marks: [[-9.6, 1.4, edZ]], diff: [LX + 0.5, 1.0, cageZ + 0.15] });
     // 지게차
     const fork = () => { K.box(1.2, 0.9, 2, '--vest', 4.4, 0.35, 3.2); K.box(1.1, 1.2, 0.9, '--asphalt-2', 4.4, 1.25, 3.6); K.box(0.08, 2.2, 0.08, '--art-steel', 4.0, 0.2, 2.1); K.box(0.08, 2.2, 0.08, '--art-steel', 4.8, 0.2, 2.1); K.box(1, 0.06, 1, '--art-steel', 4.4, 0.35, 1.6); K.box(1, 0.6, 1, K.T(texPlywood()), 4.4, 0.42, 1.6); for (const [x, z] of [[3.8, 2.6], [5, 2.6], [3.8, 3.9], [5, 3.9]]) K.cyl(0.28, 0.25, '--asphalt', x, 0.05, z); };
     hz(K, H, '3-4', [4.4, 1.1, 2.6], () => { fork(); person(K, 2.6, 2.2, { pose: 'walk', ry: -1.5 }); }, () => { fork(); person(K, 2.4, 3.6, { pose: 'flag', ry: 1.2 }); }, { pos: [3.2, 2.2, 7], look: [4.4, 0.9, 2.6] });
-    person(K, -5.8, 1.6, { pose: 'flag', ry: 0.5 }); S['3-s1'] = [-5.8, 1.2, 1.6];
+    person(K, -2.2, 7.4, { pose: 'flag', ry: 0.4 }); S['3-s1'] = [-2.2, 1.2, 7.4];
     Pr.pallet(K, -2.2, 4.2, 0.2); Pr.lumber(K, -3.4, 5.6, 0.1); Pr.rebar(K, 7.8, 5.2, 0.4, 3); Pr.sign(K, -8.6, 3.4, 'caution', 0.4); Pr.drum(K, 7.4, -1.6, '--art-steel'); Pr.drum(K, 8.1, -1.1, '--art-steel'); Pr.fence(K, -14, -10, 14, -10);
-    return { cam: [0, 1.6, 10], look: [0, 4.4, -2], fov: 62 };
+    return { cam: [-1.5, 1.6, 11], look: [-1.5, 4.2, -2], fov: 66 };
   },
   // 4. 장비·토공사
   equip(K, H, S) {
@@ -209,7 +233,7 @@ const SCENES = {
     hz(K, H, '4-2', null, () => person(K, 5.6, -4.4, { ry: 0.3 }), () => person(K, 2.6, 4.8, { pose: 'flag', ry: 0.3 }), { pos: [5.6, 2.6, 2.4], look: [5.6, 1.0, -4.6] });
     const roller = () => K.group(() => { K.box(1.8, 0.9, 1.4, '--art-helmet', 0.6, 0.55, 0); K.cyl(0.6, 1.4, '--art-steel', -0.9, 0, 0).rotation.x = Math.PI / 2; K.box(0.9, 0.9, 1, '--asphalt-2', 0.8, 1.45, 0); for (const zz of [-0.7, 0.7]) K.cyl(0.5, 0.3, '--asphalt', 1.2, 0.0, zz).rotation.x = Math.PI / 2; }, 10.4, 0, -1.6, Math.PI / 2);
     roller();
-    hz(K, H, '4-3', null, () => person(K, 10.4, -0.1, { pose: 'crouch', ry: Math.PI }), () => person(K, 12.2, 1.6, { pose: 'flag', ry: -0.8 }), { pos: [8.6, 1.8, 3.6], look: [10.4, 0.7, -0.8] });
+    hz(K, H, '4-3', null, () => person(K, 10.4, -0.1, { pose: 'crouch', ry: Math.PI }), () => person(K, 12.2, 1.6, { pose: 'flag', ry: -0.8 }), { pos: [9.4, 1.5, 2.2], look: [10.4, 0.8, -0.6] });
     // 굴착면: 땅에 판 구덩이(깊이 2.4m). 위험 = 수직 벽 + 금 + 가장자리 흙더미, 사람은 바닥에서 일함 / 안전 = 같은 구덩이를 기울기로 (v16)
     const D = 2.4, X0 = 3.6, X1 = 8.8, Z0 = 0.6, Z1 = 6.0, dirt = K.T(texSpeckle('art-dirt', 1, 2200, 0.2));
     K.box(X1 - X0, 0.05, Z1 - Z0, '--art-dirt-dark', (X0 + X1) / 2, -D, (Z0 + Z1) / 2); // 구덩이 바닥
@@ -234,7 +258,7 @@ const SCENES = {
     const top = SF.shoring(K, -5, -3, { nx: 6, nz: 2, sx: 2, sz: 4, h: 3.2, skip: [[1, 1], [4, 1]], over: 1.0 });
     // 5-1: 사람은 같고 동바리 하나가 휨 / 곧음
     hz(K, H, '5-1', null, () => { SF.pipeSupport(K, -3, 1, 3.2, { bent: true }); person(K, -3.4, 1.6, { ry: 0.5 }); },
-      () => { SF.pipeSupport(K, -3, 1, 3.2); person(K, -3.4, 1.6, { ry: 0.5 }); }, { pos: [-1.6, 1.8, 5.0], look: [-3, 1.5, 1.2] });
+      () => { SF.pipeSupport(K, -3, 1, 3.2); person(K, -3.4, 1.6, { ry: 0.5 }); }, { pos: [-2.2, 1.6, 3.6], look: [-3.1, 1.6, 1.2] });
     hz(K, H, '5-2', [0.6, top + 0.5, -1], () => { K.cone(1.5, 1, '--art-concrete-dark', 0.6, top, -1); }, () => { K.box(9, 0.15, 4.8, '--art-concrete-dark', 0, top, -1); }, { pos: [0.6, 5.6, 3], look: [0.6, 3.6, -1] });
     // 5-3: 이어 세운 동바리(짧은 두 개 + 각재) / 한 개로 곧게
     hz(K, H, '5-3', [3, 1.6, 1], () => SF.pipeSupport(K, 3, 1, 3.2, { spliced: true }), () => SF.pipeSupport(K, 3, 1, 3.2), { pos: [3.4, 1.7, 2.9], look: [3, 1.5, 1] });
@@ -267,10 +291,10 @@ const SCENES = {
         person(K, 0.2, 2.0, { ry: 0.9, pose: 'point' }); K.box(0.14, 0.22, 0.08, '--brand', 0.45, 1.05, 1.75); K.rod([0.45, 1.0, 1.75], [1.3, -0.6, 1.25], 0.012, '--art-dark'); }, { pos: [2.4, 2.4, 4.6], look: [1.4, 0.2, 1.2] });
     // 전선
     hz(K, H, '6-3', [2.8, 0.06, 2.9], () => { K.cyl(0.8, 0.008, K.M('--art-glass', { transparent: true, opacity: 0.75 }), 2.9, 0, 3.0, 24); K.rod([0.6, 0.04, 2.7], [2.6, 0.04, 2.9], 0.04, '--asphalt'); for (let k = 0; k < 6; k++) K.rod([2.6, 0.04, 2.9], [2.95 + (k % 3) * 0.06, 0.04 + (k % 2) * 0.03, 2.86 + k * 0.025], 0.008, '--vest'); K.rod([3.05, 0.04, 2.95], [5.6, 0.04, 3.2], 0.04, '--asphalt'); },
-      () => { for (const x of [0.6, 2.8, 5.6]) K.box(0.06, 1.2, 0.06, '--art-steel', x, 0, 2.9); K.rod([0.6, 1.15, 2.9], [2.8, 1.1, 2.9], 0.04, '--asphalt'); K.rod([2.8, 1.1, 2.9], [5.6, 1.15, 2.9], 0.04, '--asphalt'); }, { pos: [3.4, 0.9, 4.6], look: [2.8, 0.1, 2.9] });
+      () => { for (const x of [0.6, 2.8, 5.6]) K.box(0.06, 1.2, 0.06, '--art-steel', x, 0, 2.9); K.rod([0.6, 1.15, 2.9], [2.8, 1.1, 2.9], 0.04, '--asphalt'); K.rod([2.8, 1.1, 2.9], [5.6, 1.15, 2.9], 0.04, '--asphalt'); }, { pos: [3.6, 1.3, 5.2], look: [2.8, 0.45, 2.9] });
     // 땡볕 / 그늘
     hz(K, H, '6-4', null, () => { person(K, 5, -1.6, { pose: 'wipe', ry: -0.4 }); },
-      () => { person(K, 5, -1.6, { pose: 'sit', ry: -0.4 }); for (const [x, z] of [[3.8, -2.8], [6.2, -2.8], [3.8, -0.4], [6.2, -0.4]]) K.cyl(0.04, 2.2, '--art-steel', x, 0, z); K.box(2.8, 0.06, 2.8, '--safe', 5, 2.2, -1.6); K.cyl(0.05, 0.22, '--art-shirt', 5.5, 0, -1.2); }, { pos: [4.0, 1.0, 2.6], look: [5.6, 2.8, -3.2] });
+      () => { person(K, 5, -1.6, { pose: 'sit', ry: -0.4 }); for (const [x, z] of [[3.8, -2.8], [6.2, -2.8], [3.8, -0.4], [6.2, -0.4]]) K.cyl(0.04, 2.2, '--art-steel', x, 0, z); K.box(2.8, 0.06, 2.8, '--safe', 5, 2.2, -1.6); K.cyl(0.05, 0.22, '--art-shirt', 5.5, 0, -1.2); }, { pos: [4.4, 1.15, 1.6], look: [5.25, 2.25, -2.4] });
     // 함정: 방화포·소화기를 갖춘 용접
     person(K, -6.4, -2.6, { pose: 'weld', ry: 0.4 }); K.box(0.04, 1.6, 1.8, '--art-tan', -5.6, 0, -2.4); K.cyl(0.1, 0.55, '--danger', -7.2, 0, -2); S['6-s1'] = [-6.2, 0.8, -2.5];
     Pr.drum(K, -5.2, 1.4, '--danger'); Pr.welder(K, -5.2, -0.4, 0.3); Pr.pallet(K, 7.6, 0.8, 0.2); Pr.sign(K, 7.0, -4.2, 'caution', -0.3); Pr.water(K, 7.4, -2.8);
@@ -372,11 +396,17 @@ export async function renderPairs(id, { w = 320, h = 220, fmt = 'image/jpeg', q 
     else { const from = new THREE.Vector3(...cam.cam); const dir = from.clone().sub(a).normalize(); camera.position.copy(a).addScaledVector(dir, Math.max(2.6, (hh.size || 1) * 1.2)).add(new THREE.Vector3(0, 0.5, 0)); camera.lookAt(a); }
     camera.updateMatrixWorld();
     const draw = () => (post ? post.render() : pairRenderer.render(scene, camera));
+    // v19: 주목 영역(판단할 사물 전체) · 번호 표식 · 차이 부분 → 그림 위 % 좌표 (r 은 가로 % )
+    const right = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0);
+    const pj = (p, rad = 0) => { const v = new THREE.Vector3(...p).project(camera); if (v.z > 1 || Math.abs(v.x) > 1.05 || Math.abs(v.y) > 1.05) return null; const o = { x: +((v.x + 1) * 50).toFixed(1), y: +((1 - v.y) * 50).toFixed(1) };
+      if (rad) { const e = new THREE.Vector3(...p).addScaledVector(right, rad).project(camera); o.r = +Math.min(40, Math.max(9, Math.abs(e.x - v.x) * 50)).toFixed(1); } return o; };
+    const fr = hh.close?.fr || Math.min(2.2, Math.max(0.7, (hh.size || 1) * 0.42));
+    const meta = { focus: pj(hh.close?.focus || hh.anchor, fr), marks: (hh.close?.marks || MARKS[k] || [hh.anchor]).map((p) => pj(p)), diff: pj(hh.close?.diff || hh.anchor, Math.min(1.2, fr * 0.6)) };
     for (const v of Object.values(H)) { v.bad.visible = true; v.good.visible = false; }
     draw(); const bad = pairRenderer.domElement.toDataURL(fmt, q);
     hh.bad.visible = false; hh.good.visible = true;
     draw(); const good = pairRenderer.domElement.toDataURL(fmt, q);
-    out[k] = { bad, good };
+    out[k] = { bad, good, meta };
   }
   post?.dispose();
   return out;
