@@ -1,5 +1,5 @@
 {
- "updated": "2026-11-22",
+ "updated": "2026-11-24",
  "note": "앱에 쓰는 그림·사진·글꼴의 출처와 이용 조건. 실제 사진을 넣을 때는 촬영 동의·얼굴·회사명 가림 여부를 꼭 적는다(people 칸). 확인: node tools/smoke-v13.mjs 7번",
  "media": [
   {
@@ -273,7 +273,60 @@
    "author": "첫 삽 프로젝트",
    "license": "자체 제작",
    "people": "3D 인형(실존 인물 아님)",
-   "reference": "모델: js/learn/site3d.js·scene3d.js·props3d.js (코드로 직접 모델링, 외부 3D 에셋·텍스처 없음). 아이소메트릭 디오라마 표현은 일반 양식만 참고, 특정 이미지·상품은 쓰지 않음. AI 생성 이미지 없음"
+   "reference": "모델: js/learn/site3d.js·scene3d.js·props3d.js·models/worker.js·models/safety.js(코드) + v18 CC0 모델·질감·HDRI(위 cc0-* 항목). v18에서 지도와 7구역 장면을 모두 다시 렌더링. 아이소메트릭 디오라마 표현은 일반 양식만 참고, 특정 이미지·상품은 쓰지 않음. AI 생성 이미지 없음"
+  },
+  {
+   "id": "worker-v18",
+   "kind": "직접 만든 3D 근로자 (three.js 코드, 보호구 부품 교체)",
+   "file": "js/learn/models/worker.js",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "people": "3D 인물(얼굴 없음, 실존 인물 아님)",
+   "reference": "치수: docs/모델_치수.md"
+  },
+  {
+   "id": "cc0-kenney-v18",
+   "kind": "CC0 3D 모델 (재질 세트로 다시 입힘)",
+   "file": "assets/models/container.json·cone.json·barrier.json·warnlight.json (tools/import-cc0.mjs)",
+   "author": "Kenney (www.kenney.nl)",
+   "license": "CC0 1.0 (크레딧 의무 없음)",
+   "source": "https://kenney.nl/assets/city-kit-industrial (shipping-container-a), https://kenney.nl/assets/city-kit-roads (construction-cone·construction-barrier·construction-light)",
+   "modified": "원래 텍스처를 버리고 재질만 교체, 크기를 m 단위로 맞춤"
+  },
+  {
+   "id": "cc0-polyhaven-tex-v18",
+   "kind": "CC0 PBR 질감 (흑백 결·노멀·거칠기, WebP로 줄임)",
+   "file": "assets/tex/{concrete,dirt,gravel,plywood,metal}_{d,n,r}.webp (tools/prep-textures.mjs)",
+   "author": "Rob Tuytel (Poly Haven)",
+   "license": "CC0 1.0 (크레딧 의무 없음)",
+   "source": "https://polyhaven.com/a/concrete_floor_02 · brown_mud_dry · gravel_floor · plywood · metal_plate",
+   "modified": "색을 빼고 흑백 결로 바꿈(색은 팔레트가 정함), 512px로 줄임"
+  },
+  {
+   "id": "cc0-polyhaven-hdri-v18",
+   "kind": "CC0 HDRI (환경광 전용)",
+   "file": "assets/tex/sky.hdr (tools/prep-textures.mjs)",
+   "author": "Greg Zaal (Poly Haven)",
+   "license": "CC0 1.0 (크레딧 의무 없음)",
+   "source": "https://polyhaven.com/a/kloofendal_43d_clear_puresky",
+   "modified": "1k → 256×128 로 줄임"
+  },
+  {
+   "id": "cc0-oga-v18",
+   "kind": "CC0 3D 모델 (장비: 굴착기·레미콘·타워크레인·덤프트럭, 재질 세트로 다시 입힘)",
+   "file": "assets/models/excavator.json·mixer.json·crane.json·dumper.json (tools/blend-export.py → tools/import-cc0.mjs)",
+   "author": "Iacox (굴착기), Majadroid / Maik Hoffmann (레미콘·타워크레인·덤프트럭)",
+   "license": "CC0 1.0 (크레딧 의무 없음)",
+   "source": "https://opengameart.org/content/excavator (excavadora_0.blend), https://opengameart.org/content/3d-house-construction-site-lowpoly-cc0 (Concrete Truck·Crane Ground·Dumper Truck)",
+   "modified": "Blender(무료, 도구로만 사용)로 GLB 변환, 굴착기는 면 30%로 줄임, 원래 색·텍스처를 버리고 재질 세트로 다시 입힘, 크기를 m 단위로 맞춤"
+  },
+  {
+   "id": "safety-v18",
+   "kind": "직접 만든 안전 구조물 3D (안전난간·개구부 덮개·시스템 비계·이동식 비계·파이프 서포트 동바리)",
+   "file": "js/learn/models/safety.js",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "reference": "치수: docs/모델_치수.md"
   }
  ]
 }

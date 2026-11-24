@@ -1,7 +1,9 @@
-// 첫 삽 v17 — 현장 소품 모음 (직접 모델링, 외부 에셋 없음). 지도(site3d)와 위험 장면(scene3d)이 같은 소품을 쓴다
+// 첫 삽 v17·v18 — 현장 소품 모음. v18: 복잡한 소품은 CC0 모델(P.model, Kenney)을 먼저 쓰고, 없으면 코드 모델. 지도(site3d)와 위험 장면(scene3d)이 같은 소품을 쓴다
 // P 는 조립 도구: box(w,h,d,c,x,y,z,ry) · cyl(r,h,c,x,y,z) · cone(r,h,c,x,y,z) · rod([x,y,z],[x,y,z],r,c) · group(fn,x,y,z,ry)
 //   y 는 물체 바닥 높이, 색은 css/tokens.css 토큰 이름(--art-* 등)만. 글자·로고 없음.
 // 각 소품은 P 와 위치를 받아 그린다. 단위 m.
+
+import * as SF from './models/safety.js';
 
 // 사람 (작은 인형: 지도용). 보호구가 또렷이 — 노랑 안전모, 주황 조끼 + 흰 반사띠, 안전대(선택)
 export function doll(P, x, z, o = {}, y = 0) {
@@ -21,8 +23,21 @@ export function doll(P, x, z, o = {}, y = 0) {
   }, x, y, z, o.ry || 0);
 }
 
-// 컨테이너 사무실 (6 × 2.4, 높이 2.6)
+// 컨테이너 사무실 (6 × 2.4, 높이 2.6). v18: 몸체는 CC0 컨테이너(Kenney) + 창·문·계단은 코드
 export function container(P, x, z, ry = 0) {
+  if (P.model) {
+    let ok = false;
+    P.group(() => {
+      ok = !!P.model('container', 0, 0, 0, 0);
+      if (!ok) return;
+      const f = 1.39; // 앞면 (z+)
+      for (const wx of [-1.7, 1.75]) { P.box(1.36, 0.96, 0.05, '--bg', wx, 1.08, f); P.box(1.2, 0.8, 0.05, '--art-glass', wx, 1.16, f + 0.02); P.box(1.4, 0.06, 0.16, '--art-steel', wx, 1.04, f + 0.05); }
+      P.box(0.95, 2.05, 0.05, '--bg', 0.1, 0.12, f); P.box(0.85, 1.95, 0.05, '--asphalt', 0.1, 0.16, f + 0.02);
+      P.box(1.2, 0.18, 0.6, '--art-steel', 0.1, 0, f + 0.32);
+      P.box(0.7, 0.5, 0.45, '--bg', -2.5, 1.95, f + 0.2); // 에어컨 실외기
+    }, x, 0, z, ry);
+    if (ok) return;
+  }
   P.group(() => {
     P.box(6, 2.5, 2.4, '--art-wall', 0, 0.1, 0);
     P.box(6.1, 0.12, 2.5, '--art-concrete-dark', 0, 2.6, 0);
@@ -40,7 +55,7 @@ export function fence(P, x0, z0, x1, z1, h = 1.8) {
     P.group(() => { P.box(w - 0.06, h - 0.3, 0.08, '--art-wall', 0, 0.3, 0); P.box(w - 0.06, 0.3, 0.09, i % 2 ? '--brand' : '--asphalt', 0, 0, 0); P.box(0.1, h + 0.1, 0.12, '--art-steel', -w / 2, 0, 0); }, x, 0, z, ry);
   }
 }
-export function cone(P, x, z) { P.box(0.42, 0.05, 0.42, '--asphalt', x, 0, z); P.cone(0.17, 0.7, '--vest', x, 0.05, z); P.cyl(0.11, 0.1, '--bg', x, 0.33, z); }
+export function cone(P, x, z) { if (P.model?.('cone', x, 0, z, (x * 7 + z * 3) % 6.28)) return; P.box(0.42, 0.05, 0.42, '--asphalt', x, 0, z); P.cone(0.17, 0.7, '--vest', x, 0.05, z); P.cyl(0.11, 0.1, '--bg', x, 0.33, z); }
 // A형 바리케이드 (노랑·검정)
 export function barrier(P, x, z, ry = 0) { P.group(() => { P.box(1.6, 0.22, 0.06, '--brand', 0, 0.75, 0); P.box(1.6, 0.22, 0.06, '--asphalt', 0, 0.5, 0); for (const k of [-0.75, 0.75]) P.box(0.08, 1.0, 0.5, '--art-steel', k, 0, 0); }, x, 0, z, ry); }
 // 표지판: kind 'mandatory'(파랑 원)·'caution'(노랑)·'danger'(빨강) — 색과 모양만, 글자 없음
@@ -48,10 +63,15 @@ export function sign(P, x, z, kind = 'mandatory', ry = 0) {
   P.group(() => {
     P.box(0.08, 1.6, 0.08, '--art-steel', 0, 0, 0);
     P.box(0.9, 0.9, 0.05, '--bg', 0, 1.2, 0.05);
-    if (kind === 'mandatory') P.group(() => P.cyl(0.32, 0.04, '--mandatory', 0, 0, 0), 0, 1.65, 0.08, 0, Math.PI / 2);
+    if (kind === 'mandatory') { P.group(() => P.cyl(0.32, 0.04, '--mandatory', 0, 0, 0), 0, 1.65, 0.08, 0, Math.PI / 2);
+      // 안전모 그림(흰색, 글자 없음): 둥근 머리 + 차양
+      P.group(() => P.cyl(0.13, 0.02, '--bg', 0, 0, 0), 0, 1.66, 0.125, 0, Math.PI / 2); P.box(0.34, 0.05, 0.02, '--bg', 0, 1.57, 0.15); P.box(0.3, 0.09, 0.025, '--mandatory', 0, 1.48, 0.152); }
     else P.box(0.6, 0.55, 0.04, kind === 'caution' ? '--caution' : '--danger', 0, 1.37, 0.09);
   }, x, 0, z, ry);
 }
+// v18 CC0: 콘크리트 방호벽(저지 배리어)·경고등 — 모델이 없으면 그리지 않음
+export function jersey(P, x, z, ry = 0) { P.model?.('barrier', x, 0, z, ry); }
+export function warnLight(P, x, z, ry = 0) { P.model?.('warnlight', x, 0, z, ry); }
 // TBM 게시판 (위험성평가표 자리)
 export function board(P, x, z, ry = 0) { P.group(() => { for (const k of [-1, 1]) P.box(0.1, 2.2, 0.1, '--art-steel', k, 0, 0); P.box(2.3, 1.2, 0.08, '--bg', 0, 1.0, 0); P.box(2.3, 0.18, 0.1, '--mandatory', 0, 2.05, 0); for (let r = 0; r < 4; r++) P.box(1.9, 0.05, 0.09, '--line', 0, 1.25 + r * 0.22, 0.01); }, x, 0, z, ry); }
 // 철근 묶음 (받침목 위)
@@ -84,7 +104,8 @@ export function blower(P, x, z, tx, tz) { P.box(0.6, 0.6, 0.6, '--art-steel', x,
 export function tripod(P, x, z, h = 2) { P.rod([x, h, z], [x - 0.8, 0, z - 0.5], 0.04, '--art-steel'); P.rod([x, h, z], [x + 0.8, 0, z - 0.5], 0.04, '--art-steel'); P.rod([x, h, z], [x, 0, z + 0.9], 0.04, '--art-steel'); }
 
 // 굴착기 (y 회전) — 지도·장면 공용 크기 (길이 약 6m)
-export function excavator(P, x, z, ry = 0, swing = 0) {
+export function excavator(P, x, z, ry = 0, swing = 0, sc = 1) {
+  if (P.model?.('excavator', x, 0, z, ry + swing, sc)) return; // v18 CC0 (Iacox, OpenGameArt) 길이 9.2m, 팔은 -x 쪽
   P.group(() => {
     for (const s of [-1, 1]) { P.box(4, 0.8, 0.8, '--asphalt', 0, 0, s * 1.1); P.box(3.6, 0.12, 0.84, '--art-dark', 0, 0.8, s * 1.1); }
     P.group(() => {
@@ -97,6 +118,7 @@ export function excavator(P, x, z, ry = 0, swing = 0) {
 }
 // 덤프트럭 (길이 약 7m)
 export function dump(P, x, z, ry = 0) {
+  if (P.model?.('dumper', x, 0, z, ry)) return; // v18 CC0 (Majadroid) 길이 7.4m, 운전석 +x
   P.group(() => {
     for (const dx of [-2.2, -1.0, 2.2]) for (const s of [-1, 1]) P.group(() => P.cyl(0.55, 0.4, '--asphalt', 0, -0.2, 0), dx, 0.55, s * 1.1, 0, Math.PI / 2);
     P.box(7, 0.4, 2.2, '--art-dark', 0, 0.7, 0);
@@ -110,6 +132,8 @@ export function roller(P, x, z, ry = 0) { P.group(() => { P.group(() => P.cyl(0.
 export function forklift(P, x, z, ry = 0) { P.group(() => { P.box(2.0, 1.0, 1.3, '--vest', 0, 0.3, 0); P.box(1.0, 1.2, 1.2, '--art-dark', -0.3, 1.3, 0); P.box(0.1, 2.6, 0.1, '--art-steel', 1.1, 0, -0.4); P.box(0.1, 2.6, 0.1, '--art-steel', 1.1, 0, 0.4); P.box(1.0, 0.06, 0.12, '--art-steel', 1.6, 0.25, -0.35); P.box(1.0, 0.06, 0.12, '--art-steel', 1.6, 0.25, 0.35); for (const dx of [-0.7, 0.7]) for (const s of [-1, 1]) P.group(() => P.cyl(0.32, 0.25, '--asphalt', 0, -0.12, 0), dx, 0.32, s * 0.65, 0, Math.PI / 2); }, x, 0, z, ry); }
 // 타워크레인 (높이 h, 지브 길이 L, 짐 위치 hookX)
 export function towerCrane(P, x, z, ry = 0, h = 16, L = 12, hookX = 8, hookY = 7) {
+  // v18 CC0 (Majadroid): 높이 24m 모델을 h 에 맞춰 줄임. 기둥이 원점에 오게 옮기고, 줄·갈고리는 코드
+  if (P.model) { let ok = false; const k = (h + 2.4) / 24; P.group(() => { ok = !!P.model('crane', 5.5 * k, 0, 0, 0, k); if (ok && hookX > 0) { const jy = 21 * k; P.box(0.5, 0.3, 0.5, '--art-steel', hookX, jy - 0.35, 0); P.rod([hookX, jy - 0.35, 0], [hookX, hookY + 0.6, 0], 0.03, '--asphalt'); P.box(0.3, 0.3, 0.3, '--asphalt', hookX, hookY + 0.3, 0); } }, x, 0, z, ry); if (ok) return; }
   P.group(() => {
     P.box(2.4, 0.6, 2.4, '--art-concrete-dark', 0, 0, 0);
     for (const [dx, dz] of [[-0.45, -0.45], [0.45, -0.45], [-0.45, 0.45], [0.45, 0.45]]) P.box(0.14, h, 0.14, '--art-helmet', dx, 0.6, dz);
@@ -134,27 +158,22 @@ export function pumpTruck(P, x, z, ry = 0, boom = [[0, 2.4, 0], [1.5, 7, 0], [6,
 }
 // 레미콘 (믹서 트럭)
 export function mixer(P, x, z, ry = 0) {
+  if (P.model?.('mixer', x, 0, z, ry)) return; // v18 CC0 (Majadroid) 길이 8.2m, 운전석 +x
   P.group(() => {
     for (const dx of [-2.2, -1.0, 2.2]) for (const s of [-1, 1]) P.group(() => P.cyl(0.5, 0.36, '--asphalt', 0, -0.18, 0), dx, 0.5, s * 1.05, 0, Math.PI / 2);
     P.box(7, 0.4, 2.1, '--art-dark', 0, 0.6, 0); P.box(1.8, 1.9, 2.2, '--bg', 2.5, 1.0, 0); P.box(0.1, 0.8, 1.9, '--art-glass', 3.42, 1.9, 0);
     P.rod([-3.2, 2.6, 0], [1.2, 2.0, 0], 1.1, '--bg'); P.rod([-3.4, 2.65, 0], [-2.4, 2.5, 0], 1.15, '--vest');
   }, x, 0, z, ry);
 }
-// 비계 한 칸 묶음: 폭 w, 단 수 n, 단 높이 1.8 — 발판 + 안전난간(2줄) + 발끝막이판
+// 비계 묶음: 폭 w, 단 수 n, 단 높이 1.8 — v18: 시스템 비계 코드 모델(models/safety.js). o.gap 맨 위 발판 한 칸 뺌, o.norail 맨 위 난간 없음
 export function scaffold(P, x, z, w = 6, n = 3, ry = 0, o = {}) {
-  P.group(() => {
-    const H = n * 1.8 + 1.1, cols = Math.max(2, Math.round(w / 1.8) + 1);
-    for (let i = 0; i < cols; i++) { const dx = -w / 2 + (w * i) / (cols - 1); P.box(0.08, H, 0.08, '--art-steel', dx, 0, 0); P.box(0.08, H, 0.08, '--art-steel', dx, 0, 1.0); }
-    for (let k = 1; k <= n; k++) { const y = k * 1.8;
-      if (!(o.gap && k === n)) P.box(w, 0.06, 1.0, '--art-wood', 0, y, 0.5); else { P.box(w * 0.4, 0.06, 1.0, '--art-wood', -w * 0.3, y, 0.5); P.box(w * 0.4, 0.06, 1.0, '--art-wood', w * 0.3, y, 0.5); }
-      if (!(o.norail && k === n)) { P.box(w, 0.06, 0.06, '--art-helmet', 0, y + 0.55, 1.0); P.box(w, 0.06, 0.06, '--art-helmet', 0, y + 1.0, 1.0); P.box(w, 0.15, 0.03, '--art-helmet', 0, y + 0.06, 1.02); }
-      P.rod([-w / 2, y - 1.8, 1.0], [w / 2, y, 1.0], 0.025, '--art-steel'); }
-  }, x, 0, z, ry);
+  const bays = Math.max(1, Math.round(w / 1.8)), lifts = Array.from({ length: n }, (_, k) => (k + 1) * 1.8);
+  P.group(() => SF.systemScaffold(P, -w / 2, 0, { n: bays, bayW: w / bays, depth: 1.0, lifts, skip: o.gap ? [[Math.floor(bays / 2), n - 1]] : [], guard: o.norail ? { top: false, mid: false, toe: false } : {} }), x, 0, z, ry);
 }
-// 동바리 + 거푸집 판 (w × d, 높이 h)
+// 동바리 + 거푸집 판 (w × d, 높이 h) — v18: 파이프 서포트 코드 모델(models/safety.js). bent 면 가운데 하나가 휨
 export function shoring(P, x, z, w = 5, d = 4, h = 3, bent = false) {
-  for (let i = 0; i <= 3; i++) for (let j = 0; j <= 2; j++) { const px = x - w / 2 + (w * i) / 3, pz = z - d / 2 + (d * j) / 2; if (bent && i === 1 && j === 1) { P.rod([px, 0, pz], [px + 0.4, h / 2, pz], 0.05, '--art-steel'); P.rod([px + 0.4, h / 2, pz], [px, h, pz], 0.05, '--art-steel'); } else P.cyl(0.05, h, '--art-steel', px, 0, pz); }
-  P.box(w + 0.6, 0.12, d + 0.6, '--art-wood-dark', x, h, z); P.box(w + 0.6, 0.1, d + 0.6, '--art-wood', x, h + 0.12, z);
+  SF.shoring(P, x - w / 2, z - d / 2, { nx: 4, nz: 3, sx: w / 3, sz: d / 2, h, skip: bent ? [[1, 1]] : [], over: 0.3 });
+  if (bent) SF.pipeSupport(P, x - w / 2 + w / 3, z, h, { bent: true });
 }
 // 골조 (기둥 4개 + 슬래브), 슬래브 윗면 높이 = h
 export function frame(P, x, z, w = 8, d = 7, h = 3.4) { for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, -1], [0, 1]]) P.box(0.5, h - 0.3, 0.5, '--art-concrete-dark', x + dx * (w / 2 - 0.4), 0, z + dz * (d / 2 - 0.4)); P.box(w, 0.3, d, '--art-concrete', x, h - 0.3, z); }

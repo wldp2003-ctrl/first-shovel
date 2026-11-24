@@ -43,6 +43,15 @@
   --art-dark: #2A303A;
   --art-tan: #C9A46B;
   --art-grass: #7CC456;
+  /* v18 스타일라이즈드 실사 팔레트 (docs/art-bible: 3D 재질 세트 js/learn/materials.js 전용) */
+  --pbr-dirt: #8A6A4A;
+  --pbr-dirt-2: #B08A5E;
+  --pbr-concrete: #A9ADB2;
+  --pbr-steel: #C7CCD1;
+  --pbr-yellow: #F2C230;
+  --pbr-orange: #FF7A1A;
+  --pbr-navy: #1F2A44;
+  --pbr-paper: #F4F1EA;
   /* 그림 팔레트 끝 */
 
   /* v14 현장 테마 (게임 원본 틀) */

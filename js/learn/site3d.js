@@ -6,6 +6,8 @@
 // renderSiteStill({ w, h, zone }) → { url, pins } : 같은 각도 이미지 (대체 이미지·미리 보기용, tools/render-scenes.mjs)
 // 색은 css/tokens.css 토큰만. 글자·로고·얼굴 없음.
 import * as Pr from './props3d.js';
+import { loadKit, MODELS } from './materials.js';
+// v18: 하나의 PBR 재질 세트 + 하늘 HDRI 환경광 + 모서리 베벨 + CC0 모델(인스턴싱) + 지도를 만들 때 굽는 접지 AO
 
 const reduce = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#888888';
@@ -18,30 +20,52 @@ const ROUTE = [[16, 27.5], [16, 23], [-22, 23], [-22, 8], [22, 8], [22, -8], [0,
 const HALF = 27, EL = 0.62, AZ = Math.PI / 4; // 땅 블록 반 폭, 내려보는 각(약 35°), 돌린 각(45°)
 
 /* ---------- 조립 도구: 같은 모양·색은 InstancedMesh 하나로 ---------- */
-function emitter(THREE) {
+function emitter(THREE, KIT, RB) {
   const lists = new Map(), stack = [new THREE.Matrix4()];
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), p = new THREE.Vector3(), s = new THREE.Vector3(), e = new THREE.Euler(), up = new THREE.Vector3(0, 1, 0);
   const push = (geo, c) => { const k = geo + '|' + c; if (!lists.has(k)) lists.set(k, []); lists.get(k).push(stack[stack.length - 1].clone().multiply(m4)); };
   const P = {
-    box(w, h, d, c, x, y, z, ry = 0) { e.set(0, ry, 0); q.setFromEuler(e); m4.compose(p.set(x, y + h / 2, z), q, s.set(w, h, d)); push('box', c); },
+    box(w, h, d, c, x, y, z, ry = 0) { e.set(0, ry, 0); q.setFromEuler(e); m4.compose(p.set(x, y + h / 2, z), q, s.set(w, h, d)); push(RB && Math.max(w, h, d) <= 3 && Math.min(w, h, d) >= 0.03 ? 'rbox' : 'box', c); },
+    // CC0 모델: 재질 부품마다 InstancedMesh 하나
+    model(name, x, y, z, ry = 0, sc = 1) { const parts = KIT?.parts(name); if (!parts) return false; e.set(0, ry, 0); q.setFromEuler(e); m4.compose(p.set(x, y, z), q, s.set(sc, sc, sc)); for (const pt of parts) push('m:' + name + ':' + pt.key, pt.key); return true; },
     cyl(r, h, c, x, y, z) { q.identity(); m4.compose(p.set(x, y + h / 2, z), q, s.set(r, h, r)); push('cyl', c); },
     cone(r, h, c, x, y, z) { q.identity(); m4.compose(p.set(x, y + h / 2, z), q, s.set(r, h, r)); push('cone', c); },
     rod(a, b, r, c) { const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b), len = A.distanceTo(B); q.setFromUnitVectors(up, B.clone().sub(A).normalize()); m4.compose(p.copy(A).add(B).multiplyScalar(0.5), q, s.set(r, len, r)); push('cyl', c); },
     group(fn, x = 0, y = 0, z = 0, ry = 0, rx = 0) { e.set(rx, ry, 0, 'YXZ'); q.setFromEuler(e); const g = new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), q.clone(), new THREE.Vector3(1, 1, 1)); stack.push(stack[stack.length - 1].clone().multiply(g)); fn(); stack.pop(); },
   };
-  const geos = { box: new THREE.BoxGeometry(1, 1, 1), cyl: new THREE.CylinderGeometry(1, 1, 1, 12), cone: new THREE.ConeGeometry(1, 1, 12) };
+  const geos = { box: new THREE.BoxGeometry(1, 1, 1), cyl: new THREE.CylinderGeometry(1, 1, 1, 14), cone: new THREE.ConeGeometry(1, 1, 14) };
+  if (RB) geos.rbox = new RB(1, 1, 1, 2, 0.06);
+  const geoOf = (g) => { if (geos[g]) return geos[g]; const i = g.indexOf(':', 2), n = g.slice(2, i), key = g.slice(i + 1); return KIT.parts(n).find((pt) => pt.key === key).geo; };
   const finish = (scene) => {
     const mats = new Map();
     for (const [k, list] of lists) {
       const [g, c] = k.split('|');
-      if (!mats.has(c)) mats.set(c, new THREE.MeshStandardMaterial({ color: new THREE.Color(tok(c)), roughness: 0.86, metalness: 0 }));
-      const mesh = new THREE.InstancedMesh(geos[g], mats.get(c), list.length);
+      if (!mats.has(c)) mats.set(c, KIT ? KIT.mat(c) : new THREE.MeshStandardMaterial({ color: new THREE.Color(tok(c)), roughness: 0.86, metalness: 0 }));
+      const mesh = new THREE.InstancedMesh(geoOf(g), mats.get(c), list.length);
       list.forEach((m, i) => mesh.setMatrixAt(i, m));
       mesh.castShadow = true; mesh.receiveShadow = true; scene.add(mesh);
     }
-    return () => { Object.values(geos).forEach((g) => g.dispose()); mats.forEach((m) => m.dispose()); };
+    return () => { Object.values(geos).forEach((g) => g.dispose()); if (!KIT) mats.forEach((m) => m.dispose()); };
   };
-  return { P, finish };
+  // 접지 AO 굽기: 땅에 닿은 물체의 바닥 자리를 부드럽게 어둡게 (지도를 만들 때 한 번, 캔버스 1024)
+  const bakeAO = (half) => {
+    const N = 1024, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d');
+    const k = N / (half * 2), v = new THREE.Vector3(), corners = [-0.5, 0.5];
+    g.fillStyle = tok('--asphalt');
+    for (const [key, list] of lists) {
+      const geo = key.split('|')[0]; if (geo.startsWith('m:')) continue;
+      const ext = geo === 'cyl' || geo === 'cone' ? 1 : 0.5, yoff = geo === 'box' || geo === 'rbox' ? 0 : 0.5;
+      for (const m of list) {
+        let x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, y0 = 1e9, y1 = -1e9;
+        for (const a of corners) for (const b of corners) for (const d of corners) { v.set(a * ext * 2, b + yoff, d * ext * 2).applyMatrix4(m); x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); z0 = Math.min(z0, v.z); z1 = Math.max(z1, v.z); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); }
+        if (y0 > 0.5 || y1 - y0 < 0.25) continue; // 떠 있거나 납작한 것(바닥 판·동선)은 빼고
+        const px = (x0 + half) * k, pz = (z0 + half) * k, w = (x1 - x0) * k, d = (z1 - z0) * k, h = Math.min(1, (y1 - y0) / 3);
+        for (let r = 4; r >= 0; r--) { const e2 = (r + 1) * 3; g.globalAlpha = 0.05 + 0.03 * h; g.fillRect(px - e2, pz - e2, w + e2 * 2, d + e2 * 2); }
+      }
+    }
+    g.globalAlpha = 1; const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  };
+  return { P, finish, bakeAO };
 }
 
 // 부드러운 접지 그림자 (구운 AO 대신 — 물체 밑 둥근 어둠)
@@ -69,22 +93,22 @@ function topTex(THREE) {
 }
 
 /* ---------- 현장 만들기 ---------- */
-function buildSite(THREE) {
+function buildSite(THREE, KIT = null, RB = null) {
   const scene = new THREE.Scene();
-  const { P, finish } = emitter(THREE);
+  const { P, finish, bakeAO } = emitter(THREE, KIT, RB);
   const disposers = [];
-  // 빛: 따뜻한 해 1 + 하늘빛 반구광
-  scene.add(new THREE.HemisphereLight(new THREE.Color(tok('--art-sky')), new THREE.Color(tok('--art-dirt')), 1.25));
-  const sun = new THREE.DirectionalLight(new THREE.Color(tok('--bg')).lerp(new THREE.Color(tok('--brand')), 0.22), 2.6);
+  // 빛: 하늘 HDRI 환경광(mount 때) + 약한 반구광 + 오전 햇빛 1(왼쪽 위, 따뜻한 색). HDRI 가 없으면 반구광을 세게
+  scene.add(new THREE.HemisphereLight(new THREE.Color(tok('--art-sky')), new THREE.Color(tok('--pbr-dirt')), KIT ? 0.5 : 1.25));
+  const sun = new THREE.DirectionalLight(new THREE.Color(tok('--bg')).lerp(new THREE.Color(tok('--pbr-orange')), 0.16), 2.9);
   sun.position.set(-26, 46, 22); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
   Object.assign(sun.shadow.camera, { left: -42, right: 42, top: 42, bottom: -42, near: 1, far: 140 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
   scene.add(sun);
   // 땅 블록: 윗면 + 옆면 흙 단면 (두께 4.5)
-  const TH = 4.5, side = new THREE.MeshStandardMaterial({ map: strataTex(THREE), roughness: 1 }), top = new THREE.MeshStandardMaterial({ map: topTex(THREE), roughness: 1 });
-  const slab = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2, TH, HALF * 2), [side, side, top, side, side, side]);
+  const TH = 4.5, side = new THREE.MeshStandardMaterial({ map: strataTex(THREE), roughness: 1 }), top = KIT ? KIT.mat('--art-ground') : new THREE.MeshStandardMaterial({ map: topTex(THREE), roughness: 1 });
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(HALF * 2, TH, HALF * 2, 12, 1, 12), [side, side, top, side, side, side]);
   slab.position.y = -TH / 2; slab.receiveShadow = true; scene.add(slab);
   side.map.repeat.set(3, 1);
-  disposers.push(() => { slab.geometry.dispose(); side.map.dispose(); top.map.dispose(); side.dispose(); top.dispose(); });
+  disposers.push(() => { slab.geometry.dispose(); side.map.dispose(); side.dispose(); if (!KIT) { top.map.dispose(); top.dispose(); } });
   // 블록 밑 그림자 (떠 있는 디오라마 느낌)
   const ao = aoTex(THREE), aoMat = new THREE.MeshBasicMaterial({ map: ao, transparent: true, opacity: 0.38, depthWrite: false });
   const blob = (x, z, w, d, y = 0.02, o) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), o ? aoMat.clone() : aoMat); if (o) m.material.opacity = o; m.rotation.x = -Math.PI / 2; m.position.set(x, y, z); scene.add(m); return m; };
@@ -130,8 +154,8 @@ function buildSite(THREE) {
   // ⑤ 장비·토공: 판 구덩이 + 굴착기 + 덤프 + 롤러 + 흙더미 + 콘
   { const [x, z] = SPOT[4]; P.box(5, 0.03, 4, '--art-dirt-dark', x + 3, 0.06, z + 2.6); for (const [dx, dz, w, d] of [[0.5, 2.6, 0.3, 4], [5.5, 2.6, 0.3, 4], [3, 0.6, 5, 0.3], [3, 4.6, 5, 0.3]]) P.box(w, 0.3, d, '--art-dirt', x + dx, 0.06, z + dz);
     D(4, 3, 2.6, { ry: 0.5 }, -0.1); P.cone(1.6, 1.4, '--art-dirt', x + 3, 0, z - 1.2);
-    Pr.excavator(P, x - 2.6, z - 2.6, 0.7, 0.4); big(x - 2.6, z - 2.6, 5.5, 4.5); Pr.dump(P, x + 2.4, z - 4.6, 0); big(x + 2.4, z - 4.6, 7.5, 3);
-    Pr.roller(P, x - 3.8, z + 3.8, -0.2); for (let k = 0; k < 4; k++) Pr.cone(P, x - 5.8 + k * 1.4, z + 0.8); D(4, -5.4, 2.0, { arm: 1, ry: 0.6 }); }
+    Pr.excavator(P, x - 3.4, z - 1.6, 0.75 + Math.PI, 0, 0.72); big(x - 3.4, z - 1.6, 5.5, 4.5); Pr.dump(P, x + 2.4, z - 4.6, 0); big(x + 2.4, z - 4.6, 7.5, 3);
+    Pr.roller(P, x - 6.4, z + 4.6, -0.2); for (let k = 0; k < 4; k++) Pr.cone(P, x - 5.8 + k * 1.4, z + 0.8); D(4, -5.4, 2.0, { arm: 1, ry: 0.6 }); }
   // ⑥ 타설: 동바리 + 거푸집 + 펌프카 붐 + 레미콘 + 전선
   { const [x, z] = SPOT[5]; Pr.shoring(P, x - 1.6, z - 1.2, 6, 4.4, 3.2); big(x - 1.6, z - 1.2, 7, 5.5);
     Pr.pumpTruck(P, x + 2.6, z + 4.0, Math.PI, [[0, 2.4, 0], [-1, 7, 0], [2.8, 8.4, 2.4], [4.2, 4.6, 4.8]]); big(x + 2.6, z + 4, 7.6, 3);
@@ -151,6 +175,10 @@ function buildSite(THREE) {
   // 길가 콘·바리케이드
   for (const [x, z] of [[-8, 21], [8, 21], [-20, 12], [10, 6.5], [-10, 6.5], [20, -6], [6, -10]]) Pr.cone(P, x, z);
   Pr.barrier(P, 8, -9.6, 0); Pr.barrier(P, -8, 9.6, 0);
+  // v18 CC0: 정문 옆 콘크리트 방호벽 + 경고등
+  Pr.jersey(P, 11.6, 24.6, 0); Pr.jersey(P, 20.4, 24.6, 0); Pr.warnLight(P, 12.6, 25.6); Pr.warnLight(P, 19.4, 25.6);
+  // 접지 AO (구운 텍스처) — 바닥 판·동선 위에 얹음
+  if (KIT) { const aoT = bakeAO(HALF), aoM = new THREE.MeshBasicMaterial({ map: aoT, transparent: true, opacity: 0.85, depthWrite: false, toneMapped: false }); const pl = new THREE.Mesh(new THREE.PlaneGeometry(HALF * 2, HALF * 2), aoM); pl.rotation.x = -Math.PI / 2; pl.position.y = 0.105; pl.renderOrder = 1; scene.add(pl); disposers.push(() => { aoT.dispose(); aoM.dispose(); pl.geometry.dispose(); }); }
   disposers.push(finish(scene));
   disposers.push(() => { ao.dispose(); aoMat.dispose(); });
   // 잠긴 구역 안개 (반투명, 현장 모습은 비침)
@@ -173,8 +201,10 @@ function place(cam, target, theta, zoom) {
 const TARGET0 = [0, -0.5, 1.5], ZOOM0 = 1.42; // 처음: 현장 전체가 화면 폭에 차게
 
 export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
-  let THREE;
+  let THREE, KIT = null, RB = null, dirty = () => {};
   try { THREE = await import('../../vendor/three.module.js'); } catch { return null; }
+  try { RB = (await import('../../vendor/addons/geometries/RoundedBoxGeometry.js')).RoundedBoxGeometry; } catch { RB = null; }
+  try { KIT = await loadKit(THREE, { onUpdate: () => dirty() }); await KIT.preload(MODELS); } catch { KIT = null; }
   const canvas = document.createElement('canvas');
   canvas.className = 'site3d-canvas';
   let renderer;
@@ -189,7 +219,8 @@ export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
   renderer.setClearColor(0x000000, 0);
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12; renderer.outputColorSpace = THREE.SRGBColorSpace;
-  const S = buildSite(THREE);
+  const S = buildSite(THREE, KIT, RB);
+  if (KIT) KIT.env(renderer).then((t) => { if (t) { S.scene.environment = t; S.scene.environmentIntensity = 0.8; dirty(); } });
   zones.forEach((zn, i) => { if (S.fogs[i]) S.fogs[i].visible = zn.state === 'lock'; });
   let cam = makeCam(THREE, (box.clientWidth || 360) / height);
 
@@ -239,6 +270,7 @@ export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
   }
   const v = new THREE.Vector3();
   let alive = true, lastKey = '';
+  dirty = () => { lastKey = ''; }; // 질감·환경광이 늦게 도착하면 한 번 더 그림
   function size() { const w = box.clientWidth || 360; renderer.setSize(w, height, false); const c2 = makeCam(THREE, w / height); cam = c2; }
   size(); window.addEventListener('resize', size);
   function frame(now) {
@@ -256,7 +288,7 @@ export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  function destroy() { if (!alive) return; alive = false; window.removeEventListener('resize', size); S.dispose(); renderer.dispose(); }
+  function destroy() { if (!alive) return; alive = false; window.removeEventListener('resize', size); S.dispose(); KIT?.dispose(); renderer.dispose(); }
   window.__site3d = { zones: zones.length, gl: true, pick: (i) => pick(i), focus: (i) => focus(i), get theta() { return theta; } };
   return { destroy, focus };
 }
@@ -269,13 +301,16 @@ export async function renderSiteStill({ w = 1080, h = 1220, zone = null, fmt = '
   renderer.setPixelRatio(1); renderer.setSize(w, h, false); renderer.setClearColor(0x000000, 0);
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12; renderer.outputColorSpace = THREE.SRGBColorSpace;
-  const S = buildSite(THREE), cam = makeCam(THREE, w / h);
+  let RB = null; try { RB = (await import('../../vendor/addons/geometries/RoundedBoxGeometry.js')).RoundedBoxGeometry; } catch { RB = null; }
+  const KIT = await loadKit(THREE); await KIT.preload(MODELS);
+  const S = buildSite(THREE, KIT, RB), cam = makeCam(THREE, w / h);
+  S.scene.environment = await KIT.env(renderer); S.scene.environmentIntensity = 0.8; await KIT.ready();
   const target = zone == null ? new THREE.Vector3(...TARGET0) : new THREE.Vector3(SPOT[zone][0], 1.5, SPOT[zone][1]);
   place(cam, target, AZ, zone == null ? ZOOM0 : 3.3);
   renderer.render(S.scene, cam);
   const url = canvas.toDataURL(fmt, q);
   const v = new THREE.Vector3();
   const pins = S.anchors.map((p) => { v.copy(p).project(cam); return { x: +(((v.x + 1) / 2) * 100).toFixed(2), y: +(((1 - v.y) / 2) * 100).toFixed(2) }; });
-  S.dispose(); renderer.dispose(); renderer.forceContextLoss?.();
+  S.dispose(); KIT.dispose(); renderer.dispose(); renderer.forceContextLoss?.();
   return { url, pins };
 }
