@@ -1,7 +1,7 @@
 // 첫 삽 서비스 워커 — 앱 파일은 미리 저장(오프라인 실행), 글꼴은 처음 받을 때 저장, 날씨·Firebase는 항상 네트워크
-const VERSION = 'cheotsap-v19.4';
+const VERSION = 'cheotsap-v20-a';
 const CORE = [
-  './', './index.html', './game.html', './css/tokens.css', './css/learn.css', './js/learn/app.js', './js/learn/mascot.js', './js/learn/site3d.js', './js/learn/scene3d.js', './js/learn/props3d.js', './data/prerender.json',
+  './', './index.html', './game.html', './css/tokens.css', './css/learn.css', './js/learn/app.js', './js/learn/title.js', './data/media.json', './js/learn/mascot.js', './js/learn/site3d.js', './js/learn/scene3d.js', './js/learn/props3d.js', './data/prerender.json',
   // v18: 재질 세트·근로자 모델·베벨·CC0 모델·질감·HDRI
   './js/learn/materials.js', './js/learn/models/worker.js', './vendor/addons/geometries/RoundedBoxGeometry.js', './assets/tex/sky.hdr',
   './assets/tex/concrete_d.webp', './assets/tex/concrete_n.webp', './assets/tex/concrete_r.webp', './assets/tex/dirt_d.webp', './assets/tex/dirt_n.webp', './assets/tex/dirt_r.webp', './assets/tex/gravel_d.webp', './assets/tex/gravel_n.webp',

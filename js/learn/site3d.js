@@ -10,7 +10,10 @@ import { loadKit, MODELS } from './materials.js';
 import { makeConstructionHoist, makeCage } from './models/constructionHoist.js';
 // v18: 하나의 PBR 재질 세트 + 하늘 HDRI 환경광 + 모서리 베벨 + CC0 모델(인스턴싱) + 지도를 만들 때 굽는 접지 AO
 
-const reduce = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+// v20: 앱 설정 "움직임 줄이기"(html.rm)도 따름
+const reduce = () => document.documentElement.classList.contains('rm') || !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+// v20: 3D 화질 설정 (html[data-q3d]: auto | low | high) → 픽셀 비율
+const pxRatio = () => { const q = document.documentElement.dataset.q3d || 'auto', d = window.devicePixelRatio || 1; return q === 'low' ? 1 : q === 'high' ? Math.min(d, 2.5) : Math.min(d, 2); };
 const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#888888';
 
 // 구역 중심 (x, z) — 정문(오른쪽 앞) → 출근·TBM → 골조 바닥 → 비계 → 양중 → 장비 → 타설 → 용접·밀폐 → 준공(멈추고 알려요)
@@ -206,7 +209,8 @@ function place(cam, target, theta, zoom) {
 }
 const TARGET0 = [0, -0.5, 1.5], ZOOM0 = 1.42; // 처음: 현장 전체가 화면 폭에 차게
 
-export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
+// backdrop: v20 타이틀 배경 — 이름표·손가락 조작 없이 60초에 한 바퀴 천천히 돎 (리프트 운반구는 그대로 오르내림)
+export async function mountSite(box, { zones, onPick, height = 460, backdrop = false } = {}) {
   let THREE, KIT = null, RB = null, dirty = () => {};
   try { THREE = await import('../../vendor/three.module.js'); } catch { return null; }
   try { RB = (await import('../../vendor/addons/geometries/RoundedBoxGeometry.js')).RoundedBoxGeometry; } catch { RB = null; }
@@ -221,7 +225,7 @@ export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
   box.style.height = height + 'px';
   box.append(canvas);
   const marks = document.createElement('div'); marks.className = 'site3d-marks'; box.append(marks);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setPixelRatio(pxRatio());
   renderer.setClearColor(0x000000, 0);
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12; renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -244,8 +248,8 @@ export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
   const target = new THREE.Vector3(...TARGET0);
   let theta = AZ, zoom = ZOOM0, anim = null, dragging = null, moved = 0;
   const pts = new Map(); let pinch0 = 0, zoom0 = 1;
-  canvas.addEventListener('pointerdown', (e) => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = zoom; } dragging = { x: e.clientX, y: e.clientY, t: performance.now() }; moved = 0; canvas.setPointerCapture?.(e.pointerId); });
-  canvas.addEventListener('pointermove', (e) => {
+  if (!backdrop) canvas.addEventListener('pointerdown', (e) => { pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch0 = Math.hypot(a.x - b.x, a.y - b.y); zoom0 = zoom; } dragging = { x: e.clientX, y: e.clientY, t: performance.now() }; moved = 0; canvas.setPointerCapture?.(e.pointerId); });
+  if (!backdrop) canvas.addEventListener('pointermove', (e) => {
     if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pts.size === 2) { const [a, b] = [...pts.values()]; zoom = Math.min(3.2, Math.max(ZOOM0 * 0.8, zoom0 * Math.hypot(a.x - b.x, a.y - b.y) / (pinch0 || 1))); moved = 99; return; }
     if (!dragging) return; const dx = e.clientX - dragging.x; moved += Math.abs(dx) + Math.abs(e.clientY - dragging.y);
@@ -256,8 +260,8 @@ export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
     if (dragging && moved < 8 && performance.now() - dragging.t < 500) tapAt(e.clientX, e.clientY);
     dragging = null;
   };
-  canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', (e) => { pts.delete(e.pointerId); dragging = null; });
-  canvas.addEventListener('wheel', (e) => { e.preventDefault(); zoom = Math.min(3.2, Math.max(ZOOM0 * 0.8, zoom * (e.deltaY < 0 ? 1.1 : 0.9))); }, { passive: false });
+  if (!backdrop) canvas.addEventListener('pointerup', up); if (!backdrop) canvas.addEventListener('pointercancel', (e) => { pts.delete(e.pointerId); dragging = null; });
+  if (!backdrop) canvas.addEventListener('wheel', (e) => { e.preventDefault(); zoom = Math.min(3.2, Math.max(ZOOM0 * 0.8, zoom * (e.deltaY < 0 ? 1.1 : 0.9))); }, { passive: false });
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
   function tapAt(cx, cy) {
     const r = canvas.getBoundingClientRect(); ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
@@ -279,10 +283,13 @@ export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
   dirty = () => { lastKey = ''; }; // 질감·환경광이 늦게 도착하면 한 번 더 그림
   function size() { const w = box.clientWidth || 360; renderer.setSize(w, height, false); const c2 = makeCam(THREE, w / height); cam = c2; }
   size(); window.addEventListener('resize', size);
+  let lastNow = 0;
   function frame(now) {
     if (!alive) return;
     if (!box.isConnected) { destroy(); return; }
     anim?.(now);
+    if (backdrop && !reduce() && lastNow) theta -= ((now - lastNow) / 60000) * Math.PI * 2; // 60초에 한 바퀴
+    lastNow = now;
     if (S.lift && !reduce()) { const T = 9000, ph = (now % (T * 3)) / T, i = Math.floor(ph), f = Math.min(1, (ph - i) / 0.35), ys = [0.0, 2.4, 4.8, 0.0], y0 = ys[i], y1 = ys[i + 1], e = f * f * (3 - 2 * f); S.lift.position.y = y0 + (y1 - y0) * e; }
     // 카메라가 그대로면 다시 그리지 않음 (배터리·저사양 휴대전화)
     const key = `${theta.toFixed(4)}|${zoom.toFixed(4)}|${target.x.toFixed(3)}|${target.z.toFixed(3)}|${canvas.width}|${S.lift ? S.lift.position.y.toFixed(2) : ''}`;
@@ -296,7 +303,7 @@ export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
   }
   requestAnimationFrame(frame);
   function destroy() { if (!alive) return; alive = false; window.removeEventListener('resize', size); S.dispose(); KIT?.dispose(); renderer.dispose(); }
-  window.__site3d = { zones: zones.length, gl: true, pick: (i) => pick(i), focus: (i) => focus(i), get theta() { return theta; } };
+  if (!backdrop) window.__site3d = { zones: zones.length, gl: true, pick: (i) => pick(i), focus: (i) => focus(i), get theta() { return theta; } };
   return { destroy, focus };
 }
 

@@ -120,6 +120,13 @@ const P = {
   enter: '<path d="M14 3h6v18h-6"/><path d="M3 12h11M10 8l4 4-4 4"/>',
   rest: '<circle cx="7" cy="7" r="2"/><path d="M7 10v5h7v6"/><path d="M4 21v-6"/><path d="M13 3a3 3 0 0 0 4 4"/>',
   star: '<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+  // v20 메뉴·설정
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17.2v.1"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  textsize: '<path d="M3 19l4.5-12L12 19"/><path d="M4.7 15h5.6"/><path d="M14 19l3-8 3 8"/><path d="M15.1 16.5h3.8"/>',
+  motion: '<circle cx="15" cy="12" r="5"/><path d="M3 9h5M2 12h6M3 15h5"/>',
+  quality: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
+  speed: '<path d="M4 17a8 8 0 1 1 16 0"/><path d="M12 17l4-5"/><path d="M12 17h.01"/>',
   search: '<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15l5.5 5.5"/>',
   cross: '<path d="M6 6l12 12M18 6 6 18"/>',
 };
