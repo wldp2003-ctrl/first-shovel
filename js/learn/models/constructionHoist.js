@@ -17,15 +17,17 @@ export const HOIST = { cageW: 3.0, cageD: 1.4, cageH: 2.2, mast: 0.65, section: 
 const tok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || '#888888';
 let meshTex = null;
 // 철망: 가는 격자 알파 텍스처 (속이 비쳐 보이게)
+const meshMats = new Map();
 function meshMat(THREE, M, key = 'steel', cell = 0.06) {
+  if (meshMats.has(key) && meshMats.get(key).userData.M === M) return meshMats.get(key);
   if (!meshTex) {
     const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d');
-    g.fillStyle = '#000'; g.fillRect(0, 0, 64, 64); g.strokeStyle = '#fff'; g.lineWidth = 5;
+    g.fillStyle = 'rgb(56,56,56)'; g.fillRect(0, 0, 64, 64); g.strokeStyle = 'rgb(255,255,255)'; g.lineWidth = 6; // 바탕 알파 약 0.22 + 철선 1.0
     for (const p of [2, 34]) { g.beginPath(); g.moveTo(p, 0); g.lineTo(p, 64); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(64, p); g.stroke(); }
     meshTex = new THREE.CanvasTexture(c); meshTex.wrapS = meshTex.wrapT = THREE.RepeatWrapping;
   }
-  const base = M(key); const m = new THREE.MeshStandardMaterial({ color: base.color.clone(), roughness: 0.5, metalness: 0.55, alphaMap: meshTex, alphaTest: 0.45, side: THREE.DoubleSide });
-  m.userData = { kind: base.userData?.kind || 'steel', meshCell: cell }; return m;
+  const base = M(key); const m = new THREE.MeshStandardMaterial({ color: base.color.clone(), roughness: 0.5, metalness: 0.45, alphaMap: meshTex, transparent: true, alphaTest: 0.05, depthWrite: false, side: THREE.DoubleSide });
+  m.userData = { kind: base.userData?.kind || 'steel', meshCell: cell, M }; meshMats.set(key, m); return m;
 }
 // 철망 판 하나 (w × h, 수직, z 쪽을 향함) — 셀 크기를 판 크기에 맞춤
 function meshPanel(THREE, M, w, h, key) {
@@ -57,7 +59,7 @@ export function makeCage(THREE, M, o = {}, RB = null) {
     // 철망 벽: 바깥쪽 옆면·뒤 위쪽
     const sideMesh = meshPanel(THREE, M, D - 0.08, Hh - 0.38, ST); sideMesh.rotation.y = Math.PI / 2; sideMesh.position.set(-side * W / 2, 0.32 + (Hh - 0.38) / 2, 0); cage.add(sideMesh);
     const innerMesh = meshPanel(THREE, M, D - 0.08, Hh - 0.1, ST); innerMesh.rotation.y = Math.PI / 2; innerMesh.position.set(side * W / 2, (Hh - 0.1) / 2 + 0.02, 0); cage.add(innerMesh); // 마스트 쪽
-  } else { box(0.02, Hh - 0.4, D, M(ST, { transparent: true, opacity: 0.45 }), -side * W / 2, 0.32, 0, cage); }
+  } else { for (const sx of [-side, side]) { const pm = meshPanel(THREE, M, D, Hh - 0.32, ST); pm.rotation.y = Math.PI / 2; pm.position.set(sx * W / 2, 0.32 + (Hh - 0.32) / 2, 0); cage.add(pm); } }
   // 지붕판 + 지붕 위 난간(110cm 상부난간대 + 중간난간대, 별표 3 제16호)
   box(W + 0.06, 0.06, D + 0.06, 'steel', 0, Hh, 0, cage);
   const roof = node('cage_roof_rail', cage);
@@ -70,7 +72,7 @@ export function makeCage(THREE, M, o = {}, RB = null) {
     for (const x of [-fw / 2, fw / 2]) box(0.05, fh, 0.05, FR, x, 0.02, 0, d);
     for (const y of [0.02, fh - 0.03, 1.0]) box(fw, 0.05, 0.05, FR, 0, y, 0, d);
     if (lod === 'near') { const p = meshPanel(THREE, M, fw - 0.06, fh - 0.08, ST); p.position.set(0, fh / 2 + 0.02, 0); d.add(p); }
-    else box(fw, fh, 0.02, M(ST, { transparent: true, opacity: 0.45 }), 0, 0.02, 0, d);
+    else { const p = meshPanel(THREE, M, fw, fh, ST); p.position.set(0, fh / 2 + 0.02, 0); d.add(p); }
     return d;
   };
   // 앞문(층 쪽): 경사로식 — 아래 경첩, 열리면 바깥으로 눕혀져 층 발판 위에 걸치는 발판이 됨 (제조사 "gate and ramp" 방식, 모양 참고)
@@ -109,7 +111,7 @@ export function makeLandingGate(THREE, M, o = {}, RB = null) {
     for (const x of [-lw / 2, lw / 2]) box(0.045, H - 0.05, 0.045, FR, x, 0.04, 0, l);
     for (const y of [0.04, H - 0.06, 1.0]) box(lw, 0.045, 0.045, FR, 0, y, 0, l);
     if (lod === 'near') { const p = meshPanel(THREE, M, lw - 0.05, H - 0.12, 'steel'); p.position.set(0, H / 2, 0); l.add(p); }
-    else box(lw, H - 0.1, 0.02, M('steel', { transparent: true, opacity: 0.45 }), 0, 0.05, 0, l);
+    else { const p = meshPanel(THREE, M, lw, H - 0.1, 'steel'); p.position.set(0, H / 2, 0); l.add(p); }
   };
   leaf(-1); leaf(1);
   // 열린 문짝이 밀려 들어갈 옆 고정 철망 (문틀 밖)
@@ -147,6 +149,7 @@ export function makeConstructionHoist(THREE, M, opts = {}, RB = null) {
     if (lod === 'near') for (const [x, z] of cs) box(0.13, 0.025, 0.13, GALV, x, y0 - 0.012, mastZ + z, mast); // 섹션 이음판(플랜지)
   }
   box(m + 0.1, 0.05, m + 0.1, GALV, 0, top, mastZ, mast); // 최상단 덮개
+  if (lod === 'far') for (let f = 0; f < 4; f++) { const p = meshPanel(THREE, M, m, top - 0.2, 'steel:--art-dark'); p.rotation.y = (f * Math.PI) / 2; p.position.set(Math.sin(f * Math.PI / 2) * m / 2, 0.15 + (top - 0.2) / 2, mastZ + Math.cos(f * Math.PI / 2) * m / 2); mast.add(p); }
   // 랙: 운반구 쪽 면(±x)에 세로 톱니 막대
   const rack = node('rack', root);
   for (const s of sides) {
@@ -165,7 +168,7 @@ export function makeConstructionHoist(THREE, M, opts = {}, RB = null) {
   const fence = (a, b, skipMid) => { const len = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.max(1, Math.round(len / 2)); for (let i = 0; i <= n; i++) box(0.06, eH, 0.06, 'paint:yellow', a[0] + (b[0] - a[0]) * i / n, 0, a[1] + (b[1] - a[1]) * i / n, enc);
     for (let i = 0; i < n; i++) { if (skipMid && i === Math.floor(n / 2)) { const xa = a[0] + (b[0] - a[0]) * i / n, xb = a[0] + (b[0] - a[0]) * (i + 1) / n; encDoor = { x0: xa, x1: xb, z: a[1] }; continue; } const x0 = a[0] + (b[0] - a[0]) * i / n, z0 = a[1] + (b[1] - a[1]) * i / n, x1 = a[0] + (b[0] - a[0]) * (i + 1) / n, z1 = a[1] + (b[1] - a[1]) * (i + 1) / n, sl = Math.hypot(x1 - x0, z1 - z0);
       if (lod === 'near') { const p = meshPanel(THREE, M, sl - 0.06, eH - 0.12, 'steel'); p.position.set((x0 + x1) / 2, eH / 2 + 0.04, (z0 + z1) / 2); p.rotation.y = -Math.atan2(z1 - z0, x1 - x0); enc.add(p); }
-      else { const p = box(sl - 0.06, eH - 0.1, 0.02, M('steel', { transparent: true, opacity: 0.4 }), (x0 + x1) / 2, 0.05, (z0 + z1) / 2, enc); p.rotation.y = -Math.atan2(z1 - z0, x1 - x0); }
+      else { const p = meshPanel(THREE, M, sl - 0.06, eH - 0.1, 'steel'); p.position.set((x0 + x1) / 2, eH / 2, (z0 + z1) / 2); p.rotation.y = -Math.atan2(z1 - z0, x1 - x0); enc.add(p); }
       if (lod === 'near') rod([x0, eH, z0], [x1, eH, z1], 0.025, 'paint:yellow', enc); } };
   fence([-ex / 2, ez1], [ex / 2, ez1], true); fence([-ex / 2, ez0], [-ex / 2, ez1]); fence([ex / 2, ez0], [ex / 2, ez1]);
   // 방호울 출입문 (철망 + 노랑 테, 닫힘). 장면에서 열고 닫을 때는 이 노드를 숨기고 makeEnclosureDoor 로 따로 그림
