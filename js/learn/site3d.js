@@ -7,6 +7,7 @@
 // 색은 css/tokens.css 토큰만. 글자·로고·얼굴 없음.
 import * as Pr from './props3d.js';
 import { loadKit, MODELS } from './materials.js';
+import { makeConstructionHoist, makeCage } from './models/constructionHoist.js';
 // v18: 하나의 PBR 재질 세트 + 하늘 HDRI 환경광 + 모서리 베벨 + CC0 모델(인스턴싱) + 지도를 만들 때 굽는 접지 AO
 
 const reduce = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -96,7 +97,7 @@ function topTex(THREE) {
 function buildSite(THREE, KIT = null, RB = null) {
   const scene = new THREE.Scene();
   const { P, finish, bakeAO } = emitter(THREE, KIT, RB);
-  const disposers = [];
+  const disposers = []; let lift = null;
   // 빛: 하늘 HDRI 환경광(mount 때) + 약한 반구광 + 오전 햇빛 1(왼쪽 위, 따뜻한 색). HDRI 가 없으면 반구광을 세게
   scene.add(new THREE.HemisphereLight(new THREE.Color(tok('--art-sky')), new THREE.Color(tok('--pbr-dirt')), KIT ? 0.5 : 1.25));
   const sun = new THREE.DirectionalLight(new THREE.Color(tok('--bg')).lerp(new THREE.Color(tok('--pbr-orange')), 0.16), 2.9);
@@ -149,7 +150,12 @@ function buildSite(THREE, KIT = null, RB = null) {
   { const [x, z] = SPOT[3]; Pr.towerCrane(P, x - 3, z - 2.5, 0, 17, 13, 8, 5.2); big(x - 3, z - 2.5, 3.2, 3.2);
     P.group(() => Pr.lumber(P, 0, 0, 0), x + 5, 4.8, z - 2.5);
     for (let a = 0; a < 6.28; a += 0.9) Pr.cone(P, x + 5 + Math.cos(a) * 2.2, z - 2.5 + Math.sin(a) * 2.2);
-    Pr.building(P, x + 1, z - 5.6, 5, 1.6, 7); Pr.hoist(P, x - 1.6, z - 4.4, 9, 3.4, true);
+    Pr.building(P, x + 1, z - 5.6, 5, 1.6, 7);
+    // v19.1 건설용 리프트(지도용 단순 버전, 2,000면 이하): 건물 앞면(z-4.8)에 붙임, 운반구는 층 사이를 오르내림(mountSite)
+    if (KIT) { const ho = makeConstructionHoist(THREE, KIT.mat, { floors: [2.4, 4.8], top: 8.5, twin: false, cages: [null], lod: 'far', bridge: 0.9 }, null); ho.position.set(x + 0.2, 0, z - 4.8); scene.add(ho);
+      lift = makeCage(THREE, KIT.mat, { lod: 'far', side: -1 }, null); lift.position.set(x + 0.2 + ho.userData.cx(1), 2.4, z - 4.8 + ho.userData.cageZ); scene.add(lift);
+      disposers.push(() => { for (const g of [ho, lift]) g.traverse((o) => o.geometry?.dispose()); }); }
+    else Pr.hoist(P, x - 1.6, z - 4.4, 9, 3.4, true);
     Pr.forklift(P, x + 2.2, z + 3.4, 0.3); Pr.pallet(P, x + 4.6, z + 3.8); D(3, -1.6, 2.6, { arm: 1, ry: -0.6 }); D(3, 5.6, 0.6, { ry: 2.4 }); }
   // ⑤ 장비·토공: 판 구덩이 + 굴착기 + 덤프 + 롤러 + 흙더미 + 콘
   { const [x, z] = SPOT[4]; P.box(5, 0.03, 4, '--art-dirt-dark', x + 3, 0.06, z + 2.6); for (const [dx, dz, w, d] of [[0.5, 2.6, 0.3, 4], [5.5, 2.6, 0.3, 4], [3, 0.6, 5, 0.3], [3, 4.6, 5, 0.3]]) P.box(w, 0.3, d, '--art-dirt', x + dx, 0.06, z + dz);
@@ -185,7 +191,7 @@ function buildSite(THREE, KIT = null, RB = null) {
   const fogMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(tok('--bg-soft')), transparent: true, opacity: 0.62, depthWrite: false });
   const fogs = SPOT.map(([x, z], i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(13.6, ZH[i], 13), fogMat); m.position.set(x, ZH[i] / 2 + 0.05, z); m.renderOrder = 5; m.visible = false; scene.add(m); return m; });
   const anchors = SPOT.map(([x, z], i) => new THREE.Vector3(x, TOPY[i], z));
-  return { scene, anchors, fogs, dispose: () => { disposers.forEach((f) => f()); fogs.forEach((f) => f.geometry.dispose()); fogMat.dispose(); } };
+  return { scene, anchors, fogs, lift, dispose: () => { disposers.forEach((f) => f()); fogs.forEach((f) => f.geometry.dispose()); fogMat.dispose(); } };
 }
 
 // 정사영 카메라: 블록 전체가 들어오는 크기
@@ -277,8 +283,9 @@ export async function mountSite(box, { zones, onPick, height = 460 } = {}) {
     if (!alive) return;
     if (!box.isConnected) { destroy(); return; }
     anim?.(now);
+    if (S.lift && !reduce()) { const T = 9000, ph = (now % (T * 3)) / T, i = Math.floor(ph), f = Math.min(1, (ph - i) / 0.35), ys = [0.0, 2.4, 4.8, 0.0], y0 = ys[i], y1 = ys[i + 1], e = f * f * (3 - 2 * f); S.lift.position.y = y0 + (y1 - y0) * e; }
     // 카메라가 그대로면 다시 그리지 않음 (배터리·저사양 휴대전화)
-    const key = `${theta.toFixed(4)}|${zoom.toFixed(4)}|${target.x.toFixed(3)}|${target.z.toFixed(3)}|${canvas.width}`;
+    const key = `${theta.toFixed(4)}|${zoom.toFixed(4)}|${target.x.toFixed(3)}|${target.z.toFixed(3)}|${canvas.width}|${S.lift ? S.lift.position.y.toFixed(2) : ''}`;
     if (key === lastKey) { requestAnimationFrame(frame); return; }
     lastKey = key;
     place(cam, target, theta, zoom);

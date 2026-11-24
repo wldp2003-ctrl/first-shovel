@@ -327,6 +327,14 @@
    "author": "첫 삽 프로젝트",
    "license": "자체 제작",
    "reference": "치수: docs/모델_치수.md"
+  },
+  {
+   "id": "hoist-v19",
+   "kind": "직접 만든 3D 건설용 리프트 (랙앤피니언식, three.js 코드)",
+   "file": "js/learn/models/constructionHoist.js",
+   "author": "첫 삽 프로젝트",
+   "license": "자체 제작",
+   "reference": "치수 근거: 위험기계·기구 안전인증 고시 [별표 3] (sources.json hoist-b3-*), 형태는 제조사·공공 자료를 모양만 참고(이미지 사용 없음) — docs/모델_치수.md, art/spec/참고링크.md"
   }
  ]
 }
