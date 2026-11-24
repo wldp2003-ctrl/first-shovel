@@ -210,7 +210,7 @@ function place(cam, target, theta, zoom) {
 const TARGET0 = [0, -0.5, 1.5], ZOOM0 = 1.42; // 처음: 현장 전체가 화면 폭에 차게
 
 // backdrop: v20 타이틀 배경 — 이름표·손가락 조작 없이 60초에 한 바퀴 천천히 돎 (리프트 운반구는 그대로 오르내림)
-export async function mountSite(box, { zones, onPick, height = 460, backdrop = false } = {}) {
+export async function mountSite(box, { zones, onPick, height = 460, backdrop = false, onSlow = null } = {}) {
   let THREE, KIT = null, RB = null, dirty = () => {};
   try { THREE = await import('../../vendor/three.module.js'); } catch { return null; }
   try { RB = (await import('../../vendor/addons/geometries/RoundedBoxGeometry.js')).RoundedBoxGeometry; } catch { RB = null; }
@@ -228,9 +228,14 @@ export async function mountSite(box, { zones, onPick, height = 460, backdrop = f
   renderer.setPixelRatio(pxRatio());
   renderer.setClearColor(0x000000, 0);
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // 라운드 1: 그림자는 무언가 움직일 때만 다시 그림(해는 고정, 카메라만 돎) — 그리기 호출을 줄임
+  renderer.shadowMap.autoUpdate = false; renderer.shadowMap.needsUpdate = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.12; renderer.outputColorSpace = THREE.SRGBColorSpace;
   const S = buildSite(THREE, KIT, RB);
-  if (KIT) KIT.env(renderer).then((t) => { if (t) { S.scene.environment = t; S.scene.environmentIntensity = 0.8; dirty(); } });
+  // 라운드 1: 움직이지 않는 물체는 행렬을 한 번만 계산 (매 장면 수천 개를 다시 계산하던 것) — 리프트 운반구만 움직임
+  { let n = 0; S.scene.traverse((o) => { n++; o.updateMatrix(); o.matrixAutoUpdate = false; }); S.scene.updateMatrixWorld(true); if (S.lift) S.lift.traverse((o) => { o.matrixAutoUpdate = true; }); S.nObj = n; }
+  // 라운드 1: 환경광(HDRI)을 셰이더 컴파일 전에 넣음 — 늦게 넣으면 모든 재질이 다시 컴파일되어 4.7초 멈춤(측정)
+  if (KIT) { try { const t = await KIT.env(renderer); if (t) { S.scene.environment = t; S.scene.environmentIntensity = 0.8; } } catch {} }
   zones.forEach((zn, i) => { if (S.fogs[i]) S.fogs[i].visible = zn.state === 'lock'; });
   let cam = makeCam(THREE, (box.clientWidth || 360) / height);
 
@@ -280,13 +285,20 @@ export async function mountSite(box, { zones, onPick, height = 460, backdrop = f
   }
   const v = new THREE.Vector3();
   let alive = true, lastKey = '';
-  dirty = () => { lastKey = ''; }; // 질감·환경광이 늦게 도착하면 한 번 더 그림
+  dirty = () => { lastKey = ''; renderer.shadowMap.needsUpdate = true; }; // 질감·환경광이 늦게 도착하면 한 번 더 그림
   function size() { const w = box.clientWidth || 360; renderer.setSize(w, height, false); const c2 = makeCam(THREE, w / height); cam = c2; }
   size(); window.addEventListener('resize', size);
-  let lastNow = 0;
+  // 라운드 1: 셰이더를 병렬로 미리 컴파일(KHR_parallel_shader_compile) — 첫 그리기에서 화면이 수 초 멈추던 것(측정: 셰이더 연결 3.1초) 방지
+  place(cam, target, theta, zoom);
+  try { if (renderer.compileAsync) await renderer.compileAsync(S.scene, cam); } catch {}
+  if (!box.isConnected) { S.dispose(); KIT?.dispose(); renderer.dispose(); return null; }
+  window.__site3dInfo = { programs: renderer.info.programs?.length || 0 };
+  let lastNow = 0, lastDraw = 0, lastShadow = 0, shadowY = null, drawn = 0, slowT0 = 0;
   function frame(now) {
     if (!alive) return;
     if (!box.isConnected) { destroy(); return; }
+    // 타이틀 배경은 초당 30장까지만
+    if (backdrop && now - lastDraw < 32) { requestAnimationFrame(frame); return; }
     anim?.(now);
     if (backdrop && !reduce() && lastNow) theta -= ((now - lastNow) / 60000) * Math.PI * 2; // 60초에 한 바퀴
     lastNow = now;
@@ -295,8 +307,13 @@ export async function mountSite(box, { zones, onPick, height = 460, backdrop = f
     const key = `${theta.toFixed(4)}|${zoom.toFixed(4)}|${target.x.toFixed(3)}|${target.z.toFixed(3)}|${canvas.width}|${S.lift ? S.lift.position.y.toFixed(2) : ''}`;
     if (key === lastKey) { requestAnimationFrame(frame); return; }
     lastKey = key;
+    if (S.lift && S.lift.position.y !== shadowY && now - lastShadow > 200) { renderer.shadowMap.needsUpdate = true; shadowY = S.lift.position.y; lastShadow = now; }
+    drawn++; lastDraw = now;
     place(cam, target, theta, zoom);
+    const r0 = performance.now();
     renderer.render(S.scene, cam);
+    // 저사양 자동 판단(타이틀 배경): 6~25번째 장면을 그리는 데 평균 25ms 넘게 걸리면(메인 스레드를 오래 막음) 미리 렌더링 그림으로
+    if (backdrop && onSlow && drawn > 5 && drawn <= 25) { slowT0 += performance.now() - r0; if (drawn === 25 && slowT0 / 20 > 25) { window.__site3dSlow = +(slowT0 / 20).toFixed(1); onSlow(); destroy(); return; } } window.__site3dInfo = { objs: S.nObj, programs: renderer.info.programs?.length || 0, calls: renderer.info.render.calls, tris: renderer.info.render.triangles };
     const w = canvas.clientWidth, hh = canvas.clientHeight;
     for (const { el, p } of els) { v.copy(p).project(cam); el.style.transform = `translate(${Math.round(((v.x + 1) / 2) * w)}px, ${Math.round(((1 - v.y) / 2) * hh)}px)`; }
     requestAnimationFrame(frame);

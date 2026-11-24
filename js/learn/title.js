@@ -22,7 +22,7 @@ export function makeTitle(ctx) {
     if (say) view.dataset.say = say;
     app().append(h('header', { class: 'top deep' },
       h('button', { class: 'back', id: 'pgBack', 'aria-label': t('common.back'), onclick: () => { ctx.tap(); onBack(); } }, ic('back')),
-      h('div', { class: 'ttl' }, title), h('div', { class: 'dots', id: 'dots' }), ctx.sayBtn()), view);
+      h('h1', { class: 'ttl' }, title), h('div', { class: 'dots', id: 'dots' }), ctx.sayBtn()), view);
     window.scrollTo(0, 0);
     ctx.autoSay();
     return view;
@@ -73,16 +73,27 @@ export function makeTitle(ctx) {
     return v;
   }
   // 배경: 3D 디오라마(60초에 한 바퀴) / 동작 줄이기·저사양·화질 "가볍게"·WebGL 실패 → 같은 각도 미리 렌더링 이미지
+  // 느린 통신(2G·3G) 또는 데이터 절약 모드면 3D 를 받지 않음 (자동일 때)
+  function slowNet() { const c = navigator.connection; return !!c && (c.saveData || /(^|-)2g|3g/.test(c.effectiveType || '')); }
   function lowEnd() { const n = navigator.hardwareConcurrency || 8, m = navigator.deviceMemory || 8; return n <= 4 && m <= 3; }
-  function still(bg) { const src = ctx.PRE?.map?.img; bg.dataset.kind = 'still'; if (src) bg.append(h('img', { class: 'tt-still', src, alt: '' })); }
+  function still(bg) { const src = ctx.PRE?.map?.sm || 'assets/scenes/map-sm.webp'; bg.dataset.kind = 'still'; if (src) bg.append(h('img', { class: 'tt-still', src, alt: '' })); }
   // 미리 렌더링 이미지를 바로 깔고(오프닝에서 이어지는 장면), 3D 가 준비되면 0.6초 동안 바꿔 끼움
   async function mountBg(bg) {
     still(bg);
     const q = UI.q3d || 'auto';
-    if (rm() || q === 'low' || (q === 'auto' && lowEnd()) || !ctx.hasGL()) return;
+    if (rm() || q === 'low' || (q === 'auto' && (lowEnd() || slowNet())) || !ctx.hasGL()) return;
+    // 라운드 1: 3D 를 만드는 동안 메인 스레드가 약 0.7초(CPU 4배 느린 휴대전화면 약 3초) 멈춤 — 측정. 그래서 "자동"이면
+    //  ① 처음 실행은 그림(+ 느린 움직임)만 — 첫인상을 빨리, 3D 파일(약 1MB)도 받지 않음
+    //  ② 두 번째부터는 2.5초 동안 아무것도 누르지 않을 때만 3D 로 바꿈 (누르는 순간 멈추지 않게). "좋게"면 바로 3D
+    if (q === 'auto') {
+      if (!UI.title3d) { UI.title3d = 1; ctx.saveUI(); return; }
+      const touched = await new Promise((ok) => { const on = () => { off(); ok(true); }; const off = () => ['pointerdown', 'keydown'].forEach((e) => window.removeEventListener(e, on, true)); ['pointerdown', 'keydown'].forEach((e) => window.addEventListener(e, on, true)); setTimeout(() => { off(); ok(false); }, 2500); });
+      if (touched) return;
+    }
+    if (!bg.isConnected) return;
     const holder = h('div', { class: 'tt-3d' }); bg.append(holder);
     const H = Math.round(window.innerHeight * 0.86);
-    const r = await ctx.mountSite(holder, { zones: [], onPick: () => {}, height: H, backdrop: true }).catch(() => null);
+    const r = await ctx.mountSite(holder, { zones: [], onPick: () => {}, height: H, backdrop: true, onSlow: q === 'auto' ? () => { bg.classList.remove('live'); bg.dataset.kind = 'still-slow'; bg3d = null; setTimeout(() => holder.remove(), 700); } : null }).catch(() => null);
     if (!bg.isConnected) { r?.destroy(); return; }
     if (!r) { holder.remove(); return; }
     bg3d = r; requestAnimationFrame(() => requestAnimationFrame(() => { bg.classList.add('live'); bg.dataset.kind = '3d'; }));
@@ -100,7 +111,7 @@ export function makeTitle(ctx) {
     const done = () => { UI.aboutDone = true; ctx.saveUI(); then(); };
     const v = page('about', t('about.title'), onBack || then);
     // 오른쪽 위 건너뛰기 (머리 줄의 듣기 자리 앞)
-    const skip = h('button', { class: 'btn ghost ab-skip', id: 'abSkip', onclick: () => { ctx.tap(); done(); } }, t('about.skip'));
+    const skip = h('button', { class: 'btn ghost ab-skip', id: 'abSkip', 'aria-label': t('about.skip'), onclick: () => { ctx.tap(); done(); } }, ic('next', { size: 16 }), ic('next', { size: 16 }), ctx.isPic() ? null : h('span', {}, t('about.skip')));
     $('.top.deep').insertBefore(skip, $('#sayBtn'));
     const PRE = ctx.PRE || {}, map = PRE.map, zone0 = PRE.zones?.tbm?.zone;
     const slides = [
@@ -230,7 +241,7 @@ export function makeTitle(ctx) {
       const sw = (id, name, label, on, fn) => h('label', { class: 'set-row', 'data-set': id }, ic(name), h('span', {}, label), sayMini(label),
         h('input', { type: 'checkbox', role: 'switch', id: 'set-' + id, checked: on ? true : null, onchange: (e) => { fn(e.target.checked); ctx.saveUI(); ctx.applyPrefs(); ctx.tap(); render(); } }));
       const seg = (id, name, label, opts, cur, fn) => h('div', { class: 'set-row col', 'data-set': id }, h('div', { class: 'set-lbl' }, ic(name), h('span', {}, label), sayMini(label)),
-        h('div', { class: 'seg', role: 'radiogroup', 'aria-label': label }, opts.map(([val, txt]) => h('button', { class: 'seg-b' + (cur === val ? ' on' : ''), role: 'radio', 'aria-checked': cur === val ? 'true' : 'false', 'data-val': val, onclick: () => { fn(val); ctx.saveUI(); ctx.applyPrefs(); ctx.tap(); render(); } }, txt))));
+        h('div', { class: 'seg', role: 'radiogroup', 'aria-label': label }, opts.map(([val, txt, art]) => h('button', { class: 'seg-b' + (cur === val ? ' on' : ''), role: 'radio', 'aria-checked': cur === val ? 'true' : 'false', 'aria-label': txt, 'data-val': val, onclick: () => { fn(val); ctx.saveUI(); ctx.applyPrefs(); ctx.tap(); render(); } }, art ? h('span', { class: 'seg-art', html: art }) : null, h('span', { class: 'seg-t' }, txt)))));
       const view = UI.view || 'text';
       const vcard = (id, label) => h('button', { class: 'mode-opt' + (view === id ? ' sel' : ''), 'data-view': id, 'aria-pressed': view === id ? 'true' : 'false', onclick: () => { UI.view = id; if (UI.autoSayUser == null) UI.autoSay = id === 'pic'; ctx.saveUI(); ctx.applyPrefs(); ctx.tap(); render(); } },
         h('span', { class: 'mo-big', html: id === 'pic' ? icon('eye', { size: 32 }) : icon('eye', { size: 24 }) + icon('textmode', { size: 24 }) }), h('b', {}, label));
@@ -238,14 +249,14 @@ export function makeTitle(ctx) {
       v.append(
         grp('eye', t('set.gView'),
           h('div', { class: 'set-row col', 'data-set': 'view' }, h('div', { class: 'set-lbl' }, ic('eye'), h('span', {}, t('set.view')), sayMini(t('set.view'))), h('div', { class: 'mode-pick sm' }, vcard('text', t('mode.text')), vcard('pic', t('mode.pic')))),
-          seg('font', 'textsize', t('set.font'), [['m', t('set.fontM')], ['l', t('set.fontL')], ['xl', t('set.fontXL')]], fs, (x) => { UI.fontSize = x; }),
+          seg('font', 'textsize', t('set.font'), [['m', t('set.fontM'), icon('textsize', { size: 16 })], ['l', t('set.fontL'), icon('textsize', { size: 21 })], ['xl', t('set.fontXL'), icon('textsize', { size: 26 })]], fs, (x) => { UI.fontSize = x; }),
           h('p', { class: 'set-preview', id: 'fontPreview' }, t('set.fontPreview')),
           sw('motion', 'motion', t('set.motion'), ctx.reduceMotion(), (on) => { UI.motion = on; }),
-          seg('q3d', 'quality', t('set.q3d'), [['auto', t('set.qAuto')], ['low', t('set.qLow')], ['high', t('set.qHigh')]], UI.q3d || 'auto', (x) => { UI.q3d = x; })),
+          seg('q3d', 'quality', t('set.q3d'), [['auto', t('set.qAuto'), icon('quality', { size: 18 }) + icon('check', { size: 14 })], ['low', t('set.qLow'), icon('quality', { size: 16 })], ['high', t('set.qHigh'), icon('quality', { size: 18 }) + icon('star', { size: 14 })]], UI.q3d || 'auto', (x) => { UI.q3d = x; })),
         grp('sound', t('set.gSound'),
           sw('sound', 'sound', t('settings.sound'), !!UI.sound, (on) => { UI.sound = on; }),
           sw('autoSay', 'play', t('set.autoSay'), ctx.autoSayOn(), (on) => { UI.autoSay = on; UI.autoSayUser = true; }),
-          seg('rate', 'speed', t('set.rate'), [['slow', t('set.rateSlow')], ['normal', t('set.rateNormal')]], UI.rate || 'normal', (x) => { UI.rate = x; }),
+          seg('rate', 'speed', t('set.rate'), [['slow', t('set.rateSlow'), icon('walk', { size: 18 })], ['normal', t('set.rateNormal'), icon('walk', { size: 18 }) + icon('next', { size: 14 })]], UI.rate || 'normal', (x) => { UI.rate = x; }),
           sw('vibrate', 'vibrate', t('settings.vibrate'), UI.vibrate !== false, (on) => { UI.vibrate = on; })),
         grp('globe', t('set.gLang'), h('div', { class: 'opts langs' }, [['ko', '한국어', true], ['en', 'English', false], ['vi', 'Tiếng Việt', false], ['zh', '中文', false], ['ru', 'Русский', false]].map(([id, nm, ok]) =>
           h('button', { class: 'opt' + (ok ? ' right sel' : ''), disabled: !ok, 'data-lang': id, lang: id }, h('span', { class: 'opt-t' }, nm), ok ? h('span', { class: 'mark-ok' }, ic('check', { size: 20 })) : h('small', { class: 'soon' }, t('intro.soon')))))),

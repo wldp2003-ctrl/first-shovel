@@ -2198,5 +2198,7 @@
  "learn.info.maker": "만든 곳",
  "learn.info.makerName": "첫 삽 프로젝트",
  "learn.info.three": "three.js (three.js authors) · MIT",
- "learn.info.self": "3D 모델·장면 그림·아이콘·첫삽이·효과음은 첫 삽 프로젝트가 직접 만들었어요. 바깥 에셋은 무료 라이선스(CC0·MIT·OFL)만 써요."
+ "learn.info.self": "3D 모델·장면 그림·아이콘·첫삽이·효과음은 첫 삽 프로젝트가 직접 만들었어요. 바깥 에셋은 무료 라이선스(CC0·MIT·OFL)만 써요.",
+ "learn.a11y.progFound": "찾은 위험 수",
+ "learn.a11y.progStars": "다음 계급까지 모은 별"
 }

@@ -58,11 +58,11 @@
   --asphalt: #2B2F36; --asphalt-2: #3A3F48; --on-asphalt-2: #D7DBE0;
   --vest: #FF8A1E;
   --stripe: repeating-linear-gradient(135deg, var(--brand) 0 12px, var(--asphalt) 12px 24px);
-  --font-head: 'Black Han Sans', Pretendard, "Noto Sans", sans-serif;
+  --font-head: 'Black Han Sans', "Pretendard Variable", Pretendard, "Noto Sans", sans-serif;
   --card-shadow: 0 3px 0 var(--asphalt);
 
   /* 글꼴 (저장소 안 fonts/, 외부 CDN 없음) */
-  --font: Pretendard, "Pretendard Variable", "Noto Sans", "Noto Sans SC", sans-serif;
+  --font: "Pretendard Variable", Pretendard, "Noto Sans", "Noto Sans SC", sans-serif;
   --fs-title: 28px; --fw-title: 800;   /* 제목 */
   --fs-h: 22px; --fw-h: 800;           /* 화면 제목 */
   --fs-body: 17px; --fw-body: 500;     /* 본문 */

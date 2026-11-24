@@ -85,6 +85,8 @@ function h(tag, attrs = {}, ...kids) {
     else el.setAttribute(k, v === true ? '' : v);
   }
   for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(String(k)));
+  // 라운드 1(axe aria-prohibited-attr): 이름표(aria-label)가 붙은 span 은 그림 하나로 읽히게 role="img"
+  if ((tag === 'span' || tag === 'i') && attrs?.['aria-label'] && !attrs.role) el.setAttribute('role', 'img');
   return el;
 }
 const pic = (id, cls = 'pic') => h('div', { class: cls, html: art(id) });
@@ -127,7 +129,7 @@ function shell() {
   const n = streak();
   const nb = SC.scenes.filter((x) => S.scenes?.[x.id]?.best).length;
   // 시안: 왼쪽 삽 + 연속 출근, 오른쪽 배지 + 수. 첫 화면 듣기는 현장 카드 안에, 다른 탭은 상단 오른쪽에
-  app().append(h('header', { class: 'top' },
+  app().append(h('header', { class: 'top' }, h('h1', { class: 'sr-only' }, `${t('app.name')} · ${t('nav.' + tab)}`),
       h('span', { class: 'top-chip streak-c', title: t('home.streak', { n }), 'aria-label': t('home.streak', { n }) }, ic('shovel', { size: 24 }), h('span', { class: 't-num' }, String(n))),
       h('span', { class: 'top-chip badge-c', title: t('top.badges', { n: nb }), 'aria-label': t('top.badges', { n: nb }) }, ic('badge', { size: 24 }), h('span', { class: 't-num' }, String(nb))),
       tab === 'home' ? null : sayBtn()),
@@ -155,7 +157,7 @@ function deep(title, onBack) {
   const back = h('button', { class: 'back', 'aria-label': t('common.back'), onclick: () => { onBack?.(); go(tab); } }, ic('back'));
   const view = h('main', { id: 'view', class: 'deepview view-in' });
   TITLE?.stopBg();
-  app().append(h('header', { class: 'top deep' }, back, h('div', { class: 'ttl' }, title), h('div', { class: 'dots', id: 'dots' }), sayBtn()), view);
+  app().append(h('header', { class: 'top deep' }, back, h('h1', { class: 'ttl' }, title), h('div', { class: 'dots', id: 'dots' }), sayBtn()), view);
   window.scrollTo(0, 0); autoSay();
   return view;
 }
@@ -212,7 +214,7 @@ function siteZones() {
     const state = cur ? 'cur' : b ? 'done' : open ? 'cur' : 'lock';
     const label = `${sc.no}. ${sc.title} — ${t('job.' + sc.id)}`;
     const top = state === 'cur' ? `<span class="zt-who">${sapi({ size: 50, mood: 'wave' })}</span><span class="zt-flag">${icon('flag', { size: 14 })}${t('map.here')}</span>`
-      : state === 'done' ? `<span class="zt-flag ok" aria-label="${b.stars}/3">${icon('check', { size: 12 })}</span>` : '';
+      : state === 'done' ? `<span class="zt-flag ok" role="img" aria-label="${b.stars}/3">${icon('check', { size: 12 })}</span>` : '';
     return { id: sc.id, no: sc.no, state, label, html: top + tag(sc.no, sc.id, zoneName(sc), t('job.' + sc.id), state, label) };
   });
   const st = S.stop?.done ? 'done' : all ? 'cur' : 'lock';
@@ -717,7 +719,7 @@ function record(v) {
     h('div', { class: 'rank-main' },
       h('div', { class: 'rank-row' }, rankMark(rk), isPic() ? null : h('b', {}, t('rank.' + rk))),
       h('div', { class: 'star-row', 'aria-label': `${sn}/${max}` }, h('span', { class: 'st-on' }, ic('star', { size: 20 })), h('b', {}, String(sn)), h('small', {}, `/ ${max}`)),
-      h('div', { class: 'bar', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(goal), 'aria-valuenow': String(sn) }, h('i', { style: `width:${Math.min(100, (sn / goal) * 100)}%` })),
+      h('div', { class: 'bar', role: 'progressbar', 'aria-label': t('a11y.progStars'), 'aria-valuemin': '0', 'aria-valuemax': String(goal), 'aria-valuenow': String(sn) }, h('i', { style: `width:${Math.min(100, (sn / goal) * 100)}%` })),
       isPic() ? null : h('small', { class: 'rank-next' }, rk < 2 ? t('rank.next', { n: goal - sn, r: t('rank.' + (rk + 1)) }) : t('rank.top')))));
   // 도감: 위험 종류별로 찾은 수 / 전체, 찾은 위험은 그림으로
   v.append(h('h2', { class: 'sec' }, t('record.dex')), dex());
@@ -897,7 +899,7 @@ function openScene(id, o = {}) {
   const hd = document.querySelector('.top.deep');
   hd.innerHTML = ''; hd.classList.add('q-top');
   hd.append(h('button', { class: 'q-x', id: 'sceneClose', 'aria-label': t('common.close'), onclick: () => go(tab) }, ic('cross', { size: 26 })),
-    h('div', { class: 'q-prog', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': String(total), 'aria-valuenow': '0' }, prog));
+    h('div', { class: 'q-prog', role: 'progressbar', 'aria-label': t('a11y.progFound'), 'aria-valuemin': '0', 'aria-valuemax': String(total), 'aria-valuenow': '0' }, prog));
   // 찾은 칸: 찾으면 노랑(주의) 네모 + 체크, 아직은 회색 점선 네모
   // v17: 빈칸 = 미리 본 위험 종류 아이콘 (무엇을 찾는지 아는 상태에서 찾기) → 찾으면 노랑으로 채워짐
   const slots = h('div', { class: 'haz-slots', 'aria-label': t('scene.count', { f: 0, n: total }) }, hz.map((z) => h('span', { class: 'haz-slot', 'data-id': z.id, title: SC.hazardTypes?.[z.type] || '' }, ic(HAZ_TYPES.includes(z.type) ? z.type : 'warn', { size: 22 }), h('i', { class: 'slot-ok' }, ic('check', { size: 12 })))));
@@ -1152,6 +1154,8 @@ async function cardPNG(sc) {
   const hz = cardHz(sc), fs = foundSet(), r = await cardSnap(sc);
   const W = 1080, P = 48, ROW = 236, F = tok('--font') || 'sans-serif', FH = tok('--font-head') || F;
   const H = 150 + 600 + hz.length * ROW + 160;
+  // 라운드 1: 글꼴이 조각(unicode-range)으로 나뉘어 있어 캔버스에 쓸 글자 조각을 먼저 받음
+  try { const txt = [sc.title, zoneName(sc), t('job.' + sc.id), t('card.kicker', { no: sc.no }), t('card.title'), ...hz.flatMap((z) => [T0(z.line), T0(z.name), SC.hazardTypes?.[z.type] || '', ...z.line.src.map(srcShort)])].join(''); await Promise.all(['500', '600', '800'].map((w) => document.fonts?.load(`${w} 24px "Pretendard Variable"`, txt))); await document.fonts?.load('40px "Black Han Sans"', txt); } catch {}
   const c = document.createElement('canvas'); c.width = W; c.height = H; const g = c.getContext('2d');
   g.fillStyle = tok('--bg'); g.fillRect(0, 0, W, H);
   // 머리: 아스팔트 띠 + 노랑 줄무늬
@@ -1247,16 +1251,19 @@ function opening() {
     const today = dayStr(), full = !UI.openDay, still = reduceMotion();
     UI.openDay = today; saveUI();
     const ms = still ? 600 : full ? 1800 : 500;
-    const el = h('div', { id: 'opening', class: still ? 'still' : full ? 'full' : 'short', role: 'button', 'aria-label': t('opening.skip') },
+    // 라운드 1: index.html 에 이미 그려진 정적 오프닝(tools/gen-opening.mjs)을 이어 씀 — 시간은 그것이 그려진 때부터
+    let el = document.getElementById('opening');
+    if (!el) { el = h('div', { id: 'opening', role: 'button', 'aria-label': t('opening.skip') },
       h('div', { class: 'op-mark', html: logoMark({ size: 132 }) }),
       h('div', { class: 'op-name' }, t('app.name')), h('div', { class: 'op-sub' }, t('app.sub')),
-      h('div', { class: 'op-mascot', html: sapi({ size: 96, mood: 'wave' }) }));
-    document.body.append(el);
+      h('div', { class: 'op-mascot', html: sapi({ size: 96, mood: 'wave' }) })); document.body.append(el); }
+    el.className = still ? 'still' : full ? 'full' : 'short';
+    const left = Math.max(120, ms - (performance.now() - (window.__opT0 ?? performance.now())));
     let gone = false;
     // v20: 끝날 때 로고가 앞으로 다가오며 사라지고(삽 뜬 자리에서 뒤로 빠지는 느낌) 타이틀 배경이 이어짐 (0.6초)
     const done = () => { if (gone) return; gone = true; el.classList.add('out'); setTimeout(() => el.remove(), still ? 0 : 600); resolve(); };
     el.addEventListener('pointerdown', done);
-    setTimeout(done, ms);
+    setTimeout(done, left);
     window.__opening = { full, still, ms };
   });
 }
@@ -1268,12 +1275,19 @@ async function boot() {
   S = load(); loadUI(); applyPrefs();
   // 예전 기록에서 공부한 날 채우기 (연속 출근 표시용)
   if (!UI.days.length) { const ts = [S.created, S.pre?.at, S.post?.at, ...Object.values(S.lessons || {}).flatMap((l) => [l.startAt, l.doneAt])].filter(Boolean); UI.days = [...new Set(ts.map((x) => dayStr(new Date(x))))].sort().slice(-60); }
-  try { LOC = await (await fetch('./locales/ko.json')).json(); } catch {}
+  // 라운드 1: 데이터 네 파일과 문구 파일을 한꺼번에 요청 (하나씩 기다리면 느린 4G에서 약 2초 더 걸림 — 측정)
+  const getJ = (u) => fetch(u).then((r) => r.json());
+  const [jL, jS, jC, jP] = [getJ('./data/lessons.json'), getJ('./data/sources.json'), getJ('./data/scenes.json'), getJ('./data/prerender.json')];
+  jP.catch(() => {});
+  // 라운드 1: 교육 앱 문구만 뽑은 작은 파일(ko-learn.json, 빌드 때 ko.json 에서 만듦) — 없으면 전체 ko.json
+  try { LOC = await (await fetch('./locales/ko-learn.json')).json(); } catch { try { LOC = await (await fetch('./locales/ko.json')).json(); } catch {} }
   const op = opening();
+  // 라운드 1: 화면 CSS·글꼴 CSS 를 그리기를 막지 않게 받으므로, 다 받은 뒤에 앱 화면을 보여 줌 (스타일 없는 화면이 번쩍이지 않게)
+  await Promise.all(['cssLearn', 'cssFonts'].map((id) => new Promise((ok) => { const l = document.getElementById(id); if (!l || l.rel === 'stylesheet' || l.sheet) return ok(); l.addEventListener('load', ok); l.addEventListener('error', ok); setTimeout(ok, 8000); })));
   document.documentElement.classList.remove('boot');
-  try { D = await (await fetch('./data/lessons.json')).json(); SRC = Object.fromEntries((await (await fetch('./data/sources.json')).json()).sources.map((s) => [s.id, s])); SC = await (await fetch('./data/scenes.json')).json(); }
+  try { [D, SRC, SC] = await Promise.all([jL, jS.then((x) => Object.fromEntries(x.sources.map((s) => [s.id, s]))), jC]); }
   catch (e) { app().innerHTML = ''; app().append(h('p', { style: 'padding:24px' }, t('app.loadFail'))); return; }
-  try { PRE = await (await fetch('./data/prerender.json')).json(); for (const [zid, zp] of Object.entries(PRE.zones || {})) { const sc = SC.scenes.find((x) => x.id === zid); for (const z of sc?.hazards || []) if (zp.pairs?.[z.id]) { PAIR3D[z.bad] = zp.pairs[z.id].bad; PAIR3D[z.good] = zp.pairs[z.id].good; if (zp.pairs[z.id].meta) PMETA[z.id] = zp.pairs[z.id].meta; pairsDone.add(zid); } } } catch { PRE = { zones: {} }; }
+  try { PRE = await jP; for (const [zid, zp] of Object.entries(PRE.zones || {})) { const sc = SC.scenes.find((x) => x.id === zid); for (const z of sc?.hazards || []) if (zp.pairs?.[z.id]) { PAIR3D[z.bad] = zp.pairs[z.id].bad; PAIR3D[z.good] = zp.pairs[z.id].good; if (zp.pairs[z.id].meta) PMETA[z.id] = zp.pairs[z.id].meta; pairsDone.add(zid); } } } catch { PRE = { zones: {} }; }
   noteHour(); save();
   TITLE = makeTitle({ h, t, ic, icon, sapi, logoMark, renderMascot, UI, saveUI, isPic, canSpeak, speak, sayBtn, dots, autoSay, autoSayOn, reduceMotion, applyPrefs, tap, toast, hasGL, mountSite, T, shown, srcShort,
     get S() { return S; }, get SC() { return SC; }, get PRE() { return PRE; }, get SRC() { return SRC; }, starSum, allScenes, go,

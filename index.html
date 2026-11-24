@@ -11,13 +11,60 @@
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icons/icon-192.png">
 <link rel="apple-touch-icon" href="./icons/icon-192.png">
-<link rel="preload" href="./fonts/PretendardVariable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="./fonts/fonts.css">
+<!-- 라운드 1: 모듈을 한꺼번에 요청 (import 를 따라 세 번 나눠 받던 것, 느린 4G에서 약 1.7초) -->
+<link rel="modulepreload" href="./js/learn/app.js">
+<link rel="modulepreload" href="./js/learn/title.js">
+<link rel="modulepreload" href="./js/learn/art.js">
+<link rel="modulepreload" href="./js/learn/icons.js">
+<link rel="modulepreload" href="./js/learn/brand.js">
+<link rel="modulepreload" href="./js/learn/mascot.js">
+<link rel="modulepreload" href="./js/learn/scene-art.js">
+<link rel="modulepreload" href="./js/learn/scene-art2.js">
+<link rel="modulepreload" href="./js/learn/scene3d.js">
+<link rel="modulepreload" href="./js/learn/site3d.js">
+<link rel="modulepreload" href="./js/learn/props3d.js">
+<link rel="modulepreload" href="./js/learn/materials.js">
+<link rel="modulepreload" href="./js/learn/models/constructionHoist.js">
+<link rel="modulepreload" href="./js/learn/models/worker.js">
+<link rel="modulepreload" href="./js/learn/models/safety.js">
 <link rel="stylesheet" href="./css/tokens.css">
-<link rel="stylesheet" href="./css/learn.css">
-<style>html.boot, html.boot body { background: var(--bg); } html.boot #app { visibility: hidden; }</style>
+<link rel="preload" as="image" href="./assets/scenes/map-sm.webp"><!-- 라운드 1: 타이틀 배경(첫 화면에서 가장 큰 그림) 미리 받기 -->
+<!-- 라운드 1: 큰 CSS(화면 전체 109KB)·글꼴 CSS 는 그리기를 막지 않게 받고, 오프닝은 아래 작은 CSS 로 바로 그림. app.js 는 둘 다 받은 뒤 화면을 보여 줌 -->
+<link rel="preload" as="style" href="./css/learn.css" id="cssLearn" onload="this.rel='stylesheet'">
+<link rel="preload" as="style" href="./fonts/fonts.css" id="cssFonts" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="./css/learn.css"><link rel="stylesheet" href="./fonts/fonts.css"></noscript>
+<style>
+html.boot, html.boot body { background: var(--bg); margin: 0; } html.boot #app { visibility: hidden; }
+#opening { position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; font-family: var(--font); }
+#opening .op-name { font-size: 40px; font-weight: 800; letter-spacing: 6px; color: var(--ink); }
+#opening .op-sub { font-size: 15px; color: var(--ink-2); letter-spacing: 1px; }
+#opening .op-mascot { line-height: 0; }
+#opening.full .lg-shovel { transform-origin: 48px 40px; animation: dig 1s cubic-bezier(.5, 0, .3, 1) both; }
+#opening.full .lg-clod { animation: clod .5s .75s both; }
+#opening.full .lg-ground { animation: fadein .3s both; }
+#opening.full .op-name { animation: rise .35s 1.05s both; }
+#opening.full .op-sub { animation: rise .35s 1.2s both; }
+#opening.full .op-mascot { animation: op-wave .4s 1.25s cubic-bezier(.3, 1.4, .5, 1) both; }
+#opening.short .op-mark, #opening.short .op-name, #opening.short .op-sub, #opening.short .op-mascot { animation: fadein .25s both; }
+@keyframes dig { 0% { transform: rotate(-38deg) translate(26px, -40px); opacity: 0; } 35% { opacity: 1; } 60% { transform: rotate(-12deg) translate(4px, 6px); } 100% { transform: rotate(-38deg) translate(0, 0); } }
+@keyframes clod { from { transform: translateY(8px) scale(.6); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes rise { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+@keyframes op-wave { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+</style>
 </head>
 <body>
+<!--opening-->
+<div id="opening" class="full" role="button" aria-label="눌러서 넘기기"><div class="op-mark"><svg width="132" height="132" viewBox="0 0 96 96" aria-hidden="true">
+  <g class="lg-ground"><path d="M12 78 Q48 70 84 78" fill="none" stroke="var(--ink)" stroke-width="4.5" stroke-linecap="round"/></g>
+  <g class="lg-shovel" transform="rotate(-38 48 48)">
+    <path d="M38 9 H58" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/><path d="M38 9 H58" stroke="var(--brand)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M48 9 V50" stroke="var(--ink)" stroke-width="11" stroke-linecap="round"/><path d="M48 9 V50" stroke="var(--brand)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M36 48 H60 V60 C60 69 55 75 48 79 C41 75 36 69 36 60 Z" fill="var(--brand)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/>
+    <path class="lg-clod" d="M40 50 C42 43 47 40 51 42 C55 39 59 44 56 49 Z" fill="var(--art-dirt)" stroke="var(--ink)" stroke-width="3.5" stroke-linejoin="round"/>
+  </g></svg></div><div class="op-name">첫 삽</div><div class="op-sub">건설현장 기초 교육</div><div class="op-mascot"><svg class="mascot " viewBox="0 0 200 240" width="96" height="115" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="첫삽이"><g class="m-body"><rect x="70" y="186" width="24" height="34" rx="8" fill="var(--ink-2)" stroke="var(--ink)" stroke-width="6"/><rect x="106" y="186" width="24" height="34" rx="8" fill="var(--ink-2)" stroke="var(--ink)" stroke-width="6"/><path d="M64 232 V224 C64 218 70 214 78 214 H94 V232 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/><path d="M136 232 V224 C136 218 130 214 122 214 H106 V232 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/><path d="M27 140 H45" stroke="var(--ink)" stroke-width="14" stroke-linecap="round"/><path d="M27 140 H45" stroke="var(--brand-dark)" stroke-width="8" stroke-linecap="round"/><path d="M36 140 V204" stroke="var(--ink)" stroke-width="13" stroke-linecap="round"/><path d="M36 140 V204" stroke="var(--brand-dark)" stroke-width="7" stroke-linecap="round"/><path d="M23 202 H49 V216 C49 224 43 229 36 232 C29 229 23 224 23 216 Z" fill="var(--locked)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/><clipPath id="tc1"><path d="M72 112 H128 C138 112 143 118 144 126 L150 178 C151 188 145 194 136 194 H64 C55 194 49 188 50 178 L56 126 C57 118 62 112 72 112 Z"/></clipPath><path d="M72 112 H128 C138 112 143 118 144 126 L150 178 C151 188 145 194 136 194 H64 C55 194 49 188 50 178 L56 126 C57 118 62 112 72 112 Z" fill="var(--vest)"/><g clip-path="url(#tc1)"><rect x="40" y="146" width="120" height="9" fill="var(--bg)" stroke="var(--stripe-edge)" stroke-width="2"/><rect x="40" y="164" width="120" height="9" fill="var(--bg)" stroke="var(--stripe-edge)" stroke-width="2"/></g><path d="M100 114 V192" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><path d="M72 112 H128 C138 112 143 118 144 126 L150 178 C151 188 145 194 136 194 H64 C55 194 49 188 50 178 L56 126 C57 118 62 112 72 112 Z" fill="none" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/><path d="M58 126 L44 168" fill="none" stroke="var(--ink)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/><path d="M58 126 L44 168" fill="none" stroke="var(--ink-2)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><g transform="rotate(0 44 170)"><circle cx="44" cy="170" r="12" fill="var(--bg-soft)" stroke="var(--ink)" stroke-width="6"/><path d="M40 161 V167" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/><path d="M44 161 V167" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/><path d="M48 161 V167" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/></g><path d="M34 170 H52" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/><path d="M142 124 L164 100 L172 72" fill="none" stroke="var(--ink)" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/><path d="M142 124 L164 100 L172 72" fill="none" stroke="var(--ink-2)" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/><g transform="rotate(10 172 68)"><circle cx="172" cy="68" r="12" fill="var(--bg-soft)" stroke="var(--ink)" stroke-width="6"/><path d="M168 59 V65" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/><path d="M172 59 V65" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/><path d="M176 59 V65" stroke="var(--ink)" stroke-width="2.5" stroke-linecap="round"/></g><path d="M182 52 q6 6 4 14 M190 46 q8 10 4 22" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/></g><g class="m-head"><path d="M57 58 C57 36 77 26 100 26 C123 26 143 36 143 58 L146 92 C146 108 127 114 100 114 C73 114 54 108 54 92 Z" fill="var(--skin)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/><path d="M61 68 C61 82 63 94 67 103 M139 68 C139 82 137 94 133 103" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linecap="round"/><path d="M48 62 C48 30 72 13 100 13 C128 13 152 30 152 62 Z" fill="var(--brand)" stroke="var(--ink)" stroke-width="6" stroke-linejoin="round"/><rect x="38" y="57" width="124" height="12" rx="6" fill="var(--brand)" stroke="var(--ink)" stroke-width="6"/><path d="M100 16 V27" stroke="var(--ink)" stroke-width="4" stroke-linecap="round"/><path d="M96.50 32.31 H103.50 M100.00 32.31 V40.63" stroke="var(--bg)" stroke-width="2.27" stroke-linecap="round" fill="none"/><path d="M95.19 40.63 H104.81 V44.13 C104.81 48.06 102.63 50.25 100.00 51.56 C97.38 50.25 95.19 48.06 95.19 44.13 Z" fill="var(--bg)"/><g class="m-face"><ellipse cx="71" cy="98" rx="8" ry="5" fill="var(--vest)" opacity=".4"/><ellipse cx="129" cy="98" rx="8" ry="5" fill="var(--vest)" opacity=".4"/><path d="M80 74 Q87 70 93 73" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M107 73 Q113 70 120 74" fill="none" stroke="var(--ink)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><g class="m-eyes"><path d="M81 89 Q87 77 93 89 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/><path d="M107 89 Q113 77 119 89 Z" fill="var(--ink)" stroke="var(--ink)" stroke-width="2.5" stroke-linejoin="round"/></g><path d="M88 98 Q100 114 112 98 Z" fill="var(--danger-dark)" stroke="var(--ink)" stroke-width="4" stroke-linejoin="round"/></g></g></svg></div></div>
+<script>(function () { try { var u = JSON.parse(localStorage.getItem('cheotsap.learn.ui') || '{}'), o = document.getElementById('opening'); var rm = u.motion === true || (u.motion !== false && matchMedia('(prefers-reduced-motion: reduce)').matches); o.className = rm ? 'still' : u.openDay ? 'short' : 'full'; window.__opT0 = performance.now(); } catch (e) {} })();</script>
+<!--/opening-->
 <div id="app"><p class="loading">불러오는 중…</p></div>
 <script type="module" src="./js/learn/app.js"></script>
 </body>
