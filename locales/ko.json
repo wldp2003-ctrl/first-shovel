@@ -1914,7 +1914,7 @@
  "learn.record.badges": "내 배지",
  "learn.record.scores": "점검 점수",
  "learn.record.lessons": "레슨별 기록",
- "learn.record.empty": "아직 기록이 없어요. 첫 레슨부터 시작해 볼까요?",
+ "learn.record.empty": "레슨 기록이 아직 없어요. 레슨은 더 알아보고 싶을 때 하는 선택 과정이에요.",
  "learn.record.notYet": "아직",
  "learn.record.firstTryNote": "오른쪽 숫자: 확인 문제 첫 번째 시도 정답",
  "learn.record.total": "레슨에 쓴 시간 합계 {time}",

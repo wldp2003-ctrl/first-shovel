@@ -733,6 +733,7 @@ function review(v) {
   if (!missed.length) v.append(empty(t('review.missedEmpty')));
   const det = h('div', { class: 'miss-detail' });
   v.append(h('div', { class: 'missed' }, missed.map((z) => h('button', { class: 'miss-row', onclick: () => { det.innerHTML = ''; det.append(hazCard(z, () => { det.innerHTML = ''; }, t('common.close'))); det.scrollIntoView({ block: 'nearest' }); } }, hazIc(z.type, 18), isPic() ? h('span', { class: 'pic xs', html: pair(z.bad) }) : h('span', {}, T(z.name)), ic('next', { size: 18 })))), det);
+  if (isPic()) return; // 그림만 규칙: 레슨(글 문제·요약)은 글과 그림 모드에서만
   v.append(h('h2', { class: 'sec' }, t('review.wrong')));
   const wr = S.wrong.filter((w) => w.kind === 'quiz').filter((w) => { const q = D.lessons.find((l) => l.id === w.lesson)?.quiz[w.qi]; return q && shown(q); });
   if (!wr.length) v.append(empty(t('review.empty')));

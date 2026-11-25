@@ -1251,3 +1251,21 @@ html.view-pic .seg-t { font-size: 12px; }
 .dots:has(i:nth-child(10)) { gap: 3px; }
 .dots:has(i:nth-child(10)) i { width: 6px; height: 6px; }
 .dots:has(i:nth-child(10)) i.on { width: 12px; }
+
+/* v20 라운드 3: 그림만 모드 규칙 (docs/그림만_모드_규칙.md)
+   남김 = 누르는 단추(아이콘)·그림·숫자·별·듣기 + 짧은 이름표(4자 안팎) + 핵심 안전 문장(위험당 1줄)
+   숨김 = 설명·안내 문장·근거 칩·출처 줄·레슨(글) — 읽어 주기(듣기 단추)로 대신. 제목 문장은 화면 읽기 프로그램용으로만 남김 */
+html.view-pic .q-ask-t small,
+html.view-pic .pv-note, html.view-pic .pv-origin, html.view-pic .basis-quote,
+html.view-pic .basis-chips, html.view-pic .basis-chip,
+html.view-pic .sc-line .sit,
+html.view-pic .lessons6, html.view-pic #view > .note,
+html.view-pic .rec-list + .small, html.view-pic .view-in > p.small,
+html.view-pic .act-q p, html.view-pic .pv-work, html.view-pic .empty p, html.view-pic .sh-t small, html.view-pic .must7 p.small { display: none !important; }
+html.view-pic .q-ask-t h1, html.view-pic .pv-h,
+html.view-pic .sec > span:not(.icw) {
+  position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+html.view-pic .pv-step { font-size: 0; gap: 0; }
+html.view-pic .pv-step b { font-size: 14px; }
+html.view-pic .q-ask { justify-content: center; }
