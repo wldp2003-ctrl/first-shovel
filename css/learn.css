@@ -1269,3 +1269,69 @@ html.view-pic .sec > span:not(.icw) {
 html.view-pic .pv-step { font-size: 0; gap: 0; }
 html.view-pic .pv-step b { font-size: 14px; }
 html.view-pic .q-ask { justify-content: center; }
+
+/* v20 라운드 4: 게임 방법 시연 5장 (3초 반복, 동작 줄이기면 멈춘 그림) */
+.d-zone { position: relative; flex: none; aspect-ratio: 3 / 2; overflow: hidden; border-bottom: 2px solid var(--line); }
+.d-zone img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.d-bar.dark { background: var(--asphalt); color: var(--on-asphalt-2); border-color: var(--brand); }
+.d-types { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 8px; }
+.d-type { display: grid; place-items: center; height: 34px; border: 2px solid var(--ink); border-radius: 10px; background: var(--white); color: var(--ink); animation: dpop 3s var(--d, 0s) infinite both; }
+@keyframes dpop { 0%, 8% { transform: scale(.5); opacity: 0; } 20%, 90% { transform: none; opacity: 1; } 100% { opacity: 0; } }
+.d-go { margin: auto 8px 8px; display: flex; justify-content: center; gap: 4px; padding: 6px; border: 2px solid var(--ink); border-radius: 10px; background: var(--brand); color: var(--ink); }
+.d-cards { position: relative; flex: 1; }
+.d-card { position: absolute; inset: 10% 10% 22%; border: 3px solid var(--ink); border-radius: 14px; overflow: hidden; background: var(--white); }
+.d-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.d-card.c-bad { animation: dswl 6s infinite; } .d-card.c-good { animation: dswr 6s infinite; }
+@keyframes dswl { 0% { transform: none; opacity: 1; } 30% { transform: translateX(-12%) rotate(-6deg); } 45%, 100% { transform: translateX(-140%) rotate(-14deg); opacity: 0; } }
+@keyframes dswr { 0%, 45% { transform: scale(.9); opacity: 0; } 55% { transform: none; opacity: 1; } 80% { transform: translateX(12%) rotate(6deg); } 95%, 100% { transform: translateX(140%) rotate(14deg); opacity: 0; } }
+.d-tag { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; display: grid; place-items: center; border-radius: var(--r-full); color: var(--white); }
+.d-tag.no { background: var(--danger-dark); } .d-tag.ok { background: var(--safe-dark); }
+.d-sides { display: flex; justify-content: space-between; padding: 0 8px 8px; }
+.d-sides span { display: flex; align-items: center; gap: 2px; padding: 4px 8px; border-radius: 10px; border: 2px solid var(--ink); color: var(--white); }
+.d-sides .no { background: var(--danger-dark); } .d-sides .ok { background: var(--safe-dark); }
+.d-row { display: flex; align-items: center; gap: 4px; padding: 4px 8px; animation: dpop 3s var(--d, 0s) infinite both; }
+.d-row b { width: 18px; height: 18px; display: grid; place-items: center; border-radius: var(--r-full); background: var(--danger-dark); color: var(--white); font-size: 10px; }
+.d-row img { width: 38%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 6px; border: 2px solid var(--line); }
+.d-save { position: absolute; right: 8px; bottom: 8px; width: 30px; height: 30px; display: grid; place-items: center; border-radius: var(--r-full); background: var(--brand); border: 2px solid var(--ink); animation: dsave 3s infinite; }
+@keyframes dsave { 0%, 60% { transform: none; } 70% { transform: scale(.82); } 80%, 100% { transform: none; } }
+.d-stars .d-phone, .d-picm .d-phone { align-items: center; }
+.d-mascot { margin-top: 10%; }
+.d-starrow { display: flex; gap: 4px; margin: 6px 0; color: var(--brand); }
+.d-star { animation: dpop 3s var(--d, 0s) infinite both; }
+.d-star svg { fill: currentColor; stroke: var(--ink); }
+.d-badge { width: 40px; height: 40px; display: grid; place-items: center; border-radius: var(--r-full); background: var(--safe-dark); color: var(--white); border: 2px solid var(--ink); animation: dpop 3s 1s infinite both; }
+.d-nohint { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--ink-2); }
+.d-nohint s { text-decoration: none; position: relative; } .d-nohint s::after { content: ''; position: absolute; left: -2px; right: -2px; top: 50%; border-top: 2px solid var(--danger-dark); transform: rotate(-30deg); }
+.d-toggle { display: flex; margin: 8px; border: 2px solid var(--ink); border-radius: var(--r-full); overflow: hidden; align-self: stretch; }
+.d-toggle span { flex: 1; display: grid; place-items: center; height: 30px; font-weight: 900; }
+.d-toggle .a { animation: dtgA 4s infinite; } .d-toggle .b { animation: dtgB 4s infinite; }
+@keyframes dtgA { 0%, 40% { background: var(--brand); } 50%, 100% { background: var(--white); } }
+@keyframes dtgB { 0%, 40% { background: var(--white); } 50%, 100% { background: var(--brand); } }
+.d-picm .d-zone { align-self: stretch; }
+.d-say { position: relative; display: flex; align-items: center; gap: 3px; margin: 10px; padding: 8px 12px; border: 2px solid var(--ink); border-radius: 12px; background: var(--white); }
+.d-say i { width: 4px; border-radius: 2px; background: var(--ink); animation: dwave 1s infinite; }
+.d-say .w1 { height: 8px; } .d-say .w2 { height: 14px; animation-delay: .15s; } .d-say .w3 { height: 10px; animation-delay: .3s; }
+@keyframes dwave { 0%, 100% { transform: scaleY(.5); } 50% { transform: scaleY(1.2); } }
+html.rm .d-card, html.rm .d-type, html.rm .d-row, html.rm .d-star, html.rm .d-badge, html.rm .d-toggle span, html.rm .d-say i { animation: none !important; }
+html.rm .d-card.c-good { display: none; }
+
+/* v20 라운드 4: 지도·탭 화면 왼쪽 위 메인 메뉴 단추 */
+.top-menu { display: grid; place-items: center; width: 44px; height: 44px; margin-left: calc(-1 * var(--s2)); border: 1px solid var(--ink-2); border-radius: 12px; background: var(--asphalt-2); color: var(--bg); cursor: pointer; }
+.top-menu:active { transform: translateY(1px); }
+
+/* v20 라운드 4: 첫 출근 연출 · 지도 코치 */
+#commute { position: fixed; inset: 0; z-index: 40; background: var(--navy-900); overflow: hidden; cursor: pointer; animation: fadein var(--fast) both; }
+#commute.out { opacity: 0; transition: opacity .25s; }
+#commute .cm-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; animation: cmzoom 2.6s ease-out both; }
+@keyframes cmzoom { from { transform: scale(1.15); } to { transform: scale(1); } }
+#commute .cm-gate { position: absolute; left: 50%; bottom: 30%; transform: translateX(-50%); width: 84px; height: 84px; display: grid; place-items: center; border-radius: 20px; background: var(--brand); color: var(--ink); border: 3px solid var(--ink); }
+#commute .cm-walker { position: absolute; bottom: 16%; left: 50%; animation: cmwalk 2.2s cubic-bezier(.3,.7,.4,1) both; }
+@keyframes cmwalk { 0% { transform: translateX(-180%); } 15%, 35%, 55% { margin-bottom: 6px; } 25%, 45%, 65% { margin-bottom: 0; } 100% { transform: translateX(-50%); } }
+#commute .cm-day { position: absolute; top: calc(var(--sat) + 18%); left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: var(--r-full); background: var(--bg); color: var(--ink); border: 3px solid var(--ink); font-size: 20px; font-weight: 900; white-space: nowrap; animation: dpop 2.6s .5s both; }
+#commute .cm-day b { font-size: 26px; }
+.coach { display: flex; align-items: center; gap: var(--s2); width: 100%; min-height: 48px; margin: var(--s2) 0; padding: var(--s2) var(--s3); border: 2px solid var(--ink); border-radius: var(--r-l); background: var(--brand); color: var(--ink); font-weight: 800; font-size: 16px; text-align: left; cursor: pointer; animation: coachin .4s both; }
+.coach > span:not(.icw) { flex: 1; }
+@keyframes coachin { from { transform: translateY(-6px); opacity: 0; } }
+body.coach-map .zt-flag { animation: coachflag 1.2s infinite; }
+@keyframes coachflag { 0%, 100% { transform: translateX(-50%); } 50% { transform: translateX(-50%) scale(1.2); } }
+.d-st { display: flex; gap: 1px; color: var(--brand); } .d-st svg { fill: currentColor; }

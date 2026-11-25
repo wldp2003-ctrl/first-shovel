@@ -18,6 +18,7 @@ export function makeTitle(ctx) {
     document.querySelector('.fbar')?.remove(); document.body.classList.remove('has-fbar', 'titled');
     document.body.classList.add('deep');
     app().innerHTML = '';
+    ctx.setBack(onBack);
     const view = h('main', { id: 'view', class: `deepview view-in ${cls}` });
     if (say) view.dataset.say = say;
     app().append(h('header', { class: 'top deep' },
@@ -41,6 +42,7 @@ export function makeTitle(ctx) {
     document.querySelector('.fbar')?.remove();
     document.body.classList.remove('deep', 'has-fbar'); document.body.classList.add('titled');
     app().innerHTML = '';
+    ctx.setBack('exit');
     const rec = hasRecord();
     const bg = h('div', { class: 'tt-bg' + (fromOpening && !rm() ? ' pull' : ''), 'aria-hidden': 'true' });
     const startTxt = rec ? t('title.continue') : t('title.start');
@@ -184,7 +186,7 @@ export function makeTitle(ctx) {
 
   /* ---------- 게임 방법: 그림 설명서 (카드마다 움직이는 짧은 시연) ---------- */
   const HOW = ['loop', 'preview', 'find', 'swipe', 'card', 'stars', 'pic'];
-  const HOW_READY = ['loop', 'find']; // v20 1단계: 2장 먼저 (나머지는 "진행" 뒤)
+  const HOW_READY = HOW; // v20 라운드 4: 7장 모두
   function howTo(onBack, start = 0) {
     const v = page('howto', t('how.title'), onBack);
     const cards = HOW.filter((k) => HOW_READY.includes(k));
@@ -227,6 +229,44 @@ export function makeTitle(ctx) {
         h('div', { class: 'd-sit' }, ic('eye', { size: 14 }), h('span', {}, sit)),
         h('div', { class: 'd-scene', style: a ? `--ax:${a.x}%;--ay:${a.y}%` : '' }, v0 ? h('img', { src: v0.img, alt: '' }) : null,
           h('span', { class: 'd-ring' }), h('span', { class: 'd-finger' }, ic('finger', { size: 30 })), h('span', { class: 'd-ok' }, ic('check', { size: 16 })))));
+    }
+    // 라운드 4: 나머지 5장 — 앱 안 그림(미리 렌더링 장면·비교 그림·아이콘)으로만
+    const pairImg = (zone, id, side) => h('img', { src: `assets/scenes/${zone}/${id}-${side}.webp`, alt: '' });
+    if (k === 'preview') {
+      const sc = ctx.SC.scenes.find((s) => s.id === 'lifting'), zimg = PRE.zones?.lifting?.zone;
+      const types = [...new Set((sc?.hazards || []).map((z) => z.type))].slice(0, 4);
+      return h('div', { class: 'demo d-preview' }, h('div', { class: 'd-phone' },
+        h('div', { class: 'd-bar' }, h('span', {}, ic('crane', { size: 14 })), h('i', {}), h('b', { class: 't-num' }, '1 → 2 → 3')),
+        h('div', { class: 'd-zone' }, zimg ? h('img', { src: zimg, alt: '' }) : null),
+        h('div', { class: 'd-types' }, types.map((ty, j) => h('span', { class: 'd-type', style: `--d:${j * 0.25}s` }, ic(ty, { size: 18 })))),
+        h('span', { class: 'd-go' }, ic('search', { size: 14 }), ic('next', { size: 14 }))));
+    }
+    if (k === 'swipe') {
+      return h('div', { class: 'demo d-swipe' }, h('div', { class: 'd-phone' },
+        h('div', { class: 'd-cards' },
+          h('div', { class: 'd-card c-bad' }, pairImg('lifting', '3-1', 'bad'), h('span', { class: 'd-tag no' }, ic('stop', { size: 16 }))),
+          h('div', { class: 'd-card c-good' }, pairImg('floor', '1-1', 'good'), h('span', { class: 'd-tag ok' }, ic('next', { size: 16 })))),
+        h('div', { class: 'd-sides' }, h('span', { class: 'no' }, ic('back', { size: 14 }), ic('stop', { size: 16 })), h('span', { class: 'ok' }, ic('walk', { size: 16 }), ic('next', { size: 14 })))));
+    }
+    if (k === 'card') {
+      return h('div', { class: 'demo d-cardd' }, h('div', { class: 'd-phone' },
+        h('div', { class: 'd-bar dark' }, h('span', {}, ic('crane', { size: 14 })), h('i', {}), h('b', { class: 'd-st' }, ic('star', { size: 10 }), ic('star', { size: 10 }), ic('star', { size: 10 }))),
+        h('div', { class: 'd-zone' }, PRE.zones?.lifting?.zone ? h('img', { src: PRE.zones.lifting.zone, alt: '' }) : null),
+        ...['3-1', '3-2'].map((id, j) => h('div', { class: 'd-row', style: `--d:${0.3 + j * 0.3}s` }, h('b', { class: 't-num' }, String(j + 1)), pairImg('lifting', id, 'bad'), ic('next', { size: 12 }), pairImg('lifting', id, 'good'))),
+        h('span', { class: 'd-save' }, ic('download', { size: 16 }))));
+    }
+    if (k === 'stars') {
+      return h('div', { class: 'demo d-stars' }, h('div', { class: 'd-phone' },
+        h('div', { class: 'd-mascot', html: sapi({ size: 64, mood: 'cheer' }) }),
+        h('div', { class: 'd-starrow' }, [0, 1, 2].map((j) => h('span', { class: 'd-star', style: `--d:${j * 0.3}s` }, ic('star', { size: 30 })))),
+        h('div', { class: 'd-badge' }, ic('flag', { size: 22 })),
+        h('div', { class: 'd-nohint' }, ic('search', { size: 14 }), h('s', {}, ic('help', { size: 14 })))));
+    }
+    if (k === 'pic') {
+      return h('div', { class: 'demo d-picm' }, h('div', { class: 'd-phone' },
+        h('div', { class: 'd-toggle' }, h('span', { class: 'a' }, 'Aa'), h('span', { class: 'b' }, ic('eye', { size: 18 }))),
+        h('div', { class: 'd-zone' }, PRE.zones?.floor?.zone ? h('img', { src: PRE.zones.floor.zone, alt: '' }) : null),
+        h('div', { class: 'd-say' }, ic('sound', { size: 26 }), h('i', { class: 'w1' }), h('i', { class: 'w2' }), h('i', { class: 'w3' }))));
     }
     return h('div', { class: 'demo' });
   }

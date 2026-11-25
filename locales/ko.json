@@ -2232,5 +2232,10 @@
  "learn.survey.recTitle": "사용 설문",
  "learn.survey.recDone": "설문 완료 · {d}",
  "learn.survey.recNot": "아직 안 했어요 (마지막 점검 뒤에 할 수 있어요)",
- "learn.survey.toCert": "확인서 받기"
+ "learn.survey.toCert": "확인서 받기",
+ "learn.top.menu": "메인 메뉴",
+ "learn.top.exitAgain": "한 번 더 누르면 앱을 나가요",
+ "learn.commute.day1": "출근 1일째",
+ "learn.commute.say": "첫 출근이에요. 오늘은 출근해서 TBM 장소부터 가 봐요.",
+ "learn.coach.map": "깃발이 있는 곳을 눌러 시작해요"
 }

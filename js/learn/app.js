@@ -130,6 +130,7 @@ function shell() {
   const nb = SC.scenes.filter((x) => S.scenes?.[x.id]?.best).length;
   // 시안: 왼쪽 삽 + 연속 출근, 오른쪽 배지 + 수. 첫 화면 듣기는 현장 카드 안에, 다른 탭은 상단 오른쪽에
   app().append(h('header', { class: 'top' }, h('h1', { class: 'sr-only' }, `${t('app.name')} · ${t('nav.' + tab)}`),
+      h('button', { class: 'top-menu', id: 'toMenu', 'aria-label': t('top.menu'), onclick: () => { tap(); TITLE?.showTitle(); } }, ic('menu', { size: 24 })),
       h('span', { class: 'top-chip streak-c', title: t('home.streak', { n }), 'aria-label': t('home.streak', { n }) }, ic('shovel', { size: 24 }), h('span', { class: 't-num' }, String(n))),
       h('span', { class: 'top-chip badge-c', title: t('top.badges', { n: nb }), 'aria-label': t('top.badges', { n: nb }) }, ic('badge', { size: 24 }), h('span', { class: 't-num' }, String(nb))),
       tab === 'home' ? null : sayBtn()),
@@ -141,7 +142,7 @@ function shell() {
 function go(tb) {
   curV3?.dispose(); curV3 = null; TITLE?.stopBg();
   timeStop();
-  tab = tb; if (history.state?.deep) history.back();
+  tab = tb; setBack(tb === 'home' ? () => TITLE?.showTitle() : () => go('home'));
   shell(); document.body.classList.remove('deep');
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.tab === tb));
 
@@ -151,7 +152,7 @@ function go(tb) {
 // 레슨·점검처럼 화면 전체를 쓰는 단계 (휴대전화 뒤로 가기 → 목록)
 function deep(title, onBack) {
   document.querySelector('.fbar')?.remove(); document.body.classList.remove('has-fbar');
-  if (!history.state?.deep) history.pushState({ deep: true }, '');
+  setBack(() => { onBack?.(); timeStop(); go(tab); });
   document.body.classList.add('deep');
   app().innerHTML = '';
   const back = h('button', { class: 'back', 'aria-label': t('common.back'), onclick: () => { onBack?.(); go(tab); } }, ic('back'));
@@ -161,7 +162,19 @@ function deep(title, onBack) {
   window.scrollTo(0, 0); autoSay();
   return view;
 }
-window.addEventListener('popstate', () => { if (document.body.classList.contains('deep')) { timeStop(); go(tab); } });
+/* v20 라운드 4: 안드로이드 뒤로 가기 — 화면마다 "뒤로"가 할 일을 하나(backFn)로. 기록(history)에는 지킴 항목 하나만 두고,
+   뒤로를 누르면 그 화면의 뒤로를 실행한 뒤 다시 지킴. 타이틀에서는 한 번 더 누르면 앱을 나감 */
+let backFn = null, exitArm = 0;
+const setBack = (fn) => { backFn = fn; if (!history.state?.g) history.pushState({ g: 1 }, ''); };
+window.addEventListener('popstate', () => {
+  const dlg = document.querySelector('.dlg-wrap');
+  if (dlg) { dlg.remove(); history.pushState({ g: 1 }, ''); return; }
+  if (backFn === 'exit') {
+    if (Date.now() - exitArm < 2000) { history.back(); return; }
+    exitArm = Date.now(); toast(t('top.exitAgain')); history.pushState({ g: 1 }, ''); return;
+  }
+  const fn = backFn; history.pushState({ g: 1 }, ''); fn?.();
+});
 const dots = (n, i) => { const d = $('#dots'); if (!d) return; d.innerHTML = ''; for (let k = 0; k < n; k++) d.append(h('i', { class: k < i ? 'done' : k === i ? 'on' : '' })); };
 
 /* ---------------- 첫 화면: 현장 지도 (v13) ---------------- */
@@ -175,9 +188,10 @@ function home(v) {
     h('div', { class: 'sh-t' }, h('b', {}, t('map.loop')), h('small', {}, t('map.loopSub'))),
     h('span', { class: 'sh-n t-num', 'aria-label': t('map.progress', { n: nDone, m: SC.scenes.length }) }, t('map.progress', { n: nDone, m: SC.scenes.length })));
   v.append(unitCard(), head, site);
+  coachMap(v);
   warmPairs();
   const zs = siteZones();
-  const onPick = (z) => (z.roof ? stopTell() : z.state === 'done' ? openCard(z.id) : openScene(z.id));
+  const onPick = (z) => (UI.coachMap ||= 1, saveUI(), document.body.classList.remove('coach-map'), z.roof ? stopTell() : z.state === 'done' ? openCard(z.id) : openScene(z.id));
   mountSite(site, { zones: zs, onPick }).then((r) => { if (!r && site.isConnected) site.replaceWith(siteStill(zs, onPick)); });
   const td = todayScene(); if (td) v.append(todayCard(td));
   v.append(installTip());
@@ -472,7 +486,7 @@ function runPicTest(kind) {
     if (kind === 'pre') {
       v.append(h('div', { class: 'result' }, h('span', { class: 'sapi-s', html: sapi({ size: 72, mood: 'hi' }) }), marks(rec),
         isPic() ? null : h('div', { class: 'big' }, t('test.score', { n: rec.n, s: rec.score })), isPic() ? null : h('p', {}, t('test.preDoneV13'))),
-        h('button', { class: 'btn primary big', id: 'toScene0', 'aria-label': t('test.toScene0'), onclick: () => openScene(SC.scenes[0].id) }, thumb(SC.scenes[0]), h('span', {}, t('test.toScene0')), ic('next')));
+        h('button', { class: 'btn primary big', id: 'toScene0', 'aria-label': t('test.toScene0'), onclick: () => commute(() => openScene(SC.scenes[0].id)) }, thumb(SC.scenes[0]), h('span', {}, t('test.toScene0')), ic('next')));
     } else {
       const pre = S.pre?.kind === 'pic' ? S.pre : null;
       v.append(h('div', { class: 'result' }, pre ? marks(pre) : null, marks(rec),
@@ -814,7 +828,7 @@ function settingsBox() {
 // 글자 크기·움직임·화질·소리·진동·음성 속도(기기 설정)는 그대로 둠
 function wipeAll() {
   localStorage.removeItem(KEY); localStorage.removeItem(DONE_KEY); S = fresh();
-  for (const k of ['aboutDone', 'view', 'autoSay', 'autoSayUser', 'title3d', 'todayDone', 'installShown']) delete UI[k];
+  for (const k of ['aboutDone', 'view', 'autoSay', 'autoSayUser', 'title3d', 'todayDone', 'installShown', 'commuted', 'coachMap']) delete UI[k];
   Object.assign(UI, { floorsSeen: 0, openDay: '', days: [] }); saveUI(); applyPrefs(); noteHour(); save();
 }
 // 개인정보 없는 결과: 무작위 번호, 점수, 시간, 시간대만
@@ -857,6 +871,33 @@ function practice(v) {
     h('button', { class: 'btn', onclick: showCert }, ic('cert'), h('span', {}, t('home.cert')))));
 }
 
+/* ---------------- v20 라운드 4: 첫 출근 (처음 한 번, 2.6초, 누르면 넘어감, 동작 줄이기면 건너뜀) ---------------- */
+function commute(then) {
+  if (UI.commuted || reduceMotion()) { if (!UI.commuted) { UI.commuted = 1; saveUI(); } return then(); }
+  UI.commuted = 1; saveUI();
+  const say = t('commute.say');
+  const el = h('div', { id: 'commute', role: 'button', 'aria-label': t('opening.skip') },
+    PRE.map?.img ? h('img', { class: 'cm-bg', src: PRE.map.img, alt: '' }) : null,
+    h('div', { class: 'cm-gate', 'aria-hidden': 'true' }, ic('site', { size: 40 })),
+    h('span', { class: 'cm-walker sapi-s', html: sapi({ size: 96, mood: 'wave' }) }),
+    h('div', { class: 'cm-day' }, ic('shovel', { size: 22 }), isPic() ? h('b', { class: 't-num' }, '1') : h('span', {}, t('commute.day1'))));
+  document.body.append(el);
+  if (autoSayOn() && canSpeak()) speak(say);
+  let gone = false;
+  const done = () => { if (gone) return; gone = true; el.classList.add('out'); setTimeout(() => { el.remove(); then(); }, 250); };
+  el.addEventListener('pointerdown', done); setTimeout(done, 2600);
+  sfx('done', 0.04);
+}
+// 지도 처음 볼 때 한 번: 깃발(지금 구역)을 누르라는 안내
+function coachMap(v) {
+  if (UI.coachMap || !S.pre || allScenes()) return;
+  const say = t('coach.map');
+  const tip = h('button', { class: 'coach', id: 'coachMap', 'aria-label': say, onclick: () => { UI.coachMap = 1; saveUI(); tip.remove(); document.body.classList.remove('coach-map'); } },
+    ic('finger', { size: 26 }), ic('flag', { size: 20 }), isPic() ? null : h('span', {}, say), ic('cross', { size: 16 }));
+  document.body.classList.add('coach-map');
+  v.querySelector('.site-head')?.after(tip);
+}
+
 /* ---------------- 완료 장면 (2초, 누르면 넘어감) ---------------- */
 function finale(then) {
   if (reduceMotion()) return then();
@@ -868,7 +909,7 @@ function finale(then) {
   let gone = false;
   const done = () => { if (gone) return; gone = true; el.remove(); then(); };
   el.addEventListener('pointerdown', done); setTimeout(done, 2000);
-  buzz(30); beep();
+  buzz(30); sfx('done');
 }
 
 /* ---------------- 기초 확인서 ---------------- */
@@ -897,10 +938,16 @@ function showCert() {
 
 /* ---------------- 소리 (기본 꺼짐) ---------------- */
 let actx = null;
-function beep() {
-  if (!UI.sound) return;
-  try { actx ||= new (window.AudioContext || window.webkitAudioContext)(); const o = actx.createOscillator(), g = actx.createGain(); o.frequency.value = 880; g.gain.setValueAtTime(0.06, actx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + 0.15); o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + 0.16); } catch {}
-}
+// v20 라운드 4: 효과음(직접 합성, 파일 0개, 기본 꺼짐 — 설정 › 소리). 맞음·안전한 곳·빈 곳·별·완료
+const SFX = {
+  ok: [[660, 0, 0.08], [990, 0.07, 0.14]],
+  safe: [[523, 0, 0.12], [523, 0.14, 0.1]],
+  miss: [[196, 0, 0.09]],
+  star1: [[784, 0, 0.12]], star2: [[659, 0, 0.1], [784, 0.11, 0.14]], star3: [[523, 0, 0.1], [659, 0.1, 0.1], [784, 0.2, 0.1], [1047, 0.3, 0.22]],
+  done: [[523, 0, 0.12], [784, 0.12, 0.12], [1047, 0.24, 0.3]],
+};
+function sfx(k, vol = 0.06) { if (UI.sound && SFX[k]) tone(SFX[k], vol); }
+function beep() { sfx('ok'); }
 
 /* ---------------- 홈 화면 추가 안내 (기초 1개 완료 뒤 한 번) ---------------- */
 let installEvt = null;
@@ -994,8 +1041,8 @@ function openScene(id, o = {}) {
     const z = hz.filter((q) => !found.includes(q.id) && near(A(q))).sort((p, q) => Math.hypot(A(p).x - x, A(p).y - y) - Math.hypot(A(q).x - x, A(q).y - y))[0];
     if (z) { found.push(z.id); ring(A(z), 'hit'); armHint(); slots.querySelectorAll('.nudge').forEach((e) => e.classList.remove('nudge')); layer.querySelectorAll('.ring.hint').forEach((e) => e.remove()); slots.querySelector(`[data-id="${z.id}"]`).classList.add('on'); prog.style.width = `${(found.length / total) * 100}%`; prog.parentElement.setAttribute('aria-valuenow', String(found.length)); showHazard(z); return; }
     const sf = [...sc.safe, ...off].find((q) => near(A(q)));
-    if (sf) { ring(A(sf), 'trap'); showSafe(off.includes(sf) ? { area: A(sf) } : sf); return; }
-    tapsMiss++;
+    if (sf) { sfx('safe'); ring(A(sf), 'trap'); showSafe(off.includes(sf) ? { area: A(sf) } : sf); return; }
+    tapsMiss++; sfx('miss', 0.04);
     const rp = h('span', { class: 'ripple', style: `left:${(x / 400) * 100}%;top:${(y / 300) * 100}%` }); layer.append(rp); setTimeout(() => rp.remove(), 500);
     layer.querySelector('.ok-toast')?.remove();
     const tt = h('span', { class: 'ok-toast', style: `left:${Math.min(80, Math.max(20, (x / 400) * 100))}%;top:${(y / 300) * 100}%` }, ic('check', { size: 14 }), t('scene.okHere')); layer.append(tt); setTimeout(() => tt.remove(), 1200);
@@ -1063,6 +1110,7 @@ function openScene(id, o = {}) {
     if (!rec.first) rec.first = { found: n, total, at: Date.now() }; // 처음 찾은 수 (효과 비교용)
     rec.seen = [...new Set([...(rec.seen || []), ...found])];
     if (o.today) { UI.todayDone = dayStr(); saveUI(); }
+    setTimeout(() => sfx('star' + st), 250);
     const firstClear = !rec.best;
     if (!rec.best || st > rec.best.stars || n > rec.best.found.length) rec.best = { found: [...found], stars: st };
     if (st === 3) confetti();
@@ -1342,7 +1390,7 @@ async function boot() {
   catch (e) { app().innerHTML = ''; app().append(h('p', { style: 'padding:24px' }, t('app.loadFail'))); return; }
   try { PRE = await jP; for (const [zid, zp] of Object.entries(PRE.zones || {})) { const sc = SC.scenes.find((x) => x.id === zid); for (const z of sc?.hazards || []) if (zp.pairs?.[z.id]) { PAIR3D[z.bad] = zp.pairs[z.id].bad; PAIR3D[z.good] = zp.pairs[z.id].good; if (zp.pairs[z.id].meta) PMETA[z.id] = zp.pairs[z.id].meta; pairsDone.add(zid); } } } catch { PRE = { zones: {} }; }
   noteHour(); save();
-  TITLE = makeTitle({ h, t, ic, icon, sapi, logoMark, renderMascot, UI, saveUI, isPic, canSpeak, speak, sayBtn, dots, autoSay, autoSayOn, reduceMotion, applyPrefs, tap, toast, hasGL, mountSite, T, shown, srcShort,
+  TITLE = makeTitle({ setBack, h, t, ic, icon, sapi, logoMark, renderMascot, UI, saveUI, isPic, canSpeak, speak, sayBtn, dots, autoSay, autoSayOn, reduceMotion, applyPrefs, tap, toast, hasGL, mountSite, T, shown, srcShort,
     get S() { return S; }, get SC() { return SC; }, get PRE() { return PRE; }, get SRC() { return SRC; }, starSum, allScenes, go,
     continueGame: () => go('home'), preTest: () => runPicTest('pre'), postTest: () => runPicTest('post'), exportData, wipe: wipeAll });
   await op;
