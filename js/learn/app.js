@@ -1082,7 +1082,8 @@ function openScene(id, o = {}) {
     const missed = hz.filter((z) => !found.includes(z.id));
     missed.forEach((z) => ring(A(z), 'miss'));
     // 찾기 → 어떻게 할까 (찾은 위험 하나를 무작위로)
-    const q = shuffle(hz.filter((z) => found.includes(z.id) && z.act))[0];
+    // 라운드 6: 정답 행동이 선택지(멈춤·알림·보호구)에 없는 위험(3-6 "away")은 묻지 않음 — 정답 없는 문제·멈춤 버그였음
+    const q = shuffle(hz.filter((z) => found.includes(z.id) && SC.acts?.[z.act]))[0];
     if (q) askAct(q, (act) => result(missed, act)); else result(missed, null);
   }
   function askAct(z, then) {
