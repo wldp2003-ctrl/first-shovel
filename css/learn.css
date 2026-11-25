@@ -1235,3 +1235,19 @@ html.view-pic .seg-t { font-size: 12px; }
 /* 라운드 1: 타이틀 그림 배경도 살아 있게 — 아주 느린 확대·이동(30초 왕복). 움직임 줄이기면 멈춤 */
 .tt-bg:not(.live) .tt-still { animation: ttdrift 30s ease-in-out infinite alternate; }
 @keyframes ttdrift { from { transform: scale(1) translateX(0); } to { transform: scale(1.08) translateX(-3%); } }
+
+/* v20 라운드 2: 사용 설문 (얼굴 5점 척도) */
+.sv-q { display: flex; align-items: flex-start; gap: var(--s2); background: var(--white); border: 2px solid var(--line); border-radius: var(--r-l); padding: var(--s4); margin: var(--s3) 0; }
+.sv-q b { flex: 1; font-size: 19px; line-height: 1.5; color: var(--navy-800); }
+.sv-scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--s2); margin-top: var(--s3); }
+.sv-opt { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 72px; padding: var(--s2) 0; border: 2px solid var(--line); border-radius: var(--r-md); background: var(--white); color: var(--navy-800); cursor: pointer; }
+.sv-opt small { font-weight: 700; font-size: 14px; }
+.sv-opt.on, .sv-opt:active { border-color: var(--navy-800); background: var(--navy-100); box-shadow: inset 0 0 0 2px var(--navy-800); }
+.sv-face { display: inline-flex; }
+.sv-ends { display: flex; justify-content: space-between; color: var(--gray-600); margin: var(--s1) 2px var(--s4); }
+.sv-preview { display: flex; justify-content: center; gap: var(--s3); color: var(--navy-800); margin: var(--s3) 0; }
+.sv-rec { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s2); }
+/* 점이 10개를 넘으면(설문 15문항) 점 간격·크기를 줄여 제목이 잘리지 않게 */
+.dots:has(i:nth-child(10)) { gap: 3px; }
+.dots:has(i:nth-child(10)) i { width: 6px; height: 6px; }
+.dots:has(i:nth-child(10)) i.on { width: 12px; }

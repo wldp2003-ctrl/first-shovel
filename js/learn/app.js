@@ -8,7 +8,7 @@ import { makeScene3D, renderPairs, hasGL, SCENE3D_IDS } from './scene3d.js';
 import { mountSite, renderSiteStill } from './site3d.js';
 import { sceneTbm, sceneScaffold, sceneLifting, sceneEquip, scenePour, sceneHot, STOP } from './scene-art2.js';
 import { renderMascot } from './mascot.js';
-import { makeTitle } from './title.js';
+import { makeTitle, APP_VERSION } from './title.js';
 
 // append(..., 조건 ? 요소 : null)에서 "null" 글자가 찍히지 않게
 if (!Element.prototype.append.__skipNull) {
@@ -478,10 +478,52 @@ function runPicTest(kind) {
       v.append(h('div', { class: 'result' }, pre ? marks(pre) : null, marks(rec),
         h('div', { class: 'cmp' }, h('div', {}, h('small', {}, t('test.preShort')), h('b', {}, pre ? String(pre.score) : '-')), ic('next'), h('div', { class: 'up' }, h('small', {}, t('test.postShort')), h('b', {}, String(rec.score)))),
         isPic() ? null : h('p', {}, !pre ? t('test.oldPre') : rec.score > pre.score ? t('test.better', { n: rec.score - pre.score }) : t('test.reviewHintV13'))),
-        h('button', { class: 'btn primary big', id: 'toCert', 'aria-label': t('test.getCert'), onclick: () => finale(showCert) }, ic('cert'), isPic() ? null : h('span', {}, t('test.getCert'))));
+        h('button', { class: 'btn primary big', id: 'toCert', 'aria-label': t('test.getCert'), onclick: () => (S.survey?.done ? finale(showCert) : survey(() => finale(showCert))) }, ic('cert'), isPic() ? null : h('span', {}, t('test.getCert'))));
     }
   };
   show(0);
+}
+
+/* ---------------- v20 라운드 2: 사용 설문 (SUS 10문항 + 자체 5문항, 마지막 점검 뒤, 건너뛸 수 있음) ----------------
+   SUS: Brooke(1996) 10문항, 홀수 긍정·짝수 부정. 점수 = (홀수 (답-1) + 짝수 (5-답)) 합 × 2.5 → 0~100
+   한국어 문장은 이 앱에서 옮긴 것(검증된 한국어판 출처 확인 전 — docs/논문자료/07_평가계획.md) */
+const SURVEY = [...Array.from({ length: 10 }, (_, i) => 'sus' + (i + 1)), ...Array.from({ length: 5 }, (_, i) => 'own' + (i + 1))];
+export const susScore = (a) => (a?.length === 10 && a.every((x) => x >= 1 && x <= 5) ? a.reduce((s, x, i) => s + (i % 2 === 0 ? x - 1 : 5 - x), 0) * 2.5 : null);
+// 얼굴 5개: 입 곡선만 다르게 (1 찡그림 → 5 활짝)
+const face = (n) => { const c = [-5, -2.5, 0, 2.5, 5][n - 1];
+  return `<svg viewBox="0 0 40 40" width="40" height="40" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="20" cy="20" r="17"/><circle cx="14" cy="16" r="1.6" fill="currentColor"/><circle cx="26" cy="16" r="1.6" fill="currentColor"/><path d="M12.5 ${26 - c / 2} Q20 ${26 + c} 27.5 ${26 - c / 2}"/></svg>`; };
+function survey(then) {
+  const v = deep(isPic() ? '' : t('survey.title'));
+  v.dataset.say = t('survey.intro');
+  const ans = (S.survey?.ans || []).slice(), t0 = Date.now();
+  const save_ = (done) => { S.survey = { ans, done, at: Date.now(), timeMs: (S.survey?.timeMs || 0) + (Date.now() - t0), mode: isPic() ? 'pic' : 'text', v: 1 }; save(); };
+  const start = () => { const k = ans.findIndex((x) => !x); show(k >= 0 ? k : ans.length < SURVEY.length ? ans.length : 0); };
+  const show = (i) => {
+    dots(SURVEY.length, i);
+    v.innerHTML = ''; v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
+    if (i >= SURVEY.length) return end();
+    const q = t('survey.' + SURVEY[i]);
+    v.dataset.say = q;
+    v.append(h('div', { class: 'qhead' }, h('span', { class: 'qtag' }, ic('record', { size: 16 })), t('common.of', { i: i + 1, n: SURVEY.length })),
+      h('div', { class: 'sv-q' }, h('b', {}, q), h('button', { class: 'q-say', 'aria-label': t('scene.listen'), onclick: () => speak(q) }, ic('sound', { size: 22 }))),
+      h('div', { class: 'sv-scale', role: 'radiogroup', 'aria-label': q }, [1, 2, 3, 4, 5].map((n) => h('button', { class: 'sv-opt f' + n + (ans[i] === n ? ' on' : ''), role: 'radio', 'aria-checked': String(ans[i] === n), 'aria-label': t('survey.s' + n), 'data-n': String(n),
+        onclick: () => { ans[i] = n; tap(); save_(false); setTimeout(() => show(i + 1), 180); } }, h('span', { class: 'sv-face', html: face(n) }), h('small', {}, String(n))))),
+      h('div', { class: 'sv-ends', 'aria-hidden': 'true' }, h('small', {}, t('survey.lo')), h('small', {}, t('survey.hi'))),
+      i > 0 ? h('button', { class: 'btn', onclick: () => show(i - 1) }, ic('back'), isPic() ? null : h('span', {}, t('common.prev'))) : null);
+    autoSay();
+  };
+  const end = () => {
+    save_(true);
+    v.dataset.say = t('survey.thanks');
+    v.append(h('div', { class: 'result' }, h('span', { class: 'sapi-s', html: sapi({ size: 72, mood: 'cheer' }) }), isPic() ? null : h('p', {}, t('survey.thanks'))),
+      h('button', { class: 'btn primary big', id: 'svDone', 'aria-label': then ? t('survey.toCert') : t('scene.home'), onclick: () => (then ? then() : go('record')) }, ic(then ? 'cert' : 'check'), isPic() ? null : h('span', {}, then ? t('survey.toCert') : t('scene.home')), ic('next')));
+  };
+  // 첫 장: 무엇을 하는지 + 시작 / 건너뛰기
+  v.append(h('div', { class: 'result' }, h('span', { class: 'sapi-s', html: sapi({ size: 72, mood: 'hi' }) }),
+    h('div', { class: 'sv-preview', 'aria-hidden': 'true' }, [1, 3, 5].map((n) => h('span', { class: 'sv-face f' + n, html: face(n) }))),
+    isPic() ? null : h('p', {}, t('survey.intro'))),
+    h('button', { class: 'btn primary big', id: 'svStart', 'aria-label': t('survey.start'), onclick: start }, ic('next'), h('span', {}, t('survey.start'))),
+    then ? h('button', { class: 'btn', id: 'svSkip', 'aria-label': t('survey.skip'), onclick: () => { if (!S.survey) { S.survey = { skipped: true, at: Date.now(), v: 1 }; save(); } then(); } }, ic('cert'), isPic() ? null : h('span', {}, t('survey.skip'))) : null);
 }
 
 /* ---------------- v13 마무리: 위험하면 멈추고 → 피하고 → 알려요 ---------------- */
@@ -744,6 +786,9 @@ function record(v) {
     });
     v.append(h('p', { class: 'small' }, t('record.firstTryNote')), list, h('p', { class: 'small' }, ic('time', { size: 16 }), ' ', t('record.total', { time: mmss(total) })));
   }
+  v.append(h('h2', { class: 'sec' }, t('survey.recTitle')), h('div', { class: 'card-lite sv-rec' },
+    h('span', {}, ic('record', { size: 18 }), ' ', S.survey?.done ? t('survey.recDone', { d: new Date(S.survey.at).toLocaleDateString('ko-KR') }) : t('survey.recNot')),
+    S.post ? h('button', { class: 'btn', id: 'svOpen', onclick: () => survey(null) }, ic(S.survey?.done ? 'retry' : 'next'), h('span', {}, S.survey?.done ? t('survey.again') : t('survey.start'))) : null));
   v.append(h('h2', { class: 'sec' }, t('record.export')),
     h('p', { class: 'small' }, t('record.exportNote')),
     h('button', { class: 'btn', id: 'exportBtn', onclick: exportData }, ic('download'), h('span', {}, t('record.exportBtn'))));
@@ -764,11 +809,17 @@ function dex() {
 function settingsBox() {
   return h('div', { class: 'card-lite set' }, h('button', { class: 'btn set-btn', id: 'openSettings', onclick: () => TITLE.settings(() => go('record')) }, ic('settings'), h('span', {}, t('title.settings')), ic('next', { size: 18 })));
 }
-function wipeAll() { localStorage.removeItem(KEY); localStorage.removeItem(DONE_KEY); S = fresh(); UI.floorsSeen = 0; saveUI(); noteHour(); save(); }
+// 라운드 2: 기록과 함께 "처음 실행" 상태(소개 본 것·보기 방식·오프닝·출근한 날)도 지움 — 예비 시험에서 다음 참여자가 앞사람 선택을 물려받지 않게.
+// 글자 크기·움직임·화질·소리·진동·음성 속도(기기 설정)는 그대로 둠
+function wipeAll() {
+  localStorage.removeItem(KEY); localStorage.removeItem(DONE_KEY); S = fresh();
+  for (const k of ['aboutDone', 'view', 'autoSay', 'autoSayUser', 'title3d', 'todayDone', 'installShown']) delete UI[k];
+  Object.assign(UI, { floorsSeen: 0, openDay: '', days: [] }); saveUI(); applyPrefs(); noteHour(); save();
+}
 // 개인정보 없는 결과: 무작위 번호, 점수, 시간, 시간대만
 export function exportPayload() {
   return {
-    app: '첫 삽 기초 교육', version: D.version, anonId: S.anon, exportedDay: new Date().toISOString().slice(0, 10),
+    app: '첫 삽 기초 교육', appVersion: APP_VERSION, version: D.version, anonId: S.anon, exportedDay: new Date().toISOString().slice(0, 10),
     scenesVersion: SC.version,
     pre: S.pre && { kind: S.pre.kind || 'text', score: S.pre.score, n: S.pre.n ?? S.pre.correct.length, correct: S.pre.correct, items: S.pre.items, hour: S.pre.hour, timeSec: S.pre.timeMs ? Math.round(S.pre.timeMs / 1000) : undefined },
     post: S.post && { kind: S.post.kind || 'text', score: S.post.score, n: S.post.n ?? S.post.correct.length, correct: S.post.correct, items: S.post.items, hour: S.post.hour, timeSec: S.post.timeMs ? Math.round(S.post.timeMs / 1000) : undefined },
@@ -779,6 +830,7 @@ export function exportPayload() {
     wrongNow: S.wrong.length,
     scenes: Object.fromEntries(Object.entries(S.scenes || {}).map(([k, r]) => [k, { tries: r.tries, timeSec: Math.round(r.timeMs / 1000), last: r.last && { found: r.last.found.length, total: r.last.total, rate: +(r.last.found.length / r.last.total).toFixed(2), stars: r.last.stars, mode: r.last.mode, hour: r.last.hour, missTaps: r.last.missTaps, today: r.last.today, active: r.last.active?.length, act: r.last.act || null }, foundIds: r.seen || r.best?.found || [], best: r.best && { found: r.best.found.length, stars: r.best.stars } }])),
     usageHours: S.hours,
+    survey: S.survey?.done ? { sus: S.survey.ans.slice(0, 10), susScore: susScore(S.survey.ans.slice(0, 10)), own: S.survey.ans.slice(10, 15), mode: S.survey.mode, timeSec: Math.round((S.survey.timeMs || 0) / 1000) } : S.survey?.skipped ? { skipped: true } : null,
   };
 }
 function exportData() {

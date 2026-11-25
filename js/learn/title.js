@@ -288,7 +288,7 @@ export function makeTitle(ctx) {
       const fill = h('i', { class: 'hold-fill' });
       const stop = () => { clearTimeout(timer); cancelAnimationFrame(raf); fill.style.width = '0%'; lab.textContent = t('set.wipeHold'); };
       const tick = () => { const k = Math.min(1, (performance.now() - t0) / 3000); fill.style.width = (k * 100).toFixed(1) + '%'; lab.textContent = t('set.wipeCount', { n: Math.max(1, Math.ceil(3 - k * 3)) }); if (k < 1) raf = requestAnimationFrame(tick); };
-      const hold = h('button', { class: 'btn danger big hold', id: 'wipeHold', onpointerdown: (e) => { e.preventDefault(); t0 = performance.now(); tick(); timer = setTimeout(() => { cancelAnimationFrame(raf); close(); ctx.wipe(); after?.(); ctx.toast(t('set.wiped')); }, 3000); }, onpointerup: stop, onpointerleave: stop, onpointercancel: stop, oncontextmenu: (e) => e.preventDefault() }, fill, ic('trash'), lab);
+      const hold = h('button', { class: 'btn danger big hold', id: 'wipeHold', onpointerdown: (e) => { e.preventDefault(); t0 = performance.now(); tick(); timer = setTimeout(() => { cancelAnimationFrame(raf); close(); ctx.wipe(); showTitle(); ctx.toast(t('set.wiped')); }, 3000); }, onpointerup: stop, onpointerleave: stop, onpointercancel: stop, oncontextmenu: (e) => e.preventDefault() }, fill, ic('trash'), lab);
       dlg.append(h('div', { class: 'dlg' }, h('h2', {}, t('set.wipeLast')), h('p', {}, t('set.wipeLastSub')), hold, h('button', { class: 'btn ghost', id: 'wipeNo2', onclick: close }, t('common.cancel'))));
     };
     step1(); document.body.append(dlg);
