@@ -2,7 +2,7 @@
 /* 제목 글꼴 Black Han Sans는 한글 전용 → 중국어는 Noto Sans SC, 베트남어·러시아어는 Noto Sans(성조·키릴 문자 지원) */
 :root {
   --font-head: 'Black Han Sans', 'Noto Sans SC', 'Noto Sans', sans-serif;
-  --font-body: 'IBM Plex Sans KR', 'Noto Sans', 'Noto Sans SC', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-body: "Pretendard Variable", Pretendard, 'Noto Sans', 'Noto Sans SC', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
 }
 body.lang-zh { --font-head: 'Noto Sans SC', 'Black Han Sans', sans-serif; --font-body: 'Noto Sans SC', 'IBM Plex Sans KR', system-ui, sans-serif; }
 body.lang-vi, body.lang-ru { --font-head: 'Noto Sans', 'Black Han Sans', sans-serif; --font-body: 'Noto Sans', 'IBM Plex Sans KR', system-ui, sans-serif; }

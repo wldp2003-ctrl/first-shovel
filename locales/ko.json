@@ -2237,5 +2237,10 @@
  "learn.top.exitAgain": "한 번 더 누르면 앱을 나가요",
  "learn.commute.day1": "출근 1일째",
  "learn.commute.say": "첫 출근이에요. 오늘은 출근해서 TBM 장소부터 가 봐요.",
- "learn.coach.map": "깃발이 있는 곳을 눌러 시작해요"
+ "learn.coach.map": "깃발이 있는 곳을 눌러 시작해요",
+ "main.wx.offNote": "계절 기반 가상 예보예요. 실시간 예보는 아래 단추로 켜면 외부 서버(Open-Meteo)에 요청해요.",
+ "main.wx.turnOn": "실시간 예보 켜기 (인터넷 사용)",
+ "main.wx.turnOff": "실시간 예보 끄기",
+ "learn.practice.proto": "시제품 · 연구 범위 밖",
+ "learn.tbm.open": "TBM 때 크게 보여 주기"
 }

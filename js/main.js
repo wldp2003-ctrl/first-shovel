@@ -8,7 +8,7 @@ import {
 } from './data.js';
 import { MG, mgDefaults, needsHoist, hoistPrice, floorLabel, FLOORS } from './data2.js';
 import { loadSave, save as persist, saveNow, wipe } from './store.js';
-import { fetchForecast, getWeather, describe, effect, isLive, addDays, fmtDate, ymd } from './weather.js';
+import { fetchForecast, getWeather, describe, effect, isLive, addDays, fmtDate, ymd, liveOn, setLive } from './weather.js';
 import * as A from './audio.js';
 import { $, h, openModal, anyModal, closeAllModals, toast, shuffle, won, sleep } from './ui.js';
 import { runRemicon, runRemiconLite, runQuiz, runConflict, runTalk, quizLevelFor } from './minigames.js';
@@ -448,7 +448,8 @@ function showForecast() {
       st.city = c.id; save(); body.querySelector('.seg').style.opacity = .5;
       await fetchForecast(st.city); render(); refreshAll(); S.setWeather(describe(todayWx()).kind);
     } }, c.name)))));
-    body.append(h('div', { class: 'tiny ' + (isLive() ? '' : 'muted') }, isLive() ? $t('main.render.6') : $t('main.render.5')));
+    body.append(h('div', { class: 'tiny ' + (isLive() ? '' : 'muted') }, isLive() ? $t('main.render.6') : liveOn() ? $t('main.render.5') : $t('main.wx.offNote')));
+    body.append(h('button', { class: 'btn small', id: 'wxLive', onclick: async () => { setLive(!liveOn()); await fetchForecast(st.city); render(); refreshAll(); S.setWeather(describe(todayWx()).kind); } }, liveOn() ? $t('main.wx.turnOff') : $t('main.wx.turnOn')));
     for (let k = 0; k < 5; k++) {
       const day = st.day + k, w = getWeather(dateOf(day)), d = describe(w), ef = effect(w);
       body.append(h('div', { class: 'wxday' + (ef.stop ? ' stop' : '') },

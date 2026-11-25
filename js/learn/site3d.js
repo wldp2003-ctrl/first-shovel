@@ -316,6 +316,7 @@ export async function mountSite(box, { zones, onPick, height = 460, backdrop = f
     if (backdrop && onSlow && drawn > 5 && drawn <= 25) { slowT0 += performance.now() - r0; if (drawn === 25 && slowT0 / 20 > 25) { window.__site3dSlow = +(slowT0 / 20).toFixed(1); onSlow(); destroy(); return; } } window.__site3dInfo = { objs: S.nObj, programs: renderer.info.programs?.length || 0, calls: renderer.info.render.calls, tris: renderer.info.render.triangles };
     const w = canvas.clientWidth, hh = canvas.clientHeight;
     for (const { el, p } of els) { v.copy(p).project(cam); el.style.transform = `translate(${Math.round(((v.x + 1) / 2) * w)}px, ${Math.round(((1 - v.y) / 2) * hh)}px)`; }
+    if (!backdrop && drawn % 10 === 1) declutter(els.map((e) => e.el));
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
@@ -344,4 +345,27 @@ export async function renderSiteStill({ w = 1080, h = 1220, zone = null, fmt = '
   const pins = S.anchors.map((p) => { v.copy(p).project(cam); return { x: +(((v.x + 1) / 2) * 100).toFixed(2), y: +(((1 - v.y) / 2) * 100).toFixed(2) }; });
   S.dispose(); KIT.dispose(); renderer.dispose(); renderer.forceContextLoss?.();
   return { url, pins };
+}
+
+// v20 라운드 5: 지도 이름표 — ① 화면 가장자리에서 잘리면 안쪽으로 붙임(.edge-l/.edge-r) ② 지금 구역(깃발)을 먼저 두고,
+// 앞 이름표·깃발과 겹치는 이름표는 번호+아이콘만(.tight). 첫삽이(캐릭터)는 이름표 아래로(CSS z-index)
+export function declutter(marks) {
+  const items = marks.map((el) => ({ el, n: el.querySelector('.zt-name') })).filter((x) => x.n);
+  const box = marks[0]?.closest('.site3d')?.getBoundingClientRect();
+  items.forEach((x) => x.el.classList.remove('tight', 'edge-l', 'edge-r', 'who-off'));
+  items.sort((a, b) => b.el.classList.contains('cur') - a.el.classList.contains('cur'));
+  const placed = [];
+  const hit = (r) => placed.some((q) => !(r.right <= q.left || r.left >= q.right || r.bottom <= q.top || r.top >= q.bottom));
+  const edge = (x) => { if (!box) return; const r = x.n.getBoundingClientRect(); if (r.right > box.right - 2) x.el.classList.add('edge-r'); else if (r.left < box.left + 2) x.el.classList.add('edge-l'); };
+  for (const x of items) {
+    edge(x);
+    let r = x.n.getBoundingClientRect();
+    if (hit(r)) { x.el.classList.add('tight'); x.el.classList.remove('edge-l', 'edge-r'); edge(x); r = x.n.getBoundingClientRect(); }
+    placed.push(r);
+    if (x.el.classList.contains('cur')) for (const f of x.el.querySelectorAll('.zt-flag')) placed.push(f.getBoundingClientRect());
+  }
+  // 첫삽이가 다른 이름표를 가리면 첫삽이만 숨김(깃발은 남음)
+  const cur = items.find((x) => x.el.classList.contains('cur')), who = cur?.el.querySelector('.zt-who');
+  if (who) { const w = who.getBoundingClientRect(); if (items.some((x) => x !== cur && (() => { const r = x.n.getBoundingClientRect(); return !(r.right <= w.left || r.left >= w.right || r.bottom <= w.top || r.top >= w.bottom); })())) cur.el.classList.add('who-off'); }
+  return items.filter((x) => x.el.classList.contains('tight')).length;
 }

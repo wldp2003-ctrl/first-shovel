@@ -5,7 +5,7 @@ import { icon, LESSON_ICON, LESSON_TONE } from './icons.js';
 import { logoMark, sapi, building } from './brand.js';
 import { sceneFloor, pair, PAIR3D } from './scene-art.js';
 import { makeScene3D, renderPairs, hasGL, SCENE3D_IDS } from './scene3d.js';
-import { mountSite, renderSiteStill } from './site3d.js';
+import { mountSite, renderSiteStill, declutter } from './site3d.js';
 import { sceneTbm, sceneScaffold, sceneLifting, sceneEquip, scenePour, sceneHot, STOP } from './scene-art2.js';
 import { renderMascot } from './mascot.js';
 import { makeTitle, APP_VERSION } from './title.js';
@@ -167,8 +167,8 @@ function deep(title, onBack) {
 let backFn = null, exitArm = 0;
 const setBack = (fn) => { backFn = fn; if (!history.state?.g) history.pushState({ g: 1 }, ''); };
 window.addEventListener('popstate', () => {
-  const dlg = document.querySelector('.dlg-wrap');
-  if (dlg) { dlg.remove(); history.pushState({ g: 1 }, ''); return; }
+  const dlg = document.querySelector('.dlg-wrap, #tbm');
+  if (dlg) { dlg.close ? dlg.close() : dlg.remove(); history.pushState({ g: 1 }, ''); return; }
   if (backFn === 'exit') {
     if (Date.now() - exitArm < 2000) { history.back(); return; }
     exitArm = Date.now(); toast(t('top.exitAgain')); history.pushState({ g: 1 }, ''); return;
@@ -242,6 +242,8 @@ function siteStill(zs, onPick) {
   const marks = h('div', { class: 'site3d-marks' });
   zs.forEach((zn, i) => { const pn = PRE.map.pins[i]; if (!pn) return; const el = h('div', { class: `z-mark ${zn.state}${zn.roof ? ' roof' : ''}`, 'data-zone': zn.id, style: `left:${pn.x}%;top:${pn.y}%`, html: zn.html }); el.querySelector('.zt-name')?.addEventListener('click', () => zn.state !== 'lock' && onPick(zn)); marks.append(el); });
   wrap.append(marks);
+  const fit = () => { if (wrap.isConnected) declutter([...marks.children]); };
+  requestAnimationFrame(() => requestAnimationFrame(fit)); wrap.querySelector('img').addEventListener('load', fit);
   return wrap;
 }
 // 시안의 주황 현장 카드: 지금 할 일 하나 (그림 점검 → 다음 현장 → 멈추고 알려요 → 마지막 점검 → 확인서) + 듣기
@@ -858,14 +860,14 @@ function exportData() {
 function practice(v) {
   if (!isComplete()) {
     const left = SC.scenes.filter((s) => !sceneDone(s.id)).length, cleared = SC.scenes.length - left;
-    v.append(h('div', { class: 'lockbox' }, h('span', { class: 'lock-ic' }, ic('lock', { size: 36 })), h('h2', {}, t('practice.lockedTitle')),
+    v.append(h('div', { class: 'lockbox' }, h('span', { class: 'lock-ic' }, ic('lock', { size: 36 })), h('h2', {}, t('practice.lockedTitle')), h('span', { class: 'proto-tag' }, ic('practice', { size: 14 }), t('practice.proto')),
       h('p', {}, left ? t('practice.leftScenes', { n: left }) : !S.stop?.done ? t('practice.leftStop') : t('practice.leftPost')),
       h('div', { class: 'bd-wrap small-bd', html: building({ done: cleared, total: SC.scenes.length }) }),
       h('p', { class: 'small' }, t('practice.what')),
       h('button', { class: 'btn primary big', onclick: () => go('home') }, t('practice.toLearn'))));
     return;
   }
-  v.append(h('div', { class: 'lockbox open' }, h('span', { class: 'lock-ic open' }, ic('unlock', { size: 36 })), h('h2', {}, t('practice.openTitle')),
+  v.append(h('div', { class: 'lockbox open' }, h('span', { class: 'lock-ic open' }, ic('unlock', { size: 36 })), h('h2', {}, t('practice.openTitle')), h('span', { class: 'proto-tag' }, ic('practice', { size: 14 }), t('practice.proto')),
     h('p', {}, t('practice.openText')),
     h('a', { class: 'btn primary big', id: 'gameLink', href: './game.html' }, ic('practice'), h('span', {}, t('practice.start'))),
     h('button', { class: 'btn', onclick: showCert }, ic('cert'), h('span', {}, t('home.cert')))));
@@ -1246,7 +1248,25 @@ function openCard(id) {
     h('div', { class: 'nav2 done-more' },
       h('button', { class: 'btn primary', id: 'cardAgain', 'aria-label': t('card.replay'), onclick: () => openScene(id) }, ic('retry'), h('span', {}, t('card.replay'))),
       h('button', { class: 'btn', id: 'swipeBtn', 'aria-label': t('swipe.title'), onclick: () => swipeSet(id) }, ic('stop', { size: 20 }), ic('check', { size: 20 }), h('span', {}, t('swipe.title')))),
+    h('button', { class: 'btn big tbm-open', id: 'tbmBtn', 'aria-label': t('tbm.open'), onclick: () => tbmView(sc) }, ic('eye', { size: 22 }), h('span', {}, t('tbm.open'))),
     sceneBasis(sc));
+}
+/* v20 라운드 5: TBM 큰 글씨 — 반장이 휴대전화를 들고 위험 하나씩 보여 줌(가로로 돌리면 그림이 크게). 카드 데이터 그대로 */
+function tbmView(sc) {
+  const hz = cardHz(sc); let i = 0;
+  ensurePairs(sc.id);
+  const el = h('div', { id: 'tbm', role: 'dialog', 'aria-modal': 'true', 'aria-label': t('tbm.open') });
+  const close = () => { el.remove(); document.removeEventListener('keydown', key); };
+  const key = (e) => { if (e.key === 'ArrowRight') nav(1); else if (e.key === 'ArrowLeft') nav(-1); else if (e.key === 'Escape') close(); };
+  const nav = (d) => { i = Math.max(0, Math.min(hz.length - 1, i + d)); show(); };
+  const show = () => {
+    const z = hz[i]; el.innerHTML = '';
+    el.append(h('div', { class: 'tbm-top' }, h('b', { class: 't-num' }, `${sc.no}`), h('span', {}, sc.title), h('span', { class: 'grow' }), h('span', { class: 't-num tbm-n' }, `${i + 1} / ${hz.length}`), h('button', { class: 'tbm-x', 'aria-label': t('common.close'), onclick: close }, ic('cross', { size: 26 }))),
+      h('div', { class: 'tbm-pics' }, h('figure', { class: 'bad' }, h('span', { class: 'pic', html: pair(z.bad) }), h('span', { class: 'mk' }, ic('cross', { size: 28 }))), h('figure', { class: 'good' }, h('span', { class: 'pic', html: pair(z.good) }), h('span', { class: 'mk' }, ic('check', { size: 28 })))),
+      h('p', { class: 'tbm-line' }, T(z.line)),
+      h('div', { class: 'tbm-nav' }, h('button', { class: 'btn big', id: 'tbmPrev', disabled: i ? null : true, 'aria-label': t('common.prev'), onclick: () => nav(-1) }, ic('back', { size: 28 })), speakBtn(T0(z.line)), h('button', { class: 'btn primary big', id: 'tbmNext', disabled: i < hz.length - 1 ? null : true, 'aria-label': t('common.next'), onclick: () => nav(1) }, ic('next', { size: 28 }))));
+  };
+  el.close = close; document.body.append(el); document.addEventListener('keydown', key); show();
 }
 // 카드를 이미지(PNG)로: TBM 에서 반장에게 보여 줄 한 장. 개인정보(이름·기록) 없음
 const loadImg = (src) => new Promise((ok) => { if (!src) return ok(null); const im = new Image(); im.onload = () => ok(im); im.onerror = () => ok(null); im.src = src; });

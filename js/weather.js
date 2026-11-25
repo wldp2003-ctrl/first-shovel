@@ -17,7 +17,11 @@ export function dayDiff(a, b) {
 let cache = { city: null, days: {}, live: false, fetchedAt: 0 };
 const HOSTS = ['api.open-meteo.com', 'historical-forecast-api.open-meteo.com'];
 
+// v20 라운드 5(현장 연습 격리): 실시간 예보는 사용자가 켰을 때만 외부 서버에 요청(기본은 가상 예보 — 외부 요청 0)
+export const liveOn = () => { try { return localStorage.getItem('cheotsap.wxLive') === '1'; } catch { return false; } };
+export const setLive = (on) => { try { localStorage.setItem('cheotsap.wxLive', on ? '1' : ''); } catch {} };
 export async function fetchForecast(cityId) {
+  if (!liveOn() || (typeof navigator !== 'undefined' && navigator.onLine === false)) { cache = { city: cityId, days: {}, live: false, fetchedAt: 0 }; return false; }
   const c = CITIES.find((x) => x.id === cityId) || CITIES[0];
   const q = `/v1/forecast?latitude=${c.lat}&longitude=${c.lon}` +
     `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max` +
