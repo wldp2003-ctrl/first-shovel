@@ -319,6 +319,7 @@ export async function mountSite(box, { zones, onPick, height = 460, backdrop = f
     if (!backdrop && drawn % 10 === 1) declutter(els.map((e) => e.el));
     requestAnimationFrame(frame);
   }
+  if (/dbg3d/.test(location.search)) window.__s3d = { S, renderer }; // 점검용(주소에 ?dbg3d 일 때만)
   requestAnimationFrame(frame);
   function destroy() { if (!alive) return; alive = false; window.removeEventListener('resize', size); S.dispose(); KIT?.dispose(); renderer.dispose(); }
   if (!backdrop) window.__site3d = { zones: zones.length, gl: true, pick: (i) => pick(i), focus: (i) => focus(i), get theta() { return theta; } };
@@ -369,3 +370,4 @@ export function declutter(marks) {
   if (who) { const w = who.getBoundingClientRect(); if (items.some((x) => x !== cur && (() => { const r = x.n.getBoundingClientRect(); return !(r.right <= w.left || r.left >= w.right || r.bottom <= w.top || r.top >= w.bottom); })())) cur.el.classList.add('who-off'); }
   return items.filter((x) => x.el.classList.contains('tight')).length;
 }
+

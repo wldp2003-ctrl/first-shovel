@@ -973,7 +973,9 @@ const scene = (id) => SC.scenes.find((s) => s.id === id);
 const SR = (id) => (S.scenes ||= {})[id] ||= { tries: 0, timeMs: 0, best: null, last: null };
 // 음성(선택): 기기 음성으로 한 줄 읽기. 소리 없이도 이해되게 그림이 먼저
 const canSpeak = () => 'speechSynthesis' in window;
-function speak(text) { if (!canSpeak()) return; try { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(text); u.lang = 'ko-KR'; u.rate = UI.rate === 'slow' ? 0.75 : 0.95; speechSynthesis.speak(u); } catch {} }
+// 라운드 7: 한국어 음성을 직접 고름(기본 음성이 다른 언어인 기기 대비). 음성 목록이 왔는데 한국어가 없으면 다른 언어로 읽지 않고 알림
+const koVoice = () => { try { const vs = speechSynthesis.getVoices(); return { loaded: vs.length > 0, v: vs.find((x) => /^ko(-|_|$)/i.test(x.lang)) || null }; } catch { return { loaded: false, v: null }; } };
+function speak(text) { if (!canSpeak()) return; try { speechSynthesis.cancel(); const kv = koVoice(); if (kv.loaded && !kv.v) { if (!speak.warned) { speak.warned = 1; toast(t('say.noKo')); } return; } const u = new SpeechSynthesisUtterance(text); u.lang = 'ko-KR'; if (kv.v) u.voice = kv.v; u.rate = UI.rate === 'slow' ? 0.75 : 0.95; speechSynthesis.speak(u); } catch {} }
 const speakBtn = (text) => canSpeak() ? h('button', { class: 'btn icon-only speak', 'aria-label': t('scene.listen'), onclick: () => speak(text) }, ic('sound', { size: 26 }), isPic() ? null : h('span', {}, t('scene.listen'))) : null;
 // 위험 종류 아이콘: 경고(노랑 삼각형) 안에
 const hazIc = (type, size = 22) => h('span', { class: 'haz-ic' }, ic(HAZ_TYPES.includes(type) ? type : 'accidents', { size }));
