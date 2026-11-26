@@ -1,5 +1,5 @@
 // 첫 삽 서비스 워커 — 앱 파일은 미리 저장(오프라인 실행), 글꼴은 처음 받을 때 저장, 날씨·Firebase는 항상 네트워크
-const VERSION = 'cheotsap-v21-r1';
+const VERSION = 'cheotsap-v21-r2';
 const CORE = [
   './', './index.html', './game.html', './css/tokens.css', './css/learn.css', './js/learn/app.js', './js/learn/title.js', './data/media.json', './js/learn/mascot.js', './js/learn/site3d.js', './js/learn/scene3d.js', './js/learn/props3d.js', './data/prerender.json', './assets/scenes/map-sm.webp',
   // v18: 재질 세트·근로자 모델·베벨·CC0 모델·질감·HDRI
