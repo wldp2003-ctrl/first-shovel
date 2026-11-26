@@ -465,9 +465,12 @@ function swipeSet(id, o = {}) {
 /* ---------------- v13 그림 점검 (사전·사후 같은 6문항, 순서만 섞음) ---------------- */
 // 위험한 모습과 안전한 모습 중 안전한 쪽을 누른다. 글을 못 읽어도 풀 수 있게, 점수에 읽기 능력이 섞이지 않게
 // 범위는 v11 점검 6문항과 같게: 개구부·안전대·안전모 턱끈·맞음(짐 아래)·동바리 이상 시 대피·멈추고 알리기
-const PIC_TEST = ['1-1', '2-2', '0-2', '3-1', '5-1', 'keep'];
+// v21: 끝의 3개는 시험 전용 전이 문항(교육 7구역에 없는 장소·물체, scenes.json xfer) — 재인(교육 그림)과 전이를 나눠 잼
+const PIC_TEST = ['1-1', '2-2', '0-2', '3-1', '5-1', 'keep', 'x-1', 'x-2', 'x-3'];
+const PIC_CORE = PIC_TEST.filter((id) => !id.startsWith('x-'));
 function picItems() {
   const all = Object.fromEntries(SC.scenes.flatMap((sc) => sc.hazards || []).map((z) => [z.id, z]));
+  for (const x of SC.xfer?.items || []) if (PRE.xfer?.pairs?.[x.id]) all[x.id] = { ...x, bad: x.id + ':bad', good: x.id + ':good' };
   return PIC_TEST.map((id) => (id === 'keep' ? { id, bad: 'keepBad', good: 'keepGood' } : all[id])).filter(Boolean);
 }
 function runPicTest(kind) {
@@ -488,6 +491,9 @@ function runPicTest(kind) {
   const finish = () => {
     const correct = ans.map((a) => a.pick === 'good');
     const rec = { kind: 'pic', items: ans.map((a) => a.id), answers: ans.map((a) => a.pick), correct, score: correct.filter(Boolean).length, n: correct.length, at: Date.now(), hour: new Date().getHours(), timeMs: Date.now() - t0 };
+    // v21: 재인(교육 그림 6) · 전이(시험 전용 3) 점수를 따로 — 예전(6문항) 처음 점검과는 재인 점수끼리 비교
+    const part = (f) => ans.reduce((n, a, k) => n + (f(a.id) && correct[k] ? 1 : 0), 0);
+    rec.core = part((id) => !id.startsWith('x-')); rec.xfer = part((id) => id.startsWith('x-')); rec.xferN = ans.filter((a) => a.id.startsWith('x-')).length;
     S[kind] = rec; save();
     v.innerHTML = '';
     const marks = (r) => h('span', { class: 'pt-dots', 'aria-label': `${r.score}/${r.n}` }, r.correct.map((c) => h('i', { class: c ? 'on' : '' })));
@@ -497,9 +503,11 @@ function runPicTest(kind) {
         h('button', { class: 'btn primary big', id: 'toScene0', 'aria-label': t('test.toScene0'), onclick: () => commute(() => openScene(SC.scenes[0].id)) }, thumb(SC.scenes[0]), h('span', {}, t('test.toScene0')), ic('next')));
     } else {
       const pre = S.pre?.kind === 'pic' ? S.pre : null;
+      const same = pre && (pre.n === rec.n); // 문항 수가 다르면(예전 6문항) 재인 6문항끼리
+      const preS = pre ? (same ? pre.score : pre.core ?? pre.score) : 0, postS = same || !pre ? rec.score : rec.core;
       v.append(h('div', { class: 'result' }, pre ? marks(pre) : null, marks(rec),
-        h('div', { class: 'cmp' }, h('div', {}, h('small', {}, t('test.preShort')), h('b', {}, pre ? String(pre.score) : '-')), ic('next'), h('div', { class: 'up' }, h('small', {}, t('test.postShort')), h('b', {}, String(rec.score)))),
-        isPic() ? null : h('p', {}, !pre ? t('test.oldPre') : rec.score > pre.score ? t('test.better', { n: rec.score - pre.score }) : t('test.reviewHintV13'))),
+        h('div', { class: 'cmp' }, h('div', {}, h('small', {}, t('test.preShort')), h('b', {}, pre ? String(preS) : '-')), ic('next'), h('div', { class: 'up' }, h('small', {}, t('test.postShort')), h('b', {}, String(postS)))),
+        isPic() ? null : h('p', {}, !pre ? t('test.oldPre') : postS > preS ? t('test.better', { n: postS - preS }) : t('test.reviewHintV13'))),
         h('button', { class: 'btn primary big', id: 'toCert', 'aria-label': t('test.getCert'), onclick: () => (S.survey?.done ? finale(showCert) : survey(() => finale(showCert))) }, ic('cert'), isPic() ? null : h('span', {}, t('test.getCert'))));
     }
   };
@@ -844,8 +852,8 @@ export function exportPayload() {
   return {
     app: '첫 삽 기초 교육', appVersion: APP_VERSION, lang: LANG, version: D.version, anonId: S.anon, exportedDay: new Date().toISOString().slice(0, 10),
     scenesVersion: SC.version,
-    pre: S.pre && { kind: S.pre.kind || 'text', score: S.pre.score, n: S.pre.n ?? S.pre.correct.length, correct: S.pre.correct, items: S.pre.items, hour: S.pre.hour, timeSec: S.pre.timeMs ? Math.round(S.pre.timeMs / 1000) : undefined },
-    post: S.post && { kind: S.post.kind || 'text', score: S.post.score, n: S.post.n ?? S.post.correct.length, correct: S.post.correct, items: S.post.items, hour: S.post.hour, timeSec: S.post.timeMs ? Math.round(S.post.timeMs / 1000) : undefined },
+    pre: S.pre && { kind: S.pre.kind || 'text', score: S.pre.score, n: S.pre.n ?? S.pre.correct.length, correct: S.pre.correct, items: S.pre.items, core: S.pre.core, xfer: S.pre.xfer, xferN: S.pre.xferN, hour: S.pre.hour, timeSec: S.pre.timeMs ? Math.round(S.pre.timeMs / 1000) : undefined },
+    post: S.post && { kind: S.post.kind || 'text', score: S.post.score, n: S.post.n ?? S.post.correct.length, correct: S.post.correct, items: S.post.items, core: S.post.core, xfer: S.post.xfer, xferN: S.post.xferN, hour: S.post.hour, timeSec: S.post.timeMs ? Math.round(S.post.timeMs / 1000) : undefined },
     swipe: S.swipe || null,
     stopTell: S.stop ? { done: !!S.stop.done, tries: S.stop.tries, miss: S.stop.miss, timeSec: Math.round((S.stop.timeMs || 0) / 1000) } : null,
     hazardRate: (() => { const all = allHazards(), fs = foundSet(); return all.length ? +(all.filter((z) => fs.has(z.id)).length / all.length).toFixed(2) : 0; })(),
@@ -1107,7 +1115,8 @@ function openScene(id, o = {}) {
   function askAct(z, then) {
     sheet.innerHTML = '';
     v.dataset.say = t('act.ask');
-    const opts = shuffle(['stop', 'tell', 'ppe']);
+    // v21: 3-6(정답 "피해요")만 "멈춰요" 자리에 "피해요" — 멈춤 문장(피해 가요·들어가지 않아요)과 겹쳐 정답이 애매해지지 않게 다른 문제는 그대로
+    const opts = shuffle(z.act === 'away' ? ['away', 'tell', 'ppe'] : ['stop', 'tell', 'ppe']);
     const box2 = h('div', { class: 'act-card', id: 'actCard', 'data-hz': z.id },
       h('div', { class: 'act-q' }, h('span', { class: 'pic', html: pair(z.bad) }), h('span', { class: 'act-ask' }, ic('finger', { size: 26 }), h('b', {}, '?')), h('p', {}, h('small', {}, t('act.situ', { name: T0(z.name) })), h('br'), t('act.ask')), speakBtn(`${t('act.situ', { name: T0(z.name) })} ${t('act.ask')}`)),
       h('div', { class: 'act-opts' }, opts.map((a) => h('button', { class: 'act-opt', 'data-act': a, 'aria-label': t('act.' + a), onclick: (e) => pick(a, e.currentTarget) }, h('span', { class: 'pic', html: STOP[a]() }), isPic() ? null : h('small', {}, t('act.' + a))))));
@@ -1430,7 +1439,7 @@ async function boot() {
   catch (e) { app().innerHTML = ''; app().append(h('p', { style: 'padding:24px' }, t('app.loadFail'))); return; }
   // v21: 위험 종류 이름·구역 이름은 화면 여러 곳에서 그대로 쓰므로 데이터에서 바로 바꿈(번역이 없으면 한국어 그대로)
   if (LANG !== 'ko') { for (const k of Object.keys(SC.hazardTypes || {})) SC.hazardTypes[k] = tr(SC.hazardTypes[k]); for (const sc of SC.scenes) { sc.title = tr(sc.title); sc.cat = tr(sc.cat); if (typeof sc.situation === 'string') sc.situation = tr(sc.situation); } }
-  try { PRE = await jP; for (const [zid, zp] of Object.entries(PRE.zones || {})) { const sc = SC.scenes.find((x) => x.id === zid); for (const z of sc?.hazards || []) if (zp.pairs?.[z.id]) { PAIR3D[z.bad] = zp.pairs[z.id].bad; PAIR3D[z.good] = zp.pairs[z.id].good; if (zp.pairs[z.id].meta) PMETA[z.id] = zp.pairs[z.id].meta; pairsDone.add(zid); } } } catch { PRE = { zones: {} }; }
+  try { PRE = await jP; for (const [zid, zp] of Object.entries(PRE.zones || {})) { const sc = SC.scenes.find((x) => x.id === zid); for (const z of sc?.hazards || []) if (zp.pairs?.[z.id]) { PAIR3D[z.bad] = zp.pairs[z.id].bad; PAIR3D[z.good] = zp.pairs[z.id].good; if (zp.pairs[z.id].meta) PMETA[z.id] = zp.pairs[z.id].meta; pairsDone.add(zid); } } for (const [xid, xp] of Object.entries(PRE.xfer?.pairs || {})) { PAIR3D[xid + ':bad'] = xp.bad; PAIR3D[xid + ':good'] = xp.good; } } catch { PRE = { zones: {} }; }
   noteHour(); save();
   TITLE = makeTitle({ setBack, setLang, getLang: () => LANG, langsReady: () => LANGS_READY, trMeta: () => TR.meta, h, t, ic, icon, sapi, logoMark, renderMascot, UI, saveUI, isPic, canSpeak, speak, sayBtn, dots, autoSay, autoSayOn, reduceMotion, applyPrefs, tap, toast, hasGL, mountSite, T, shown, srcShort,
     get S() { return S; }, get SC() { return SC; }, get PRE() { return PRE; }, get SRC() { return SRC; }, starSum, allScenes, go,

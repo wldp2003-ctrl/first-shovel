@@ -177,6 +177,33 @@ const SCENES = {
     return { cam: [-1.2, 1.6, 11.5], look: [-1.2, 4.0, -1], fov: 62 };
   },
   // 3. 양중·크레인·리프트
+  // v21 시험 전용(교육 장면에 없음): 전이 문항 3개 — 같은 위험 종류를 다른 장소·물체로. 사전·사후 그림 점검에만 쓰고 7구역에는 넣지 않는다
+  //  x-1 개구부(1-1과 같은 종류, 다른 층·작은 구멍·자재 든 사람) · x-2 안전대(2-2 비계 → 철골 보) · x-3 매단 짐(3-1 철근 묶음 → 파이프 묶음)
+  xfer(K, H, S) {
+    const gnd = baseScene(K, K.scene, { ground: 'art-ground', size: 90 }); gnd.position.y = -3.2;
+    const con = K.T(texSpeckle('art-concrete', 4, 2600, 0.12));
+    // 2층 슬래브(위면 y=0), x-1 구멍 자리(1.0×1.0, 중심 -3, 2)만 비움
+    K.box(30, 0.3, 16.5, con, 0, -0.3, -6.75); K.box(30, 0.3, 5.5, con, 0, -0.3, 5.25); K.box(11.5, 0.3, 1, con, -9.25, -0.3, 2); K.box(17.5, 0.3, 1, con, 6.25, -0.3, 2);
+    for (const [x, z] of [[-14, -14], [14, -14], [-14, 7], [14, 7]]) K.box(0.5, 3.2, 0.5, '--art-concrete-dark', x, -3.2, z);
+    SF.guardrail(K, [-15, 8], [15, 8]); SF.guardrail(K, [-15, -15], [-15, 8]);
+    Pr.pallet(K, -7, -2, 0.3); Pr.lumber(K, 9, 3, -0.4); Pr.plywood(K, -9, 5, 0.2, 4); Pr.cone(K, 2.5, 5);
+    for (const [x, c] of [[-8, '--art-wall'], [6, '--art-concrete']]) K.box(5, 7, 4, K.T(texFacade(2)), x, -3.2, -24);
+    // x-1 구멍: 자재를 든 사람이 구멍 쪽으로 걸어옴(두 모습 모두)
+    person(K, -3.1, 4.3, { pose: 'carry', ry: Math.PI });
+    hz(K, H, 'x-1', [-3, 0.02, 2], () => SF.opening(K, -3, 2, 1.0, 1.0, { cover: false }), () => SF.opening(K, -3, 2, 1.0, 1.0, { cover: true, coverMat: K.T(texStripes()) }), { pos: [-1.3, 2.9, 7.2], look: [-3, 0.4, 2.6] });
+    // x-2 철골 보(위면 y=3.5) 위에서 일하는 사람 · 생명줄은 두 모습 모두
+    for (const x of [3.6, 8.4]) K.box(0.35, 3.5, 0.35, '--art-steel', x, 0, -4);
+    K.box(5.2, 0.3, 0.3, '--art-steel', 6, 3.2, -4); K.rod([3.6, 5.1, -4.25], [8.4, 5.1, -4.25], 0.02, '--asphalt');
+    for (const x of [3.6, 8.4]) K.rod([x, 3.5, -4.25], [x, 5.2, -4.25], 0.04, '--art-steel');
+    hz(K, H, 'x-2', null, () => person(K, 6, -4, { ry: 0.4, pose: 'point' }, 3.5), () => person(K, 6, -4, { ry: 0.4, pose: 'point', hookW: [6.2, 5.1, -4.25] }, 3.5), { pos: [4.9, 4.7, -1.6], look: [6, 4.3, -4], marks: [[6, 3.4, -4]] });
+    // x-3 매단 파이프 묶음 + 아래 통행
+    Pr.towerCrane(K, 11, -13, 0, 17, 0, 0, 0);
+    K.rod([0, 19, -8], [0, 5.6, -8], 0.02, '--asphalt'); K.box(0.36, 0.36, 0.36, '--asphalt', 0, 5.3, -8);
+    K.rod([0, 5.3, -8], [-1.3, 4.7, -8], 0.015, '--asphalt'); K.rod([0, 5.3, -8], [1.3, 4.7, -8], 0.015, '--asphalt');
+    K.group(() => Pr.pipes(K, 0, 0, 0), 0, 4.45, -8);
+    hz(K, H, 'x-3', null, () => person(K, 0.2, -7.8, { pose: 'walk', ry: 1.5 }), () => { person(K, 2.9, -5.7, { pose: 'walk', ry: 1.5 }); for (let a = 0; a < 6.28; a += 0.7) K.cone(0.16, 0.5, '--vest', Math.cos(a) * 2.3, 0, -8 + Math.sin(a) * 2.3); }, { pos: [1.4, 1.7, -1.6], look: [0.6, 2.5, -8] });
+    return { cam: [0, 6, 12], look: [0, 1, -3], fov: 56 };
+  },
   lifting(K, H, S) {
     baseScene(K, K.scene, { ground: 'art-ground' });
     // v19.1: 짓고 있는 건물 골조 (슬래브 3m 간격, 앞면 z=-3) — 리프트가 붙을 층과 슬래브 끝이 보이게
@@ -301,7 +328,7 @@ const SCENES = {
     return { cam: [0.4, 1.7, 6.6], look: [0.4, 0.5, -0.6], fov: 66 };
   },
 };
-export const SCENE3D_IDS = Object.keys(SCENES);
+export const SCENE3D_IDS = Object.keys(SCENES).filter((k) => k !== 'xfer'); // xfer 는 시험 전용
 
 /* ---------------- 만들기 ---------------- */
 // 렌더 품질: 부드러운 그림자 + ACES 톤 (지도와 같은 빛)

@@ -2441,5 +2441,75 @@
   ]
  },
  "updated": "2026-11-24",
- "note": "tools/render-scenes.mjs 가 만든 미리 렌더링 이미지와 누를 곳(400×300 좌표, r 30). 3D 모델(코드: site3d·scene3d·props3d·models/worker, CC0: Kenney 모델·Poly Haven 질감·HDRI)에서 렌더링. 라이선스: docs/에셋_라이선스.md"
+ "note": "tools/render-scenes.mjs 가 만든 미리 렌더링 이미지와 누를 곳(400×300 좌표, r 30). 3D 모델(코드: site3d·scene3d·props3d·models/worker, CC0: Kenney 모델·Poly Haven 질감·HDRI)에서 렌더링. 라이선스: docs/에셋_라이선스.md",
+ "xfer": {
+  "pairs": {
+   "x-1": {
+    "bad": "assets/scenes/xfer/x-1-bad.webp",
+    "good": "assets/scenes/xfer/x-1-good.webp",
+    "meta": {
+     "focus": {
+      "x": 52.5,
+      "y": 51.4,
+      "r": 9
+     },
+     "marks": [
+      {
+       "x": 52.5,
+       "y": 51.4
+      }
+     ],
+     "diff": {
+      "x": 52.5,
+      "y": 51.4,
+      "r": 9
+     }
+    }
+   },
+   "x-2": {
+    "bad": "assets/scenes/xfer/x-2-bad.webp",
+    "good": "assets/scenes/xfer/x-2-good.webp",
+    "meta": {
+     "focus": {
+      "x": 56.2,
+      "y": 46.6,
+      "r": 28.1
+     },
+     "marks": [
+      {
+       "x": 50,
+       "y": 84
+      }
+     ],
+     "diff": {
+      "x": 56.2,
+      "y": 46.6,
+      "r": 16.9
+     }
+    }
+   },
+   "x-3": {
+    "bad": "assets/scenes/xfer/x-3-bad.webp",
+    "good": "assets/scenes/xfer/x-3-good.webp",
+    "meta": {
+     "focus": {
+      "x": 45.6,
+      "y": 76.6,
+      "r": 11
+     },
+     "marks": [
+      {
+       "x": 45.6,
+       "y": 76.6
+      }
+     ],
+     "diff": {
+      "x": 45.6,
+      "y": 76.6,
+      "r": 9
+     }
+    }
+   }
+  }
+ }
 }

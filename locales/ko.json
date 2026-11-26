@@ -1850,7 +1850,7 @@
  "learn.home.done": "준공! 기초를 모두 마쳤어요",
  "learn.home.streak": "연속 {n}일",
  "learn.home.start": "시작하기",
- "learn.home.startHint": "먼저 6문제로 지금 아는 것을 확인해요. 틀려도 괜찮아요.",
+ "learn.home.startHint": "먼저 9문제로 지금 아는 것을 확인해요. 틀려도 괜찮아요.",
  "learn.home.continue": "이어서 하기",
  "learn.home.begin": "시작",
  "learn.home.post": "마지막 그림 점검",
@@ -1952,7 +1952,7 @@
  "learn.intro.go": "시작",
  "learn.intro.langH": "언어를 골라 주세요",
  "learn.intro.soon": "준비 중",
- "learn.intro.toPre": "그림 점검 6문제",
+ "learn.intro.toPre": "그림 점검 9문제",
  "learn.install.title": "홈 화면에 추가해 두세요",
  "learn.install.text": "앱처럼 바로 열고, 인터넷이 없어도 쓸 수 있어요.",
  "learn.install.manual": "브라우저 메뉴에서 \"홈 화면에 추가\"를 누르면 앱처럼 쓸 수 있어요.",
@@ -1986,7 +1986,7 @@
  "learn.rank.2": "안전 지킴이",
  "learn.rank.next": "별 {n}개 더 모으면 {r}",
  "learn.rank.top": "가장 높은 단계예요",
- "learn.home.startCheck": "그림 점검 6문제",
+ "learn.home.startCheck": "그림 점검 9문제",
  "learn.home.startSmall": "먼저 1분",
  "learn.home.nextScene": "다음 현장",
  "learn.home.last": "마지막 하나",
@@ -2255,5 +2255,6 @@
  "learn.say.noVoice": "이 기기에 {lang} 음성이 없어요. 휴대전화 설정 › 텍스트 음성 변환에서 받으면 읽어 줘요.",
  "learn.i18n.aiNote": "이 언어는 AI가 번역한 초안이에요(검수 전). 안전 문장 아래에 한국어 원문을 함께 보여 줘요.",
  "learn.i18n.pick": "언어 고르기",
- "learn.i18n.koOnly": "한국어"
+ "learn.i18n.koOnly": "한국어",
+ "learn.act.away": "피해요"
 }
