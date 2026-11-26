@@ -2243,5 +2243,17 @@
  "main.wx.turnOff": "실시간 예보 끄기",
  "learn.practice.proto": "시제품 · 연구 범위 밖",
  "learn.tbm.open": "TBM 때 크게 보여 주기",
- "learn.say.noKo": "이 기기에 한국어 음성이 없어요. 휴대전화 설정 › 텍스트 음성 변환에서 한국어를 받으면 읽어 줘요."
+ "learn.say.noKo": "이 기기에 한국어 음성이 없어요. 휴대전화 설정 › 텍스트 음성 변환에서 한국어를 받으면 읽어 줘요.",
+ "learn.common.mmss": "{m}분 {s}초",
+ "learn.short.tbm": "출근·TBM",
+ "learn.short.floor": "골조 바닥",
+ "learn.short.scaffold": "비계",
+ "learn.short.lifting": "양중",
+ "learn.short.equip": "장비",
+ "learn.short.pour": "타설",
+ "learn.short.hot": "용접·밀폐",
+ "learn.say.noVoice": "이 기기에 {lang} 음성이 없어요. 휴대전화 설정 › 텍스트 음성 변환에서 받으면 읽어 줘요.",
+ "learn.i18n.aiNote": "이 언어는 AI가 번역한 초안이에요(검수 전). 안전 문장 아래에 한국어 원문을 함께 보여 줘요.",
+ "learn.i18n.pick": "언어 고르기",
+ "learn.i18n.koOnly": "한국어"
 }

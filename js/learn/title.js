@@ -2,7 +2,8 @@
 // app.js 의 도구(h, t, ic …)와 상태(S, UI)를 ctx 로 받아 쓴다. 교육 내용(lessons/sources/scenes)은 읽기만 한다.
 // 색은 css/tokens.css 토큰만. 글자 크기 설정은 #app 의 zoom, 움직임 줄이기는 html.rm 클래스.
 
-export const APP_VERSION = 'v20';
+import { LANGS, langOf } from './langs.js';
+export const APP_VERSION = 'v21';
 
 export function makeTitle(ctx) {
   const { h, t, ic, icon, sapi, logoMark, renderMascot } = ctx;
@@ -54,6 +55,7 @@ export function makeTitle(ctx) {
       h('span', { class: 'tt-ic' }, ic(name, { size: ctx.isPic() ? 32 : 26 })), h('span', { class: 'tt-t' }, h('b', {}, label)), sayMini(label));
     const v = h('main', { id: 'view', class: 'title-screen' + (ctx.isPic() ? ' pic' : '') },
       bg, h('div', { class: 'tt-fade', 'aria-hidden': 'true' }),
+      h('button', { class: 'tt-lang', id: 'ttLang', 'aria-label': t('i18n.pick'), onclick: () => { ctx.tap(); langPage(() => showTitle()); } }, ic('globe', { size: 22 }), h('span', {}, langOf(ctx.getLang()).name)),
       h('header', { class: 'tt-head' },
         h('div', { class: 'tt-logo' }, h('span', { class: 'tt-mark', html: logoMark({ size: 64 }) }),
           h('div', {}, h('h1', { class: 'tt-name' }, t('app.name')), h('p', { class: 'tt-sub' }, t('title.sub')))),
@@ -104,6 +106,7 @@ export function makeTitle(ctx) {
 
   /* ---------- 처음 "시작하기": 소개(처음만) → 모드 → 사전 점검 ---------- */
   function startFlow() {
+    if (UI.lang == null && !/^ko/i.test(navigator.language || 'ko') && ctx.langsReady().length > 1) { UI.lang = ctx.getLang(); ctx.saveUI(); return langPage(() => startFlow()); }
     if (!UI.aboutDone) about(() => pickMode(() => ctx.preTest()), () => showTitle());
     else pickMode(() => ctx.preTest());
   }
@@ -272,6 +275,18 @@ export function makeTitle(ctx) {
   }
 
   /* ---------- ⑤ 환경 설정 ---------- */
+  /* ---------- v21 언어: 목록(고른 언어 표시, 번역 파일이 있는 것만 누를 수 있음) · 언어 화면 ---------- */
+  function langList() {
+    const cur = ctx.getLang(), ready = ctx.langsReady();
+    return h('div', { class: 'opts langs' }, LANGS.filter((L) => ready.includes(L.id)).map((L) =>
+      h('button', { class: 'opt lang-opt' + (L.id === cur ? ' right sel' : ''), 'data-lang': L.id, lang: L.id, 'aria-pressed': L.id === cur ? 'true' : 'false', onclick: () => { ctx.tap(); if (L.id !== cur) ctx.setLang(L.id); } },
+        ic('globe', { size: 20 }), h('span', { class: 'opt-t' }, L.name), L.id === cur ? h('span', { class: 'mark-ok' }, ic('check', { size: 20 })) : null)));
+  }
+  const langNote = () => (ctx.getLang() !== 'ko' ? h('p', { class: 'small lang-note' }, ic('idea', { size: 16 }), ' ', t('i18n.aiNote')) : null);
+  function langPage(onBack) {
+    const v = page('lang', t('i18n.pick'), onBack);
+    v.append(h('div', { class: 'lang-hero' }, ic('globe', { size: 40 })), langList(), langNote());
+  }
   function settings(onBack) {
     const v = page('settings', t('title.settings'), onBack);
     const render = () => {
@@ -298,8 +313,7 @@ export function makeTitle(ctx) {
           sw('autoSay', 'play', t('set.autoSay'), ctx.autoSayOn(), (on) => { UI.autoSay = on; UI.autoSayUser = true; }),
           seg('rate', 'speed', t('set.rate'), [['slow', t('set.rateSlow'), icon('walk', { size: 18 })], ['normal', t('set.rateNormal'), icon('walk', { size: 18 }) + icon('next', { size: 14 })]], UI.rate || 'normal', (x) => { UI.rate = x; }),
           sw('vibrate', 'vibrate', t('settings.vibrate'), UI.vibrate !== false, (on) => { UI.vibrate = on; })),
-        grp('globe', t('set.gLang'), h('div', { class: 'opts langs' }, [['ko', '한국어', true], ['en', 'English', false], ['vi', 'Tiếng Việt', false], ['zh', '中文', false], ['ru', 'Русский', false]].map(([id, nm, ok]) =>
-          h('button', { class: 'opt' + (ok ? ' right sel' : ''), disabled: !ok, 'data-lang': id, lang: id }, h('span', { class: 'opt-t' }, nm), ok ? h('span', { class: 'mark-ok' }, ic('check', { size: 20 })) : h('small', { class: 'soon' }, t('intro.soon')))))),
+        grp('globe', t('set.gLang'), langList(), langNote()),
         grp('learn', t('set.gLearn'),
           h('button', { class: 'btn set-btn', id: 'setAbout', onclick: () => { ctx.tap(); about(() => settings(onBack), () => settings(onBack)); } }, ic('idea'), h('span', {}, t('set.aboutAgain')), ic('next', { size: 18 })),
           h('button', { class: 'btn set-btn', id: 'setHow', onclick: () => { ctx.tap(); howTo(() => settings(onBack)); } }, ic('help'), h('span', {}, t('title.how')), ic('next', { size: 18 })),
@@ -357,5 +371,5 @@ export function makeTitle(ctx) {
     cr.append(h('p', { class: 'small' }, t('info.self')));
   }
 
-  return { showTitle, about, pickMode, howTo, settings, info, stopBg, hasRecord };
+  return { langPage, showTitle, about, pickMode, howTo, settings, info, stopBg, hasRecord };
 }

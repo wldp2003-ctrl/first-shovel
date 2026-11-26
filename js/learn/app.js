@@ -9,6 +9,7 @@ import { mountSite, renderSiteStill, declutter } from './site3d.js';
 import { sceneTbm, sceneScaffold, sceneLifting, sceneEquip, scenePour, sceneHot, STOP } from './scene-art2.js';
 import { renderMascot } from './mascot.js';
 import { makeTitle, APP_VERSION } from './title.js';
+import { LANGS, langOf } from './langs.js';
 
 // append(..., 조건 ? 요소 : null)에서 "null" 글자가 찍히지 않게
 if (!Element.prototype.append.__skipNull) {
@@ -26,13 +27,16 @@ const DEV = /[?&]dev=1/.test(location.search);
 const OK_STATUS = ['원문확인', '전문가확인'];
 const shown = (o) => !!o && (OK_STATUS.includes(o.status) || DEV);
 const isDraft = (o) => !!o && !OK_STATUS.includes(o.status);
-const T = (o) => pseudo(o == null ? '' : typeof o === 'string' ? o : o.t);
+const T = (o) => pseudo(tr(o == null ? '' : typeof o === 'string' ? o : o.t));
 let S = null; // 학습 기록
 // 화면 문구: locales/ko.json 의 learn.* 키 (번역은 나중). ?pseudo=1 → 모든 문구를 40% 길게 (다국어 대비 시험)
 let LOC = {};
+// v21 다국어: 고른 언어의 번역(locales/learn/<id>.json). ui = 화면 문구 키, c = 교육 문장(한국어 원문 → 번역). 없으면 한국어
+let LANG = 'ko', TR = { ui: {}, c: {}, meta: {} }, LANGS_READY = ['ko'];
+const tr = (s) => (LANG !== 'ko' && s && TR.c[s]) || s;
 const PSEUDO = /[?&]pseudo=1/.test(location.search);
 const pseudo = (s) => { if (!PSEUDO || !s) return s; const fill = 'Ồ ẫ Жщ ệ Ðé '; const n = Math.ceil(String(s).length * 0.4); let x = ''; while (x.length < n) x += fill; return s + ' ' + x.slice(0, n); };
-export const t = (k, vars) => { let v = LOC['learn.' + k] ?? k; if (vars) v = v.replace(/\{(\w+)\}/g, (m, n) => (vars[n] ?? m)); return pseudo(v); };
+export const t = (k, vars) => { let v = TR.ui['learn.' + k] ?? LOC['learn.' + k] ?? k; if (vars) v = v.replace(/\{(\w+)\}/g, (m, n) => (vars[n] ?? m)); return pseudo(v); };
 const ic = (name, o) => h('span', { class: 'icw', html: icon(name, o) });
 // 화면 설정·연출 상태: 학습 기록(KEY)과 따로 둬서 예전 기록 형식을 바꾸지 않는다
 const UIKEY = 'cheotsap.learn.ui';
@@ -90,11 +94,13 @@ function h(tag, attrs = {}, ...kids) {
   return el;
 }
 const pic = (id, cls = 'pic') => h('div', { class: cls, html: art(id) });
-const T0 = (o) => (o == null ? '' : typeof o === 'string' ? o : o.t);
+const T0 = (o) => tr(o == null ? '' : typeof o === 'string' ? o : o.t);
+// 번역 중이면 안전 문장 아래에 한국어 원문(한국인 동료·반장과 함께 볼 때)
+const koOrig = (o) => { const k = o == null ? '' : typeof o === 'string' ? o : o.t; return LANG !== 'ko' && TR.c[k] ? h('small', { class: 'ko-orig', lang: 'ko' }, k) : null; };
 const shuffle = (a) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 const rid = () => Math.random().toString(36).slice(2, 10);
 const today = () => { const d = new Date(); return `${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.`; };
-const mmss = (ms) => { const s = Math.round(ms / 1000); return `${Math.floor(s / 60)}분 ${String(s % 60).padStart(2, '0')}초`; };
+const mmss = (ms) => { const s = Math.round(ms / 1000); return t('common.mmss', { m: Math.floor(s / 60), s: String(s % 60).padStart(2, '0') }); };
 const chars = (c) => (T0(c.text) + T0(c.more)).replace(/\s/g, '').length;
 const visCards = (x) => x.cards.map((c, i) => ({ ...c, i })).filter((c) => shown(c.text));
 const visQuiz = (x) => x.quiz.map((q, i) => ({ ...q, i })).filter(shown);
@@ -205,7 +211,7 @@ function home(v) {
       h('span', { class: 'st' }, st === 'done' ? h('span', { class: 'done-ic', 'aria-label': t('home.statusDone') }, ic('check', { size: 20 })) : st === 'doing' ? h('span', { class: 'doing' }, t('home.statusDoing')) : ic('next', { size: 20 }))));
   });
   // 기초 레슨 6개 — 첫 화면에서 바로 (v14)
-  v.append(h('section', { class: 'lessons6' }, h('h2', { class: 'sec head' }, ic('learn', { size: 24 }), h('span', {}, t('home.lessons6'))), h('p', { class: 'small' }, t('home.lessons6Note')), list));
+  if (LANG === 'ko') v.append(h('section', { class: 'lessons6' }, h('h2', { class: 'sec head' }, ic('learn', { size: 24 }), h('span', {}, t('home.lessons6'))), h('p', { class: 'small' }, t('home.lessons6Note')), list));
   v.append(h('p', { class: 'note' }, t('home.note')));
 }
 // v15: 3D 비교 그림 — 장면마다 위험 켬/끔 두 장을 만들어 PAIR3D 에 채움 (한 번만)
@@ -217,7 +223,7 @@ async function ensurePairs(id) {
 const idle = (fn, ms) => (window.requestIdleCallback ? window.requestIdleCallback(fn, { timeout: ms }) : setTimeout(fn, ms));
 function warmPairs() { if (!hasGL()) return; const ids = SCENE3D_IDS.filter((i) => !pairsDone.has(i)); let k = 0; const step = () => { if (k >= ids.length) return; ensurePairs(ids[k++]).then(() => idle(step, 600)); }; idle(step, 1500); }
 // v17 지도 구역: 장소 이름 + 하는 일 아이콘. 지금 = 첫삽이 + 깃발 "여기부터", 끝냄 = 초록 체크 깃발 + 별, 잠김 = 안개 + 작은 이름표·자물쇠
-const SHORT = { tbm: '출근·TBM', floor: '골조 바닥', scaffold: '비계', lifting: '양중', equip: '장비', pour: '타설', hot: '용접·밀폐' };
+const SHORT = new Proxy({}, { get: (_, id) => (typeof id === 'string' ? t('short.' + id) : undefined) }); // v21: 문구 파일(learn.short.*)
 const WORKIC = { tbm: 'together', floor: 'stairs', scaffold: 'up', lifting: 'hook', equip: 'truck', pour: 'drop', hot: 'fire' };
 const zoneName = (sc) => SHORT[sc.id] || sc.title;
 function siteZones() {
@@ -836,7 +842,7 @@ function wipeAll() {
 // 개인정보 없는 결과: 무작위 번호, 점수, 시간, 시간대만
 export function exportPayload() {
   return {
-    app: '첫 삽 기초 교육', appVersion: APP_VERSION, version: D.version, anonId: S.anon, exportedDay: new Date().toISOString().slice(0, 10),
+    app: '첫 삽 기초 교육', appVersion: APP_VERSION, lang: LANG, version: D.version, anonId: S.anon, exportedDay: new Date().toISOString().slice(0, 10),
     scenesVersion: SC.version,
     pre: S.pre && { kind: S.pre.kind || 'text', score: S.pre.score, n: S.pre.n ?? S.pre.correct.length, correct: S.pre.correct, items: S.pre.items, hour: S.pre.hour, timeSec: S.pre.timeMs ? Math.round(S.pre.timeMs / 1000) : undefined },
     post: S.post && { kind: S.post.kind || 'text', score: S.post.score, n: S.post.n ?? S.post.correct.length, correct: S.post.correct, items: S.post.items, hour: S.post.hour, timeSec: S.post.timeMs ? Math.round(S.post.timeMs / 1000) : undefined },
@@ -899,6 +905,15 @@ function coachMap(v) {
   document.body.classList.add('coach-map');
   v.querySelector('.site-head')?.after(tip);
 }
+
+/* ---------------- v21 언어 불러오기 ---------------- */
+async function loadLang() {
+  try { LANGS_READY = ['ko', ...(await (await fetch('./locales/learn/index.json')).json()).ready]; } catch { LANGS_READY = ['ko']; }
+  LANG = LANGS_READY.includes(UI.lang) ? UI.lang : 'ko';
+  if (LANG !== 'ko') { try { TR = await (await fetch(`./locales/learn/${LANG}.json`)).json(); TR.ui ||= {}; TR.c ||= {}; } catch { LANG = 'ko'; TR = { ui: {}, c: {}, meta: {} }; } }
+  const L = langOf(LANG); document.documentElement.lang = LANG; document.documentElement.dir = 'ltr'; document.documentElement.classList.toggle('rtl-text', !!L.rtl);
+}
+function setLang(id) { UI.lang = id; saveUI(); speechSynthesis?.cancel?.(); location.hash = ''; location.reload(); }
 
 /* ---------------- 완료 장면 (2초, 누르면 넘어감) ---------------- */
 function finale(then) {
@@ -974,8 +989,9 @@ const SR = (id) => (S.scenes ||= {})[id] ||= { tries: 0, timeMs: 0, best: null, 
 // 음성(선택): 기기 음성으로 한 줄 읽기. 소리 없이도 이해되게 그림이 먼저
 const canSpeak = () => 'speechSynthesis' in window;
 // 라운드 7: 한국어 음성을 직접 고름(기본 음성이 다른 언어인 기기 대비). 음성 목록이 왔는데 한국어가 없으면 다른 언어로 읽지 않고 알림
-const koVoice = () => { try { const vs = speechSynthesis.getVoices(); return { loaded: vs.length > 0, v: vs.find((x) => /^ko(-|_|$)/i.test(x.lang)) || null }; } catch { return { loaded: false, v: null }; } };
-function speak(text) { if (!canSpeak()) return; try { speechSynthesis.cancel(); const kv = koVoice(); if (kv.loaded && !kv.v) { if (!speak.warned) { speak.warned = 1; toast(t('say.noKo')); } return; } const u = new SpeechSynthesisUtterance(text); u.lang = 'ko-KR'; if (kv.v) u.voice = kv.v; u.rate = UI.rate === 'slow' ? 0.75 : 0.95; speechSynthesis.speak(u); } catch {} }
+// 라운드 7·v21: 고른 언어의 음성을 직접 고름. 음성 목록이 왔는데 그 언어 음성이 없으면 다른 언어로 읽지 않고 한 번 알림
+const langVoice = () => { const L = langOf(LANG), pre = L.tts.split('-')[0].toLowerCase(); try { const vs = speechSynthesis.getVoices(); return { loaded: vs.length > 0, v: vs.find((x) => x.lang.replace('_', '-').toLowerCase() === L.tts.toLowerCase()) || vs.find((x) => x.lang.toLowerCase().split(/[-_]/)[0] === pre) || null, L }; } catch { return { loaded: false, v: null, L }; } };
+function speak(text) { if (!canSpeak()) return; try { speechSynthesis.cancel(); const kv = langVoice(); if (kv.loaded && !kv.v) { if (!speak.warned) { speak.warned = 1; toast(LANG === 'ko' ? t('say.noKo') : t('say.noVoice', { lang: kv.L.name })); } return; } const u = new SpeechSynthesisUtterance(text); u.lang = kv.L.tts; if (kv.v) u.voice = kv.v; u.rate = UI.rate === 'slow' ? 0.75 : 0.95; speechSynthesis.speak(u); } catch {} }
 const speakBtn = (text) => canSpeak() ? h('button', { class: 'btn icon-only speak', 'aria-label': t('scene.listen'), onclick: () => speak(text) }, ic('sound', { size: 26 }), isPic() ? null : h('span', {}, t('scene.listen'))) : null;
 // 위험 종류 아이콘: 경고(노랑 삼각형) 안에
 const hazIc = (type, size = 22) => h('span', { class: 'haz-ic' }, ic(HAZ_TYPES.includes(type) ? type : 'accidents', { size }));
@@ -1234,7 +1250,7 @@ function safetyCard(sc, { compact = false } = {}) {
           h('span', { class: 'sc-fig bad' }, h('span', { class: 'sc-pic', 'data-pic': z.bad, html: pair(z.bad) }), h('i', { class: 'mk mk-bad', 'aria-label': t('scene.bad') }, ic('cross', { size: 14 }))),
           h('span', { class: 'sc-arrow' }, ic('next', { size: 16 })),
           h('span', { class: 'sc-fig good' }, h('span', { class: 'sc-pic', 'data-pic': z.good, html: pair(z.good) }), h('i', { class: 'mk mk-good', 'aria-label': t('scene.good') }, ic('check', { size: 14 })))),
-        h('div', { class: 'sc-line' }, h('span', { class: 'sc-type' + (ppe ? ' must' : '') }, hazIc(z.type, 16), h('small', {}, SC.hazardTypes?.[z.type] || '')), sitLine(z, { short: true }), h('p', {}, T(z.line)), basisChips(z.line.src, quote)));
+        h('div', { class: 'sc-line' }, h('span', { class: 'sc-type' + (ppe ? ' must' : '') }, hazIc(z.type, 16), h('small', {}, SC.hazardTypes?.[z.type] || '')), sitLine(z, { short: true }), h('p', {}, T(z.line)), koOrig(z.line), basisChips(z.line.src, quote)));
     })),
     quote,
     expert ? h('p', { class: 'expert-chip' }, ic('check', { size: 12 }), t('basis.expert')) : null,
@@ -1266,7 +1282,7 @@ function tbmView(sc) {
     const z = hz[i]; el.innerHTML = '';
     el.append(h('div', { class: 'tbm-top' }, h('b', { class: 't-num' }, `${sc.no}`), h('span', {}, sc.title), h('span', { class: 'grow' }), h('span', { class: 't-num tbm-n' }, `${i + 1} / ${hz.length}`), h('button', { class: 'tbm-x', 'aria-label': t('common.close'), onclick: close }, ic('cross', { size: 26 }))),
       h('div', { class: 'tbm-pics' }, h('figure', { class: 'bad' }, h('span', { class: 'pic', html: pair(z.bad) }), h('span', { class: 'mk' }, ic('cross', { size: 28 }))), h('figure', { class: 'good' }, h('span', { class: 'pic', html: pair(z.good) }), h('span', { class: 'mk' }, ic('check', { size: 28 })))),
-      h('p', { class: 'tbm-line' }, T(z.line)),
+      h('p', { class: 'tbm-line' }, T(z.line)), koOrig(z.line),
       h('div', { class: 'tbm-nav' }, h('button', { class: 'btn big', id: 'tbmPrev', disabled: i ? null : true, 'aria-label': t('common.prev'), onclick: () => nav(-1) }, ic('back', { size: 28 })), speakBtn(T0(z.line)), h('button', { class: 'btn primary big', id: 'tbmNext', disabled: i < hz.length - 1 ? null : true, 'aria-label': t('common.next'), onclick: () => nav(1) }, ic('next', { size: 28 }))));
   };
   el.close = close; document.body.append(el); document.addEventListener('keydown', key); show();
@@ -1405,15 +1421,18 @@ async function boot() {
   jP.catch(() => {});
   // 라운드 1: 교육 앱 문구만 뽑은 작은 파일(ko-learn.json, 빌드 때 ko.json 에서 만듦) — 없으면 전체 ko.json
   try { LOC = await (await fetch('./locales/ko-learn.json')).json(); } catch { try { LOC = await (await fetch('./locales/ko.json')).json(); } catch {} }
+  await loadLang();
   const op = opening();
   // 라운드 1: 화면 CSS·글꼴 CSS 를 그리기를 막지 않게 받으므로, 다 받은 뒤에 앱 화면을 보여 줌 (스타일 없는 화면이 번쩍이지 않게)
   await Promise.all(['cssLearn', 'cssFonts'].map((id) => new Promise((ok) => { const l = document.getElementById(id); if (!l || l.rel === 'stylesheet' || l.sheet) return ok(); l.addEventListener('load', ok); l.addEventListener('error', ok); setTimeout(ok, 8000); })));
   document.documentElement.classList.remove('boot');
   try { [D, SRC, SC] = await Promise.all([jL, jS.then((x) => Object.fromEntries(x.sources.map((s) => [s.id, s]))), jC]); }
   catch (e) { app().innerHTML = ''; app().append(h('p', { style: 'padding:24px' }, t('app.loadFail'))); return; }
+  // v21: 위험 종류 이름·구역 이름은 화면 여러 곳에서 그대로 쓰므로 데이터에서 바로 바꿈(번역이 없으면 한국어 그대로)
+  if (LANG !== 'ko') { for (const k of Object.keys(SC.hazardTypes || {})) SC.hazardTypes[k] = tr(SC.hazardTypes[k]); for (const sc of SC.scenes) { sc.title = tr(sc.title); sc.cat = tr(sc.cat); if (typeof sc.situation === 'string') sc.situation = tr(sc.situation); } }
   try { PRE = await jP; for (const [zid, zp] of Object.entries(PRE.zones || {})) { const sc = SC.scenes.find((x) => x.id === zid); for (const z of sc?.hazards || []) if (zp.pairs?.[z.id]) { PAIR3D[z.bad] = zp.pairs[z.id].bad; PAIR3D[z.good] = zp.pairs[z.id].good; if (zp.pairs[z.id].meta) PMETA[z.id] = zp.pairs[z.id].meta; pairsDone.add(zid); } } } catch { PRE = { zones: {} }; }
   noteHour(); save();
-  TITLE = makeTitle({ setBack, h, t, ic, icon, sapi, logoMark, renderMascot, UI, saveUI, isPic, canSpeak, speak, sayBtn, dots, autoSay, autoSayOn, reduceMotion, applyPrefs, tap, toast, hasGL, mountSite, T, shown, srcShort,
+  TITLE = makeTitle({ setBack, setLang, getLang: () => LANG, langsReady: () => LANGS_READY, trMeta: () => TR.meta, h, t, ic, icon, sapi, logoMark, renderMascot, UI, saveUI, isPic, canSpeak, speak, sayBtn, dots, autoSay, autoSayOn, reduceMotion, applyPrefs, tap, toast, hasGL, mountSite, T, shown, srcShort,
     get S() { return S; }, get SC() { return SC; }, get PRE() { return PRE; }, get SRC() { return SRC; }, starSum, allScenes, go,
     continueGame: () => go('home'), preTest: () => runPicTest('pre'), postTest: () => runPicTest('post'), exportData, wipe: wipeAll });
   await op;

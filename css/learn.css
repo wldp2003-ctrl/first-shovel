@@ -1363,3 +1363,15 @@ body.coach-map .zt-flag { animation: coachflag 1.2s infinite; }
 @media (orientation: landscape) { .tbm-pics { grid-template-columns: 1fr 1fr; } }
 .tbm-pics { grid-auto-rows: minmax(0, 1fr); }
 @media (orientation: landscape) { #tbm { gap: var(--s2); padding-top: calc(var(--sat) + var(--s2)); } .tbm-line { font-size: clamp(22px, 7vh, 40px); } .tbm-nav .btn { min-height: 52px; } .tbm-top { font-size: 20px; } }
+
+/* v21 다국어: 타이틀 언어 단추 · 언어 목록 · 한국어 원문 · 오른쪽에서 왼쪽 글(우르두어) */
+.tt-lang { position: absolute; top: calc(var(--sat) + 12px); right: 12px; z-index: 3; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border: 2px solid var(--ink); border-radius: var(--r-full); background: var(--white); color: var(--ink); font-weight: 800; font-size: 15px; cursor: pointer; }
+.langs .lang-opt { min-height: 52px; }
+.langs .lang-opt .opt-t { font-size: 18px; }
+.lang-hero { display: grid; place-items: center; padding: var(--s3) 0; color: var(--ink); }
+.lang-note { display: flex; gap: 6px; align-items: flex-start; color: var(--ink-2); }
+.ko-orig { display: block; margin-top: 2px; color: var(--ink-2); font-size: 13px; font-weight: 600; }
+.tbm-line + .ko-orig { text-align: center; font-size: 18px; }
+html.rtl-text p, html.rtl-text b, html.rtl-text small, html.rtl-text span, html.rtl-text h1, html.rtl-text h2 { unicode-bidi: plaintext; }
+.title-screen .tt-head { padding-top: calc(var(--sat) + 64px); }
+.sc-line .ko-orig { flex: 1 1 100%; }
