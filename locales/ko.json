@@ -2256,5 +2256,19 @@
  "learn.i18n.aiNote": "이 언어는 AI가 번역한 초안이에요(검수 전). 안전 문장 아래에 한국어 원문을 함께 보여 줘요.",
  "learn.i18n.pick": "언어 고르기",
  "learn.i18n.koOnly": "한국어",
- "learn.act.away": "피해요"
+ "learn.act.away": "피해요",
+ "learn.term.hello": "현장에서 자주 듣는 말 {n}개를 사진으로 먼저 볼게요.",
+ "learn.term.more": "이것도 여기서 자주 들어요.",
+ "learn.term.check": "골라 보기",
+ "learn.term.skip": "다 알아요, 건너뛰기",
+ "learn.term.findPre": "어느 사진일까요?",
+ "learn.term.find": "{name}, 어느 사진일까요?",
+ "learn.term.right": "맞아요! 이제 현장에서 찾아봐요.",
+ "learn.term.wrong": "이 사진이에요. 현장에서 다시 보면 기억날 거예요.",
+ "learn.term.photo": "사진",
+ "learn.term.ownArt": "그림: 첫 삽 3D (실제 사진 준비 중)",
+ "learn.term.title": "현장 말 사진",
+ "learn.term.here": "여기서 듣는 말 — 누르면 사진",
+ "learn.term.see": "사진 보기",
+ "learn.info.photos": "현장 말 사진 출처 ({n}장)"
 }

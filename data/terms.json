@@ -1,0 +1,487 @@
+{
+ "version": "v22",
+ "updated": "2026-11-27",
+ "note": "v22 현장 말 미리 보기 원본. node tools/terms/build.mjs → www/data/terms.json (사진 경로·출처는 credits.json 에서 붙임). 문장은 생김새·어디서 보는지 설명(안전 규칙 아님) — 안전 규칙은 scenes.json 의 근거 있는 문장이 맡는다. 상태: 초안(전문가 검토 전)",
+ "zones": {
+  "tbm": [
+   "tbm",
+   "helmet",
+   "boots"
+  ],
+  "floor": [
+   "frame",
+   "opening",
+   "rebar",
+   "harness"
+  ],
+  "scaffold": [
+   "scaffold",
+   "mobile",
+   "awp"
+  ],
+  "lifting": [
+   "tcrane",
+   "signal",
+   "hoist",
+   "forklift"
+  ],
+  "equip": [
+   "excav",
+   "dump",
+   "roller",
+   "trench"
+  ],
+  "pour": [
+   "formwork",
+   "shoring",
+   "pump",
+   "pour"
+  ],
+  "hot": [
+   "weld",
+   "manhole"
+  ]
+ },
+ "terms": {
+  "tbm": {
+   "ko": "TBM",
+   "look": "일하기 전에 모여서 오늘 할 일과 조심할 위험을 듣는 짧은 모임이에요.",
+   "keys": [
+    "TBM"
+   ],
+   "also": [
+    {
+     "ko": "툴박스 미팅",
+     "t": "TBM의 다른 이름"
+    }
+   ],
+   "img": "assets/terms/tbm.webp",
+   "credit": {
+    "artist": "US Department of Labor",
+    "lic": "Public domain",
+    "licUrl": "",
+    "page": "https://commons.wikimedia.org/wiki/File:140604_DOL_DaytonaSafety_(14350398322).jpg",
+    "title": "140604 DOL DaytonaSafety (14350398322).jpg"
+   }
+  },
+  "helmet": {
+   "ko": "안전모",
+   "look": "머리를 지키는 단단한 모자예요. 턱 아래로 지나는 끈이 턱끈이에요.",
+   "keys": [
+    "안전모"
+   ],
+   "also": [
+    {
+     "ko": "턱끈",
+     "t": "안전모가 벗겨지지 않게 턱에 거는 끈"
+    }
+   ],
+   "img": "assets/terms/helmet.webp",
+   "credit": {
+    "artist": "רנדום",
+    "lic": "CC BY-SA 3.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Yellow_hard_hat.jpg",
+    "title": "Yellow hard hat.jpg"
+   }
+  },
+  "boots": {
+   "ko": "안전화",
+   "look": "발끝이 단단하고 바닥이 두꺼운 작업용 신발이에요.",
+   "keys": [
+    "안전화"
+   ],
+   "img": "assets/terms/boots.webp",
+   "credit": {
+    "artist": "Liftarn",
+    "lic": "CC BY-SA 3.0",
+    "licUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "page": "https://commons.wikimedia.org/wiki/File:Steel-toe_boots.jpg",
+    "title": "Steel-toe boots.jpg"
+   }
+  },
+  "frame": {
+   "ko": "골조",
+   "look": "기둥·보·바닥으로 된 건물의 뼈대예요. 벽과 창문을 붙이기 전 모습이에요.",
+   "keys": [
+    "골조"
+   ],
+   "img": "assets/terms/frame.webp",
+   "credit": {
+    "artist": "Meow2021",
+    "lic": "CC BY-SA 4.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Post_tensioned_concrete_slab_on_cellular_beams.jpg",
+    "title": "Post tensioned concrete slab on cellular beams.jpg"
+   }
+  },
+  "opening": {
+   "ko": "개구부",
+   "look": "바닥이나 벽에 뚫어 둔 구멍이에요. 계단·배관·승강기가 지나갈 자리예요.",
+   "keys": [
+    "개구부",
+    "바닥 구멍"
+   ],
+   "img": "assets/scenes/floor/1-1-bad.webp",
+   "credit": {
+    "own": true
+   }
+  },
+  "rebar": {
+   "ko": "철근",
+   "look": "콘크리트 속에 넣는 울퉁불퉁한 쇠막대예요. 바닥에서 위로 솟아 있기도 해요.",
+   "keys": [
+    "철근"
+   ],
+   "img": "assets/terms/rebar.webp",
+   "credit": {
+    "artist": "Kai Kemmann",
+    "lic": "CC BY-SA 4.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Stahlbeton-Rohbau_des_Geb%C3%A4udekomplexes_%E2%80%9EWohnen_am_Anger%E2%80%9C,_Braugasse_6,_Weimar-Ehringsdorf,_Th%C3%BCringen_03.jpg",
+    "title": "Stahlbeton-Rohbau des Gebäudekomplexes „Wohnen am Anger“, Braugasse 6, Weimar-Ehringsdorf, Thüringen 03.jpg"
+   }
+  },
+  "harness": {
+   "ko": "안전대",
+   "look": "몸에 차는 띠와 고리 달린 줄이에요. 떨어질 때 몸을 잡아 줘요.",
+   "keys": [
+    "안전대",
+    "생명줄"
+   ],
+   "also": [
+    {
+     "ko": "생명줄",
+     "t": "안전대 고리를 거는 튼튼한 줄"
+    },
+    {
+     "ko": "고리",
+     "t": "안전대 줄 끝의 갈고리. 단단한 곳에 걸어요"
+    }
+   ],
+   "img": "assets/terms/harness.webp",
+   "credit": {
+    "artist": "National Institute for Occupational Safety and Health (NIOSH) from USA",
+    "lic": "Public domain",
+    "licUrl": "",
+    "page": "https://commons.wikimedia.org/wiki/File:Construction_worker_harness_(9253634989).jpg",
+    "title": "Construction worker harness (9253634989).jpg"
+   }
+  },
+  "scaffold": {
+   "ko": "비계",
+   "look": "건물 바깥에 쇠파이프로 세운 틀과 발판이에요. 높은 곳에서 일할 때 올라서요.",
+   "keys": [
+    "비계"
+   ],
+   "also": [
+    {
+     "ko": "작업발판",
+     "t": "비계 위에 깔아 올라서는 바닥판"
+    }
+   ],
+   "img": "assets/terms/scaffold.webp",
+   "credit": {
+    "artist": "U.S. Navy photo by Mass Communication Specialist 3rd Class Dominique Pineiro",
+    "lic": "Public domain",
+    "licUrl": "",
+    "page": "https://commons.wikimedia.org/wiki/File:US_Navy_100319-N-3283P-002_Contract_Japanese_workers_remove_scaffolding_after_cleaning_and_painting_the_facade_of_the_Commander,_Fleet_Activities_Yokosuka_headquarters_building.jpg",
+    "title": "US Navy 100319-N-3283P-002 Contract Japanese workers remove scaffolding after cleaning and painting the facade of the Commander, Fleet Activities Yokosuka headquarters building.jpg"
+   }
+  },
+  "mobile": {
+   "ko": "이동식 비계",
+   "look": "바퀴가 달려 옮길 수 있는 작은 비계예요. 바퀴를 잠그고 올라가요.",
+   "keys": [
+    "이동식 비계"
+   ],
+   "img": "assets/scenes/scaffold/2-5-good.webp",
+   "credit": {
+    "own": true
+   }
+  },
+  "awp": {
+   "ko": "고소작업대",
+   "look": "사람이 탄 작업대(바구니)를 기계로 높이 올리는 장비예요.",
+   "keys": [
+    "고소작업대"
+   ],
+   "img": "assets/terms/awp.webp",
+   "credit": {
+    "artist": "KeepOnTruckin",
+    "lic": "CC BY 2.5",
+    "licUrl": "https://creativecommons.org/licenses/by/2.5",
+    "page": "https://commons.wikimedia.org/wiki/File:Scissor_lifts.jpg",
+    "title": "Scissor lifts.jpg"
+   }
+  },
+  "tcrane": {
+   "ko": "타워크레인",
+   "look": "높은 기둥과 긴 팔로 무거운 자재를 매달아 옮기는 기계예요.",
+   "keys": [
+    "크레인"
+   ],
+   "also": [
+    {
+     "ko": "양중",
+     "t": "자재를 들어 올려 옮기는 일"
+    }
+   ],
+   "img": "assets/terms/tcrane.webp",
+   "credit": {
+    "artist": "PortlandAppraisalBlog",
+    "lic": "CC BY-SA 4.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Tower_crane_rising_at_hollywoodHUB_construction_site,_Portland,_Oregon.jpg",
+    "title": "Tower crane rising at hollywoodHUB construction site, Portland, Oregon.jpg"
+   }
+  },
+  "signal": {
+   "ko": "신호수",
+   "look": "크레인·장비 기사에게 손짓이나 무전으로 움직임을 알려 주는 사람이에요.",
+   "keys": [
+    "신호수"
+   ],
+   "img": "assets/terms/signal.webp",
+   "credit": {
+    "artist": "U.S. Navy photo by Petty Officer 1st Class Andrew Waters",
+    "lic": "Public domain",
+    "licUrl": "",
+    "page": "https://commons.wikimedia.org/wiki/File:NMCB_133_Deployed_to_Guam_(8978137).jpg",
+    "title": "NMCB 133 Deployed to Guam (8978137).jpg"
+   }
+  },
+  "hoist": {
+   "ko": "건설용 리프트",
+   "look": "건물 바깥 기둥을 타고 오르내리며 사람과 자재를 나르는 승강기예요.",
+   "keys": [
+    "리프트"
+   ],
+   "also": [
+    {
+     "ko": "운반구",
+     "t": "사람·자재를 싣는 칸"
+    },
+    {
+     "ko": "방호울",
+     "t": "땅바닥 둘레를 막는 철망 울타리"
+    },
+    {
+     "ko": "적재하중",
+     "t": "한 번에 실을 수 있는 무게 한도"
+    }
+   ],
+   "img": "assets/terms/hoist.webp",
+   "credit": {
+    "artist": "W. Bulach",
+    "lic": "CC BY-SA 4.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:00_0354_Baustellenaufzug.jpg",
+    "title": "00 0354 Baustellenaufzug.jpg"
+   }
+  },
+  "forklift": {
+   "ko": "지게차",
+   "look": "앞의 쇠 갈퀴(포크)로 짐을 떠서 들어 옮기는 차예요.",
+   "keys": [
+    "지게차"
+   ],
+   "img": "assets/terms/forklift.webp",
+   "credit": {
+    "artist": "JUIMLAWIUoo",
+    "lic": "CC BY-SA 4.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:HK_Sai_Ying_Pun_%E8%88%88%E6%BC%A2%E9%81%93_Hing_Hon_Road_%E9%8F%9F%E8%BB%8A_Forklift_n_driver_construction_site_December_2018_SSG_01.jpg",
+    "title": "HK Sai Ying Pun 興漢道 Hing Hon Road 鏟車 Forklift n driver construction site December 2018 SSG 01.jpg"
+   }
+  },
+  "excav": {
+   "ko": "굴착기",
+   "look": "긴 팔 끝의 바가지로 땅을 파는 장비예요. 몸통이 빙 돌아요.",
+   "keys": [
+    "굴착기"
+   ],
+   "also": [
+    {
+     "ko": "포크레인",
+     "t": "현장에서 굴착기를 흔히 부르는 말"
+    }
+   ],
+   "img": "assets/terms/excav.webp",
+   "credit": {
+    "artist": "Matthew T Rader",
+    "lic": "CC BY-SA 4.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Caterpillar_330_excavator_on_a_pile_of_dirt.jpg",
+    "title": "Caterpillar 330 excavator on a pile of dirt.jpg"
+   }
+  },
+  "dump": {
+   "ko": "덤프트럭",
+   "look": "짐칸을 들어 올려 흙이나 자재를 쏟아 내리는 트럭이에요.",
+   "keys": [
+    "덤프"
+   ],
+   "img": "assets/terms/dump.webp",
+   "credit": {
+    "artist": "Cjp24",
+    "lic": "CC BY-SA 4.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:MAN_dump_truck_-_Kubota_U48-4.jpg",
+    "title": "MAN dump truck - Kubota U48-4.jpg"
+   }
+  },
+  "roller": {
+   "ko": "롤러",
+   "look": "큰 쇠바퀴로 땅이나 아스팔트를 눌러 다지는 장비예요.",
+   "keys": [
+    "롤러"
+   ],
+   "img": "assets/terms/roller.webp",
+   "credit": {
+    "artist": "Marc-Lautenbacher",
+    "lic": "CC BY-SA 4.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Ride-on_roller_compactor,_an_equipment_for_asphalt_pavement,_Canada.jpg",
+    "title": "Ride-on roller compactor, an equipment for asphalt pavement, Canada.jpg"
+   }
+  },
+  "trench": {
+   "ko": "토공사",
+   "look": "땅을 파고 흙을 옮기고 다지는 일이에요. 파낸 구덩이 옆에 흙벽이 생겨요.",
+   "keys": [
+    "구덩이",
+    "토공사"
+   ],
+   "also": [
+    {
+     "ko": "굴착",
+     "t": "땅을 파는 일"
+    }
+   ],
+   "img": "assets/terms/trench.webp",
+   "credit": {
+    "artist": "Giftzwerg 88",
+    "lic": "CC BY-SA 4.0",
+    "licUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Baustelle_Palazzo_T%C3%BCbingen_12.jpg",
+    "title": "Baustelle Palazzo Tübingen 12.jpg"
+   }
+  },
+  "formwork": {
+   "ko": "거푸집",
+   "look": "콘크리트를 부어 모양을 만드는 틀이에요. 합판이나 철판으로 짜요.",
+   "keys": [
+    "거푸집"
+   ],
+   "img": "assets/terms/formwork.webp",
+   "credit": {
+    "artist": "MTA Capital Construction Mega Projects",
+    "lic": "CC BY 2.0",
+    "licUrl": "https://creativecommons.org/licenses/by/2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Pouring_concrete_for_the_walls_of_a_traction_power_substation_at_the_43rd_St_Bridge_in_Queens._(CH058A,_08-12-19)_(48552595006),_formwork.jpg",
+    "title": "Pouring concrete for the walls of a traction power substation at the 43rd St Bridge in Queens. (CH058A, 08-12-19) (48552595006), formwork.jpg"
+   }
+  },
+  "shoring": {
+   "ko": "동바리",
+   "look": "거푸집과 콘크리트 무게를 아래에서 받치는 기둥이에요. 천장 아래에 줄지어 서 있어요.",
+   "keys": [
+    "동바리"
+   ],
+   "also": [
+    {
+     "ko": "서포트",
+     "t": "현장에서 동바리를 부르는 다른 말"
+    }
+   ],
+   "img": "assets/terms/shoring.webp",
+   "credit": {
+    "artist": "Lumber Jack second account (en.wikipedia)",
+    "lic": "CC BY 3.0",
+    "licUrl": "https://creativecommons.org/licenses/by/3.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Slab_Formwork_Tables.JPG",
+    "title": "Slab Formwork Tables.JPG"
+   }
+  },
+  "pump": {
+   "ko": "펌프카",
+   "look": "접었다 펴는 긴 팔(붐)로 콘크리트를 높은 곳까지 보내는 트럭이에요.",
+   "keys": [
+    "펌프카"
+   ],
+   "also": [
+    {
+     "ko": "붐",
+     "t": "펌프카의 긴 팔"
+    }
+   ],
+   "img": "assets/terms/pump.webp",
+   "credit": {
+    "artist": "Ghouston",
+    "lic": "CC0",
+    "licUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "page": "https://commons.wikimedia.org/wiki/File:Concrete-pump-20120210-001.jpg",
+    "title": "Concrete-pump-20120210-001.jpg"
+   }
+  },
+  "pour": {
+   "ko": "타설",
+   "look": "거푸집 안에 콘크리트를 붓는 일이에요.",
+   "keys": [
+    "타설",
+    "콘크리트"
+   ],
+   "img": "assets/terms/pour.webp",
+   "credit": {
+    "artist": "U.S. Navy photo",
+    "lic": "Public domain",
+    "licUrl": "",
+    "page": "https://commons.wikimedia.org/wiki/File:US_Navy_070912-F-8678B-042_Steelworker_Constructionman_Steven_A._Amador_and_Steelworker_Constructionman_Troy_Franklin,_attached_to_Naval_Mobile_Construction_Battalion_(NMCB)_4,_direct_the_flow_of_concrete_from_the_boom_of_the_p.jpg",
+    "title": "US Navy 070912-F-8678B-042 Steelworker Constructionman Steven A. Amador and Steelworker Constructionman Troy Franklin, attached to Naval Mobile Construction Battalion (NMCB) 4, direct the flow of concrete from the boom of the p.jpg"
+   }
+  },
+  "weld": {
+   "ko": "용접",
+   "look": "불꽃으로 쇠를 녹여 붙이는 일이에요. 불티가 멀리 튀어요.",
+   "keys": [
+    "용접"
+   ],
+   "also": [
+    {
+     "ko": "불티",
+     "t": "용접할 때 튀는 뜨거운 쇳가루 불꽃"
+    }
+   ],
+   "img": "assets/terms/weld.webp",
+   "credit": {
+    "artist": "U.S. Navy photo by Mass Communication Specialist 1st Class Martin Wright",
+    "lic": "Public domain",
+    "licUrl": "",
+    "page": "https://commons.wikimedia.org/wiki/File:US_Navy_070125-N-1625W-003_Steelworker_1st_Class_Brian_Hunt_of_Bremerton,_Wash.,_welds_together_pieces_of_steel_to_build_a_concrete_form.jpg",
+    "title": "US Navy 070125-N-1625W-003 Steelworker 1st Class Brian Hunt of Bremerton, Wash., welds together pieces of steel to build a concrete form.jpg"
+   }
+  },
+  "manhole": {
+   "ko": "맨홀",
+   "look": "땅속 관이나 공간으로 들어가는 둥근 구멍이에요. 안은 공기가 나쁠 수 있어요.",
+   "keys": [
+    "맨홀"
+   ],
+   "also": [
+    {
+     "ko": "밀폐공간",
+     "t": "공기가 잘 통하지 않는 닫힌 공간"
+    }
+   ],
+   "img": "assets/terms/manhole.webp",
+   "credit": {
+    "artist": "Bart Everson",
+    "lic": "CC BY 2.0",
+    "licUrl": "https://creativecommons.org/licenses/by/2.0",
+    "page": "https://commons.wikimedia.org/wiki/File:Open_Manhole_and_Cover_Mid-City_New_Orleans.jpg",
+    "title": "Open Manhole and Cover Mid-City New Orleans.jpg"
+   }
+  }
+ }
+}

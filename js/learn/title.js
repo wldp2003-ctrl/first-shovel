@@ -3,7 +3,7 @@
 // 색은 css/tokens.css 토큰만. 글자 크기 설정은 #app 의 zoom, 움직임 줄이기는 html.rm 클래스.
 
 import { LANGS, langOf } from './langs.js';
-export const APP_VERSION = 'v21';
+export const APP_VERSION = 'v22';
 
 export function makeTitle(ctx) {
   const { h, t, ic, icon, sapi, logoMark, renderMascot } = ctx;
@@ -369,6 +369,13 @@ export function makeTitle(ctx) {
       cr.append(h('ul', {}, [...groups.entries()].map(([k, n]) => h('li', {}, `${k} (${n})`)), h('li', {}, t('info.three'))));
     } catch {}
     cr.append(h('p', { class: 'small' }, t('info.self')));
+    // v22 현장 말 사진: 사진마다 작성자·라이선스·원본 (CC BY·BY-SA 표시 의무)
+    try {
+      const TMJ = await (await fetch('./data/terms.json')).json();
+      const ph = Object.values(TMJ.terms).filter((x) => x.credit && !x.credit.own);
+      if (ph.length) v.append(h('h2', { class: 'sec' }, t('info.photos', { n: ph.length })),
+        h('div', { class: 'card-lite info-cr info-ph' }, h('ul', {}, ph.map((x) => h('li', {}, h('b', { lang: 'ko' }, x.ko), ' — ', x.credit.artist, ' · ', x.credit.licUrl ? h('a', { href: x.credit.licUrl, target: '_blank', rel: 'noopener' }, x.credit.lic) : x.credit.lic, ' · ', h('a', { href: x.credit.page, target: '_blank', rel: 'noopener' }, 'Wikimedia Commons'))))));
+    } catch {}
   }
 
   return { langPage, showTitle, about, pickMode, howTo, settings, info, stopBg, hasRecord };

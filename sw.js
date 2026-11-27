@@ -1,5 +1,5 @@
 // 첫 삽 서비스 워커 — 앱 파일은 미리 저장(오프라인 실행), 글꼴은 처음 받을 때 저장, 날씨·Firebase는 항상 네트워크
-const VERSION = 'cheotsap-v21-r4';
+const VERSION = 'cheotsap-v22-r1';
 const CORE = [
   './', './index.html', './game.html', './css/tokens.css', './css/learn.css', './js/learn/app.js', './js/learn/title.js', './data/media.json', './js/learn/mascot.js', './js/learn/site3d.js', './js/learn/scene3d.js', './js/learn/props3d.js', './data/prerender.json', './assets/scenes/map-sm.webp',
   // v18: 재질 세트·근로자 모델·베벨·CC0 모델·질감·HDRI
@@ -18,6 +18,7 @@ self.addEventListener('install', (e) => {
   // v17: 미리 렌더링한 지도·장면 이미지(data/prerender.json 에 적힌 것)도 처음 설치 때 저장 → 두 번째부터 오프라인
   e.waitUntil(caches.open(VERSION).then(async (c) => {
     await c.addAll(CORE);
+    try { const m = await (await fetch('./data/terms.json')).json(); await c.addAll(['./data/terms.json', ...new Set(Object.values(m.terms).map((x) => './' + x.img))]); } catch {} // v22 현장 말 사진
     try { const m = await (await fetch('./data/prerender.json')).json(); const list = [...new Set(JSON.stringify(m).match(/assets\/scenes\/[^"]+/g) || [])].map((x) => './' + x); await c.addAll(list); } catch {}
   }).then(() => self.skipWaiting()));
 });

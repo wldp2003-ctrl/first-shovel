@@ -348,7 +348,17 @@ const sitText = (z) => (shown(z.situation) ? T(z.situation).replace(/\*\*/g, '')
 function sitLine(z, { short = false } = {}) {
   if (!shown(z.situation)) return null;
   const p = h('p', { class: 'sit' + (short ? ' short' : '') + (isDraft(z.situation) ? ' draft' : '') }); let n = 0;
-  T(z.situation).split(/(\*\*[^*]+\*\*)/).forEach((part) => { if (/^\*\*/.test(part)) { n++; p.append(h('b', { class: 'sit-k' }, h('i', { class: 'sit-n t-num', 'aria-hidden': 'true' }, String(n)), part.slice(2, -2))); } else if (part) p.append(part); });
+  const koB = (z.situation.t || '').match(/\*\*[^*]+\*\*/g) || []; // v22: 굵은 말이 현장 말이면 눌러서 사진 보기 (한국어 원문 기준)
+  T(z.situation).split(/(\*\*[^*]+\*\*)/).forEach((part) => {
+    if (!/^\*\*/.test(part)) { if (part) p.append(part); return; }
+    const tid = termForBold(koB[n] || ''); n++;
+    const b = h('b', { class: 'sit-k' + (tid ? ' tm-link' : '') }, h('i', { class: 'sit-n t-num', 'aria-hidden': 'true' }, String(n)), part.slice(2, -2), tid ? h('span', { class: 'tm-ic', 'aria-hidden': 'true' }, ic('eye', { size: 14 })) : null);
+    if (tid) {
+      Object.assign(b, { tabIndex: 0, onclick: (e) => { e.stopPropagation(); termSheet(tid); }, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); termSheet(tid); } } });
+      b.setAttribute('role', 'button'); b.dataset.term = tid; b.setAttribute('aria-label', `${part.slice(2, -2)} — ${t('term.see')}`);
+    }
+    p.append(b);
+  });
   return p;
 }
 // 그림 문장 띠: [누가] [어디서] [무엇을] ? — 글을 못 읽어도 무엇을 보는지
@@ -756,6 +766,9 @@ const empty = (msg) => h('div', { class: 'empty' }, h('span', { class: 'sapi-s',
 /* ---------------- 다시 보기 ---------------- */
 function review(v) {
   v.append(...cardShelf());
+  // v22 현장 말 사진 (전체)
+  const allT = SC.scenes.flatMap((sc) => termIds(sc));
+  if (allT.length) v.append(h('h2', { class: 'sec' }, isPic() ? ic('eye') : t('term.title')), termChips([...new Set(allT)]));
   // 해 본 장면에서 아직 못 찾은 위험
   const fs = foundSet(), tried = new Set(Object.keys(S.scenes || {}));
   const missed = allHazards().filter((z) => tried.has(z.sc.id) && !fs.has(z.id));
@@ -861,6 +874,7 @@ export function exportPayload() {
     wrongNow: S.wrong.length,
     scenes: Object.fromEntries(Object.entries(S.scenes || {}).map(([k, r]) => [k, { tries: r.tries, timeSec: Math.round(r.timeMs / 1000), last: r.last && { found: r.last.found.length, total: r.last.total, rate: +(r.last.found.length / r.last.total).toFixed(2), stars: r.last.stars, mode: r.last.mode, hour: r.last.hour, missTaps: r.last.missTaps, today: r.last.today, active: r.last.active?.length, act: r.last.act || null }, foundIds: r.seen || r.best?.found || [], best: r.best && { found: r.best.found.length, stars: r.best.stars } }])),
     usageHours: S.hours,
+    terms: S.terms ? Object.fromEntries(Object.entries(S.terms).map(([k, r]) => [k, { sec: Math.round(r.ms / 1000), quiz: r.quiz, skipped: r.skipped }])) : null, // v22 현장 말 미리 보기
     survey: S.survey?.done ? { sus: S.survey.ans.slice(0, 10), susScore: susScore(S.survey.ans.slice(0, 10)), own: S.survey.ans.slice(10, 15), mode: S.survey.mode, timeSec: Math.round((S.survey.timeMs || 0) / 1000) } : S.survey?.skipped ? { skipped: true } : null,
   };
 }
@@ -1008,6 +1022,7 @@ const stars = (n, size = 28) => h('span', { class: 'stars', 'aria-label': `${n}/
 function openScene(id, o = {}) {
   const sc = scene(id), rec = SR(id);
   // v17: 먼저 알고(미리 보기) → 찾고 → 정리(현장 안전 카드). 미리 보기에서 이번에 낼 위험을 정해 넘긴다
+  if (!o.go && !o.termsDone && !S.terms?.[id] && termIds(sc).length) return termIntro(sc, () => openScene(id, { ...o, termsDone: true }));
   if (!o.go) { const pickIds = pickHz(sc, rec, o).map((z) => z.id); return previewScene(sc, pickIds, () => openScene(id, { ...o, go: true, hz: pickIds })); }
   const v = deep(isPic() ? `${sc.no}` : `${sc.no}. ${sc.title}`);
   markStudyDay();
@@ -1208,6 +1223,77 @@ function basisChips(ids, quoteBox) {
   return h('span', { class: 'basis-chips' }, [...new Set(ids)].filter((i) => SRC[i]).map((i) => h('button', { class: 'basis-chip', 'data-src': i, 'aria-label': `${t('basis.label')}: ${srcShort(i)}`, onclick: (e) => { e.stopPropagation(); const s = SRC[i]; if (!quoteBox) return; const same = quoteBox.dataset.src === i && !quoteBox.hidden; quoteBox.hidden = same; quoteBox.dataset.src = i; quoteBox.innerHTML = ''; if (!same) quoteBox.append(h('b', {}, `${s.org} 「${s.doc}」 ${s.loc}`), h('q', {}, s.quote || ''), h('small', {}, t(GRADE[s.grade] || 'grade.0'))); } }, ic('book', { size: 12 }), srcShort(i))));
 }
 // ① 미리 보기: 여기서 하는 일 + 조심할 것 N가지(위험 종류 아이콘만, 위치·정답은 안 보여 줌)
+/* ---------------- v22 현장 말 미리 보기 ----------------
+   건설을 배운 적 없는 사람(처음 온 사람·외국인)은 "동바리·비계·개구부" 같은 이름만 보고는 무엇인지 모른다.
+   사전식 뜻풀이 대신, 구역에 처음 들어갈 때 첫삽이가 실제 사진 3~4장을 넘기며 "이게 ○○예요"(생김새·어디서 보는지 한 줄) → 한 번 골라 보기(사진 고르기 1문제) → 바로 미리 보기.
+   (참고: 듀오링고의 "새 단어 카드 → 바로 골라 보기", 문장 속 단어를 누르면 뜻이 나오는 힌트) 처음 한 번만, 건너뛰기 가능, 약 20~30초.
+   다시 보기: 미리 보기의 "여기서 듣는 말" 칩, 상황 문장의 굵은 말(사진 표시), 다시 보기 탭의 "현장 말 사진". 사진·라이선스: data/terms.json */
+let TM = { terms: {}, zones: {} };
+const termOf = (id) => TM.terms?.[id];
+const termIds = (sc) => (TM.zones?.[sc.id] || []).filter(termOf);
+const termKo = (x) => x.ko;
+const termImg = (x, cls = 'tm-img') => h('img', { class: cls, src: x.img, alt: x.ko, decoding: 'async' });
+const termCredit = (x) => (x.credit ? h('small', { class: 'tm-cr' }, x.credit.own ? t('term.ownArt') : `${t('term.photo')} · ${x.credit.artist} · ${x.credit.lic} · Wikimedia Commons`) : null);
+// 현장에서는 한국어로 듣는다 → 한국어 이름을 크게, 다른 언어면 그 아래 번역
+const termName = (x, tag = 'div') => h(tag, { class: 'tm-name' }, h('b', { lang: 'ko' }, x.ko), LANG !== 'ko' && TR.c[x.ko] ? h('span', {}, T(x.ko)) : null);
+const termAlso = (x) => (x.also?.length && !isPic() ? h('ul', { class: 'tm-also' }, x.also.map((a) => h('li', {}, h('b', { lang: 'ko' }, a.ko), LANG !== 'ko' && TR.c[a.ko] ? h('span', {}, ` (${T(a.ko)})`) : null, ' — ', T(a.t)))) : null);
+const termSay = (x) => `${x.ko}. ${T(x.look)}`;
+function termBody(x) {
+  return [h('figure', { class: 'tm-card' }, termImg(x), termCredit(x)), termName(x), isPic() ? null : h('p', { class: 'tm-look' }, T(x.look)), termAlso(x)];
+}
+function termSheet(id) {
+  const x = termOf(id); if (!x) return;
+  tap();
+  const wrap = h('div', { class: 'dlg-wrap tm-dlg', onclick: (e) => { if (e.target === wrap) wrap.remove(); } },
+    h('div', { class: 'dlg tm-sheet', role: 'dialog', 'aria-modal': 'true', 'aria-label': x.ko, 'data-say': termSay(x) }, ...termBody(x),
+      h('div', { class: 'nav2' }, speakBtn(termSay(x)), h('button', { class: 'btn primary', id: 'tmClose', onclick: () => wrap.remove() }, t('common.close')))));
+  document.body.append(wrap);
+  if (autoSayOn() && canSpeak()) speak(termSay(x));
+  wrap.querySelector('#tmClose').focus();
+}
+const termChips = (ids) => h('div', { class: 'tm-chips' }, ids.map((id) => { const x = termOf(id); const im = termImg(x, 'tm-thumb'); im.alt = ''; return h('button', { class: 'tm-chip', 'data-term': id, onclick: () => termSheet(id) }, im, h('span', { lang: 'ko' }, x.ko)); }));
+// 상황 문장의 굵은 말 → 용어 (한국어 원문 기준으로 맞춤: 번역 화면에서도 같은 순서의 굵은 말)
+function termForBold(ko) { let best = null, bl = 0; for (const [id, x] of Object.entries(TM.terms || {})) for (const k of [x.ko, ...(x.keys || [])]) if (ko.includes(k) && k.length > bl) { best = id; bl = k.length; } return best; }
+function termIntro(sc, then) {
+  const ids = termIds(sc); if (!ids.length) return then();
+  const v = deep(isPic() ? `${sc.no}` : `${sc.no}. ${sc.title}`);
+  const t0 = Date.now(); let i = 0;
+  const done = (quiz) => { (S.terms ||= {})[sc.id] = { at: Date.now(), ms: Date.now() - t0, quiz: quiz === 'skip' ? null : quiz, skipped: quiz === 'skip', seen: Math.min(i + 1, ids.length) }; save(); then(); };
+  const show = () => {
+    dots(ids.length + 1, i);
+    v.innerHTML = ''; v.classList.remove('view-in'); void v.offsetWidth; v.classList.add('view-in');
+    if (i >= ids.length) return quiz();
+    const x = termOf(ids[i]);
+    v.dataset.say = (i === 0 ? t('term.hello', { n: ids.length }) + ' ' : '') + termSay(x);
+    const card = h('div', { class: 'tm-step' }, ...termBody(x));
+    let sx = null; // 옆으로 밀어 넘기기
+    card.addEventListener('pointerdown', (e) => { sx = e.clientX; });
+    card.addEventListener('pointerup', (e) => { if (sx == null) return; const dx = e.clientX - sx; sx = null; if (dx < -50) next(); else if (dx > 50 && i > 0) { i--; show(); } });
+    v.append(h('div', { class: 'tm-npc' }, h('span', { class: 'sapi-s', html: sapi({ size: 56, mood: i === 0 ? 'wave' : 'hi' }) }), h('p', { class: 'tm-bub' }, isPic() ? h('b', { class: 't-num' }, `${i + 1} / ${ids.length}`) : i === 0 ? t('term.hello', { n: ids.length }) : t('term.more'))),
+      card,
+      h('div', { class: 'tm-nav' }, speakBtn(termSay(x)), h('button', { class: 'btn primary big', id: 'tmNext', 'aria-label': i === ids.length - 1 ? t('term.check') : t('common.next'), onclick: next }, isPic() ? null : h('span', {}, i === ids.length - 1 ? t('term.check') : t('common.next')), ic('next'))),
+      h('button', { class: 'tm-skip', id: 'tmSkip', onclick: () => done('skip') }, isPic() ? ic('next', { size: 18 }) : null, t('term.skip')));
+    autoSay();
+  };
+  const next = () => { tap(); i++; show(); };
+  // 한 번 골라 보기: 방금 본 사진 중 하나 (2~3장)
+  const quiz = () => {
+    const opts = shuffle(ids).slice(0, 3), ans = opts[Math.floor(Math.random() * opts.length)], x = termOf(ans);
+    v.dataset.say = t('term.find', { name: x.ko });
+    const msg = h('div', { class: 'fb', role: 'status' });
+    const grid = h('div', { class: 'tm-quiz' + (opts.length === 2 ? ' two' : ''), 'data-ans': ans }, opts.map((id, k) => h('button', { class: 'tm-opt', 'data-term': id, 'aria-label': t('test.pickN', { n: k + 1 }), onclick: (e) => {
+      grid.querySelectorAll('button').forEach((b) => (b.disabled = true));
+      const ok = id === ans;
+      if (ok) { markRight(e.currentTarget); sfx('ok'); msg.className = 'fb good'; msg.textContent = t('term.right'); }
+      else { markWrong(e.currentTarget); markRight(grid.querySelector(`[data-term="${ans}"]`)); msg.className = 'fb bad'; msg.textContent = t('term.wrong'); }
+      setTimeout(() => done(ok), ok ? 900 : 1800);
+    } }, Object.assign(termImg(termOf(id), 'tm-qimg'), { alt: '' }))));
+    v.append(h('div', { class: 'tm-npc' }, h('span', { class: 'sapi-s', html: sapi({ size: 56, mood: 'think' }) }), h('p', { class: 'tm-bub' }, h('span', {}, t('term.findPre')), ' ', termName(x, 'span'))),
+      h('div', { class: 'tm-ask' }, speakBtn(t('term.find', { name: x.ko }))), grid, msg);
+    autoSay();
+  };
+  show();
+}
 function previewScene(sc, ids, go_) {
   const v = deep(`${sc.no}. ${sc.title}`);
   const hz = sc.hazards.filter((z) => ids.includes(z.id)), i = SC.scenes.indexOf(sc);
@@ -1224,6 +1310,7 @@ function previewScene(sc, ids, go_) {
   const expert = hz.every((z) => z.line.status === '전문가확인');
   v.append(top, h('section', { class: 'pv-card' },
     h('div', { class: 'pv-work' }, h('span', { class: 'pv-wic' }, ic(WORKIC[sc.id] || 'worker', { size: 36 })), h('div', {}, h('small', {}, t('pv.work')), h('b', {}, t('work.' + sc.id)))),
+    termIds(sc).length ? h('div', { class: 'pv-terms' }, h('small', {}, isPic() ? ic('search', { size: 16 }) : t('term.here')), termChips(termIds(sc))) : null,
     h('h2', { class: 'pv-h' }, t('pv.watch', { n: hz.length })),
     h('div', { class: 'pv-types' }, hz.map((z, k) => h('span', { class: 'pv-type', 'data-type': z.type }, h('em', { class: 't-num' }, String(k + 1)), hazIc(z.type, 30), h('small', {}, SC.hazardTypes?.[z.type] || z.type)))),
     h('p', { class: 'pv-note' }, ic('search', { size: 16 }), ' ', t('pv.note')),
@@ -1428,6 +1515,7 @@ async function boot() {
   const getJ = (u) => fetch(u).then((r) => r.json());
   const [jL, jS, jC, jP] = [getJ('./data/lessons.json'), getJ('./data/sources.json'), getJ('./data/scenes.json'), getJ('./data/prerender.json')];
   jP.catch(() => {});
+  const jT = getJ('./data/terms.json').then((x) => { TM = x; }).catch(() => {}); // v22 현장 말 사진
   // 라운드 1: 교육 앱 문구만 뽑은 작은 파일(ko-learn.json, 빌드 때 ko.json 에서 만듦) — 없으면 전체 ko.json
   try { LOC = await (await fetch('./locales/ko-learn.json')).json(); } catch { try { LOC = await (await fetch('./locales/ko.json')).json(); } catch {} }
   await loadLang();
@@ -1435,6 +1523,7 @@ async function boot() {
   // 라운드 1: 화면 CSS·글꼴 CSS 를 그리기를 막지 않게 받으므로, 다 받은 뒤에 앱 화면을 보여 줌 (스타일 없는 화면이 번쩍이지 않게)
   await Promise.all(['cssLearn', 'cssFonts'].map((id) => new Promise((ok) => { const l = document.getElementById(id); if (!l || l.rel === 'stylesheet' || l.sheet) return ok(); l.addEventListener('load', ok); l.addEventListener('error', ok); setTimeout(ok, 8000); })));
   document.documentElement.classList.remove('boot');
+  await jT;
   try { [D, SRC, SC] = await Promise.all([jL, jS.then((x) => Object.fromEntries(x.sources.map((s) => [s.id, s]))), jC]); }
   catch (e) { app().innerHTML = ''; app().append(h('p', { style: 'padding:24px' }, t('app.loadFail'))); return; }
   // v21: 위험 종류 이름·구역 이름은 화면 여러 곳에서 그대로 쓰므로 데이터에서 바로 바꿈(번역이 없으면 한국어 그대로)
