@@ -1,6 +1,6 @@
 {
  "version": "v13",
- "updated": "2026-11-26",
+ "updated": "2026-11-28",
  "note": "장면 위 좌표는 그림 viewBox(0~400, 0~300) 기준. r 30 = 휴대전화 390px 폭에서 지름 약 54px(48px 이상). 그림을 실제 사진으로 바꾸면 image와 좌표만 다시 찍는다. 문장은 {t, src, status} — v11.1 근거 규칙 그대로",
  "hazardTypes": {
   "fall": "떨어짐",
@@ -703,9 +703,10 @@
       "status": "원문확인"
      },
      "line": {
-      "t": "자재는 두 줄로 수평으로 들어요",
+      "t": "한 줄로 매단 짐을 보면 알리고 아래를 피해요",
       "src": [
-       "kb-p53b"
+       "kb-p53b",
+       "rule-14"
       ],
       "status": "원문확인"
      },
@@ -1013,10 +1014,10 @@
      "good": "rollerGood",
      "act": "stop",
      "name": {
-      "t": "후진하는 롤러 뒤 사람",
+      "t": "유도자 신호를 무시하고 후진하는 롤러 뒤로 지나가는 사람",
       "src": [
-       "kb-p67b",
-       "kb-p59"
+       "kb-p59",
+       "kb-p67b"
       ],
       "status": "원문확인"
      },
@@ -1029,10 +1030,10 @@
       "status": "원문확인"
      },
      "situation": {
-      "t": "**롤러**(땅 다지는 장비)가 뒤로 움직이고 있어요.",
+      "t": "**롤러**가 뒤로 움직이고, **유도자**가 멈추라고 깃발을 들었어요.",
       "src": [
-       "kb-p67b",
-       "kb-p59"
+       "kb-p59",
+       "kb-p67b"
       ],
       "status": "원문확인"
      },
@@ -1041,7 +1042,7 @@
       "roller",
       "walk"
      ],
-     "diffPart": "롤러 뒤"
+     "diffPart": "근로자가 서 있는 곳"
     },
     {
      "id": "4-4",
@@ -1053,34 +1054,36 @@
      },
      "bad": "trenchBad",
      "good": "trenchGood",
-     "act": "stop",
+     "act": "away",
      "name": {
-      "t": "가파른 흙벽 아래 사람",
+      "t": "흙막이 없는 깊은 도랑 안에서 일하는 사람",
       "src": [
-       "kb-p59"
+       "kb-p62",
+       "rule-340"
       ],
       "status": "원문확인"
      },
      "line": {
-      "t": "가파른 흙벽은 무너질 수 있어요",
+      "t": "흙막이 없는 깊은 구덩이엔 들어가지 않아요",
       "src": [
-       "kb-p59"
+       "rule-340",
+       "kb-p62"
       ],
       "status": "원문확인"
      },
      "situation": {
-      "t": "근로자가 **구덩이** 바닥에서 일해요.",
+      "t": "근로자가 **구덩이** 안에서 하수관을 놓아요.",
       "src": [
-       "kb-p59"
+       "kb-p62"
       ],
       "status": "원문확인"
      },
      "iconStrip": [
       "worker",
       "trench",
-      "work"
+      "enter"
      ],
-     "diffPart": "흙벽 기울기"
+     "diffPart": "도랑 벽(흙막이)"
     }
    ],
    "safe": [
@@ -1157,87 +1160,6 @@
      "diffPart": "동바리 하나"
     },
     {
-     "id": "5-2",
-     "type": "collapse",
-     "area": {
-      "x": 170,
-      "y": 116,
-      "r": 30
-     },
-     "bad": "pileUpBad",
-     "good": "pileUpGood",
-     "act": "tell",
-     "name": {
-      "t": "한곳에 쌓인 콘크리트",
-      "src": [
-       "rule-334",
-       "kb-p52"
-      ],
-      "status": "원문확인"
-     },
-     "line": {
-      "t": "콘크리트는 골고루 나눠 부어요",
-      "src": [
-       "rule-334",
-       "kb-p52"
-      ],
-      "status": "원문확인"
-     },
-     "situation": {
-      "t": "**거푸집** 위에 콘크리트를 붓고 있어요.",
-      "src": [
-       "rule-334",
-       "kb-p52"
-      ],
-      "status": "원문확인"
-     },
-     "iconStrip": [
-      "worker",
-      "slab",
-      "drop"
-     ],
-     "diffPart": "콘크리트 모양"
-    },
-    {
-     "id": "5-3",
-     "type": "collapse",
-     "area": {
-      "x": 200,
-      "y": 200,
-      "r": 30
-     },
-     "bad": "twoTierBad",
-     "good": "twoTierGood",
-     "act": "tell",
-     "name": {
-      "t": "이어 세운 동바리",
-      "src": [
-       "kb-p52b"
-      ],
-      "status": "원문확인"
-     },
-     "line": {
-      "t": "동바리는 이어 세우지 않아요",
-      "src": [
-       "kb-p52b"
-      ],
-      "status": "원문확인"
-     },
-     "situation": {
-      "t": "**동바리**가 거푸집을 받치고 있어요.",
-      "src": [
-       "kb-p52b"
-      ],
-      "status": "원문확인"
-     },
-     "iconStrip": [
-      "worker",
-      "shore",
-      "stand"
-     ],
-     "diffPart": "동바리 이음"
-    },
-    {
      "id": "5-4",
      "type": "shock",
      "area": {
@@ -1256,9 +1178,10 @@
       "status": "원문확인"
      },
      "line": {
-      "t": "붐은 전선에서 멀리 두어요",
+      "t": "붐이 전선 가까이 가면 멈추고 알려요",
       "src": [
-       "rule-335"
+       "rule-335",
+       "kb-p7"
       ],
       "status": "원문확인"
      },
@@ -1274,7 +1197,48 @@
       "boom",
       "stand"
      ],
-     "diffPart": "붐과 전선 거리"
+     "diffPart": "붐을 편 방향"
+    },
+    {
+     "id": "5-5",
+     "type": "suffocate",
+     "area": {
+      "x": 60,
+      "y": 200,
+      "r": 30
+     },
+     "bad": "curingBad",
+     "good": "curingGood",
+     "act": "away",
+     "name": {
+      "t": "갈탄 난로를 피운 양생 천막에 들어가는 사람",
+      "src": [
+       "std-c18",
+       "kb-p93"
+      ],
+      "status": "원문확인"
+     },
+     "line": {
+      "t": "갈탄 피운 천막엔 허가 없이 들어가지 않아요",
+      "src": [
+       "std-c18",
+       "kb-p93"
+      ],
+      "status": "원문확인"
+     },
+     "situation": {
+      "t": "콘크리트를 굳히려고 천막 안에 **갈탄 난로**를 피웠어요.",
+      "src": [
+       "std-c18"
+      ],
+      "status": "원문확인"
+     },
+     "iconStrip": [
+      "worker",
+      "fire",
+      "enter"
+     ],
+     "diffPart": "사람이 천막 안인지 밖인지"
     }
    ],
    "safe": [
