@@ -2320,7 +2320,7 @@
   ],
   "sm": "assets/scenes/map-sm.webp"
  },
- "updated": "2026-11-27",
+ "updated": "2026-11-28",
  "note": "tools/render-scenes.mjs 가 만든 미리 렌더링 이미지와 누를 곳(400×300 좌표, r 30). 3D 모델(코드: site3d·scene3d·props3d·models/worker, CC0: Kenney 모델·Poly Haven 질감·HDRI)에서 렌더링. 라이선스: docs/에셋_라이선스.md",
  "xfer": {
   "pairs": {

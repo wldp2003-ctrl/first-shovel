@@ -1,6 +1,6 @@
 {
  "version": "v22",
- "updated": "2026-11-27",
+ "updated": "2026-11-28",
  "note": "v22 현장 말 미리 보기 원본. node tools/terms/build.mjs → www/data/terms.json (사진 경로·출처는 credits.json 에서 붙임). 문장은 생김새·어디서 보는지 설명(안전 규칙 아님) — 안전 규칙은 scenes.json 의 근거 있는 문장이 맡는다. 상태: 초안(전문가 검토 전)",
  "zones": {
   "tbm": [
@@ -122,7 +122,7 @@
     "개구부",
     "바닥 구멍"
    ],
-   "img": "assets/scenes/floor/1-1-bad.webp",
+   "img": "assets/terms/opening.webp",
    "credit": {
     "own": true
    }
@@ -195,7 +195,7 @@
    "keys": [
     "이동식 비계"
    ],
-   "img": "assets/scenes/scaffold/2-5-good.webp",
+   "img": "assets/terms/mobile.webp",
    "credit": {
     "own": true
    }

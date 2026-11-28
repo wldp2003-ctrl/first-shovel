@@ -139,7 +139,7 @@ const SCENES = {
     for (const [x, z] of [[-18, -26], [14, -30], [-4, -34]]) K.box(7, 14, 7, K.T(texFacade(3)), x, -9, z);
     K.rod([3, 9, -10], [3, 4.2, -10], 0.02, '--asphalt'); K.box(0.3, 0.3, 0.3, '--asphalt', 3, 3.9, -10);
     // 1-1: 구멍은 같고 덮개(노랑·검정 표시)만 바꿈
-    hz(K, H, '1-1', [-2.8, 0.02, 2.0], () => SF.opening(K, -2.8, 2.0, 1.3, 1.3, { cover: false }), () => SF.opening(K, -2.8, 2.0, 1.3, 1.3, { cover: true, coverMat: K.T(texStripes()) }), { pos: [-2.0, 1.6, 4.8], look: [-2.8, 0, 2.0] });
+    hz(K, H, '1-1', [-2.8, 0.02, 2.0], () => SF.opening(K, -2.8, 2.0, 1.3, 1.3, { cover: false }), () => SF.opening(K, -2.8, 2.0, 1.3, 1.3, { cover: true, mesh: true }), { pos: [-2.0, 1.6, 4.8], look: [-2.8, 0, 2.0] });
     // 1-2: 사람은 같고 안전난간(상부·중간 난간대 + 발끝막이판)만 바꿈
     hz(K, H, '1-2', [1.5, 0.9, -7.4], () => person(K, 1.5, -7.35, { ry: Math.PI, pose: 'point' }), () => { SF.guardrail(K, [-3, -7.9], [6, -7.9]); person(K, 1.5, -7.35, { ry: Math.PI, pose: 'point' }); }, { pos: [3.1, 1.6, -4.9], look: [1.4, 0.8, -7.7] });
     K.rod([5.2, 1.9, -6.6], [8.6, 1.9, -6.6], 0.012, '--art-steel'); K.box(0.1, 2, 0.1, '--art-steel', 5.2, 0, -6.6); K.box(0.1, 2, 0.1, '--art-steel', 8.6, 0, -6.6);
@@ -172,7 +172,7 @@ const SCENES = {
     for (const [x, z] of [[5.3, -0.3], [6.9, -0.3], [5.3, 0.7], [6.9, 0.7]]) K.box(0.05, 1.1, 0.05, '--art-helmet', x, 4.9, z); K.box(1.6, 0.05, 1, '--art-helmet', 6.1, 5.95, 0.2); }, -1.4, 0, 0);
     hz(K, H, '2-4', null, () => person(K, 4.7, 0.2, { ry: -0.4 }, 4.9), () => person(K, 4.7, 0.2, { ry: -0.4, hookW: [4.0, 5.97, -0.3] }, 4.9), { pos: [3.8, 6.5, 2.3], look: [4.7, 5.7, 0.2] });
     // 이동식 비계 (코드): 아웃트리거는 두 모습 모두, 바퀴 잠금(브레이크 + 고임목)만 바꿈
-    const tower = (locked) => { SF.mobileTower(K, -5.9, 4.4, { locked, h: 3.8 }); person(K, -5.9, 4.4, {}, 3.85); };
+    const tower = (locked) => { SF.mobileTower(K, -5.9, 4.4, { locked, h: 3.65 }); person(K, -5.9, 4.4, {}, 3.7); };
     hz(K, H, '2-5', [-5.9, 0.4, 4.4], () => tower(false), () => tower(true), { pos: [-4.7, 0.9, 6.5], look: [-5.9, 0.25, 4.4] });
     return { cam: [-1.2, 1.6, 11.5], look: [-1.2, 4.0, -1], fov: 62 };
   },
@@ -190,7 +190,7 @@ const SCENES = {
     for (const [x, c] of [[-8, '--art-wall'], [6, '--art-concrete']]) K.box(5, 7, 4, K.T(texFacade(2)), x, -3.2, -24);
     // x-1 구멍: 자재를 든 사람이 구멍 쪽으로 걸어옴(두 모습 모두)
     person(K, -3.1, 4.3, { pose: 'carry', ry: Math.PI });
-    hz(K, H, 'x-1', [-3, 0.02, 2], () => SF.opening(K, -3, 2, 1.0, 1.0, { cover: false }), () => SF.opening(K, -3, 2, 1.0, 1.0, { cover: true, coverMat: K.T(texStripes()) }), { pos: [-1.3, 2.9, 7.2], look: [-3, 0.4, 2.6] });
+    hz(K, H, 'x-1', [-3, 0.02, 2], () => SF.opening(K, -3, 2, 1.0, 1.0, { cover: false }), () => SF.opening(K, -3, 2, 1.0, 1.0, { cover: true, mesh: true }), { pos: [-1.3, 2.9, 7.2], look: [-3, 0.4, 2.6] });
     // x-2 철골 보(위면 y=3.5) 위에서 일하는 사람 · 생명줄은 두 모습 모두
     for (const x of [3.6, 8.4]) K.box(0.35, 3.5, 0.35, '--art-steel', x, 0, -4);
     K.box(5.2, 0.3, 0.3, '--art-steel', 6, 3.2, -4); K.rod([3.6, 5.1, -4.25], [8.4, 5.1, -4.25], 0.02, '--asphalt');
@@ -203,6 +203,20 @@ const SCENES = {
     K.group(() => Pr.pipes(K, 0, 0, 0), 0, 4.45, -8);
     hz(K, H, 'x-3', null, () => person(K, 0.2, -7.8, { pose: 'walk', ry: 1.5 }), () => { person(K, 2.9, -5.7, { pose: 'walk', ry: 1.5 }); for (let a = 0; a < 6.28; a += 0.7) K.cone(0.16, 0.5, '--vest', Math.cos(a) * 2.3, 0, -8 + Math.sin(a) * 2.3); }, { pos: [1.4, 1.7, -1.6], look: [0.6, 2.5, -8] });
     return { cam: [0, 6, 12], look: [0, 1, -3], fov: 56 };
+  },
+  // v22.2 용어 카드용 그림(교육 장면 아님): 맞는 자유 라이선스 사진을 못 찾은 말을 국내 현장 모습을 보고 3D로 — tools/render-xfer.mjs 가 assets/terms/ 로 저장
+  termart(K, H, S) {
+    const gnd = baseScene(K, K.scene, { ground: 'art-concrete', size: 70, hole: [-3.6, -2.4, -0.6, 0.6] });
+    // 개구부: 슬래브에 뚫린 구멍(왼쪽) + 같은 크기 구멍을 주황 철망 덮개로 덮은 모습(오른쪽)
+    K.box(1.2, 2.5, 1.2, '--art-dark', -3.0, -2.6, 0); SF.opening(K, -3.0, 0, 1.2, 1.2, { cover: false });
+    SF.opening(K, -0.6, 0.2, 1.2, 1.2, { cover: true, mesh: true });
+    Pr.lumber(K, -5.4, -2.2, 0.3); Pr.cone(K, 1.4, 1.6);
+    hz(K, H, 't-opening', [-1.8, 0, 0], () => {}, () => {}, { pos: [-1.6, 2.2, 3.1], look: [-1.8, 0, 0] });
+    // 이동식 비계: 2단 틀비계 + 위에서 일하는 사람
+    SF.mobileTower(K, 8, -1, { locked: true, h: 3.65, ry: 0.35 }); person(K, 8, -1, { ry: 0.6 }, 3.7);
+    K.box(10, 6, 0.3, '--art-wall', 8, 0, -3.2);
+    hz(K, H, 't-mobile', [8, 2, -1], () => {}, () => {}, { pos: [11.6, 2.8, 5.8], look: [8.0, 2.25, -1] });
+    return { cam: [3, 4, 10], look: [3, 0, 0], fov: 56 };
   },
   lifting(K, H, S) {
     baseScene(K, K.scene, { ground: 'art-ground' });
@@ -351,7 +365,7 @@ const SCENES = {
     return { cam: [0.4, 1.7, 6.6], look: [0.4, 0.5, -0.6], fov: 66 };
   },
 };
-export const SCENE3D_IDS = Object.keys(SCENES).filter((k) => k !== 'xfer'); // xfer 는 시험 전용
+export const SCENE3D_IDS = Object.keys(SCENES).filter((k) => k !== 'xfer' && k !== 'termart'); // xfer 시험 전용, termart 용어 카드 그림
 
 /* ---------------- 만들기 ---------------- */
 // 렌더 품질: 부드러운 그림자 + ACES 톤 (지도와 같은 빛)

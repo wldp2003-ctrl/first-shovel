@@ -20,6 +20,14 @@ export function opening(P, x, z, w, d, o = {}, y = 0) {
     for (const [dx, dz, ww, dd] of [[0, -d / 2, w, 0.03], [0, d / 2, w, 0.03], [-w / 2, 0, 0.03, d], [w / 2, 0, 0.03, d]]) P.box(ww, depth, dd, 'concrete:--art-concrete-dark', x + dx, y - depth, z + dz);
     return;
   }
+  if (o.mesh) { // v22.2 국내 현장에서 흔한 주황색 철망 덮개: 각관 테두리 + 가운데 살 + 익스팬디드 메탈 망 + 흰 표지판
+    const W = w + 0.3, D = d + 0.3, OR = 'paint:--pbr-orange';
+    for (const [dx, dz, ww, dd] of [[0, -D / 2, W, 0.06], [0, D / 2, W, 0.06], [-W / 2, 0, 0.06, D], [W / 2, 0, 0.06, D], [0, 0, 0.05, D], [0, 0, W, 0.05]]) P.box(ww, 0.06, dd, OR, x + dx, y, z + dz);
+    for (let i = -W / 2 + 0.09; i < W / 2 - 0.05; i += 0.09) P.box(0.018, 0.035, D - 0.08, OR, x + i, y + 0.01, z);
+    for (let j = -D / 2 + 0.09; j < D / 2 - 0.05; j += 0.09) P.box(W - 0.08, 0.035, 0.018, OR, x, y + 0.015, z + j);
+    P.box(0.32, 0.015, 0.22, 'paint:--bg', x - W / 4, y + 0.065, z - D / 4); P.box(0.26, 0.016, 0.05, 'paint:--danger', x - W / 4, y + 0.07, z - D / 4 - 0.05);
+    return;
+  }
   P.box(w + 0.3, 0.03, d + 0.3, coverMat, x, y, z); // 덮개: 각 변 0.15m 더 크게 (확인 필요)
   for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P.box(0.05, 0.02, 0.05, 'steel', x + dx * (w / 2 + 0.08), y + 0.03, z + dz * (d / 2 + 0.08)); // 고정 못
 }
@@ -58,22 +66,30 @@ export function deck(P, x0, z0, i, y, bayW = 1.8, depth = 1.2) {
 
 // 이동식 비계 (가로 w × 깊이 d, 발판 높이 h). o = { locked } 바퀴 잠금(브레이크 + 고임목), outrigger 아웃트리거
 export function mobileTower(P, x, z, o = {}) {
-  const { w = 1.5, d = 1.3, h = 3.6, locked = true, outrigger = true } = o;
+  // v22.2 국내 현장의 이동식 틀비계(속칭 아시바): 폭 0.9m 끝틀(사다리 모양 H틀) 둘 + 길이 1.83m 양옆 교차가새, 단 높이 1.7m,
+  //  아래 바퀴(캐스터) 4개 + 빨간 바퀴 잠금(스토퍼), 맨 위 노란 구멍 뚫린 강재 발판 2장 + 안전난간·발끝막이. o.locked=false 면 잠금 풀림(스토퍼 위로)
+  const { w = 1.83, d = 0.9, h = 3.6, locked = true, outrigger = true } = o;
+  const tiers = Math.max(1, Math.round((h - 0.25) / 1.7)), th = (h - 0.25) / tiers, y0 = 0.25, F = 'steel', T = 0.022;
   P.group(() => {
-    const cs = [[-w / 2, -d / 2], [w / 2, -d / 2], [-w / 2, d / 2], [w / 2, d / 2]];
-    for (const [cx, cz] of cs) {
-      P.cyl(0.13, 0.06, 'rubber', cx, 0.0, cz, 16); P.box(0.08, 0.16, 0.1, PIPE, cx, 0.06, cz); // 바퀴 + 받침
-      P.box(0.1, 0.03, 0.07, locked ? 'paint:red' : 'steel', cx + 0.08, locked ? 0.06 : 0.16, cz); // 브레이크 발판 (잠금 = 내려간 빨강)
-      if (locked) for (const s of [-1, 1]) P.box(0.1, 0.07, 0.1, 'paint:yellow', cx, 0, cz + s * 0.17); // 고임목
-      P.cyl(0.024, h + 1.1 - 0.22, PIPE, cx, 0.22, cz, 8);
-      if (outrigger) P.rod([cx, 0.9, cz], [cx * 1.9, 0.03, cz * 1.9], 0.022, PIPE);
-    }
-    for (let y = 0.45; y <= h + 0.01; y += h / 3) { for (const zz of [-d / 2, d / 2]) P.rod([-w / 2, y, zz], [w / 2, y, zz], 0.02, PIPE); for (const xx of [-w / 2, w / 2]) P.rod([xx, y, -d / 2], [xx, y, d / 2], 0.02, PIPE); }
-    for (let y = 0.75; y < h - 0.1; y += 0.3) P.rod([-w / 2, y, -d / 2], [-w / 2, y, d / 2], 0.012, PIPE); // 끝 틀 = 사다리 가로대
-    P.box(w, 0.05, d, 'plywood', 0, h, 0);
-    guardrail(P, [-w / 2, -d / 2], [w / 2, -d / 2], { post: w }, h); guardrail(P, [-w / 2, d / 2], [w / 2, d / 2], { post: w }, h);
-    guardrail(P, [-w / 2, -d / 2], [-w / 2, d / 2], { post: d }, h); guardrail(P, [w / 2, -d / 2], [w / 2, d / 2], { post: d }, h);
-  }, x, 0, z);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) { const cx = (sx * w) / 2, cz = (sz * d) / 2;
+      P.group(() => { P.cyl(0.075, 0.05, 'rubber:--asphalt', 0, -0.025, 0, 18); }, cx, 0.08, cz, 0, Math.PI / 2); // 바퀴(옆으로 선 원판)
+      P.box(0.06, 0.12, 0.06, F, cx, 0.1, cz); P.cyl(0.02, 0.06, F, cx, 0.2, cz, 8);
+      if (locked) { P.box(0.12, 0.035, 0.07, 'paint:--danger', cx + sx * 0.1, 0.05, cz); for (const k of [-1, 1]) P.box(0.09, 0.09, 0.12, 'paint:--pbr-yellow', cx + k * 0.15, 0, cz); } // 잠금: 빨간 스토퍼를 밟아 내림 + 노란 고임목
+      else P.rod([cx + sx * 0.03, 0.14, cz], [cx + sx * 0.16, 0.3, cz], 0.016, 'steel'); // 안 잠금: 스토퍼 레버가 들려 있음, 고임목 없음
+      if (outrigger) P.rod([cx, 0.9, cz], [cx + sx * 0.55, 0.03, cz + sz * 0.55], 0.018, F); }
+    for (let t = 0; t < tiers; t++) { const yb = y0 + t * th, yt = yb + th;
+      for (const sx of [-1, 1]) { const ex = (sx * w) / 2; // 끝틀(사다리 모양): 기둥 2 + 위·아래 가로대 + 안쪽 가로대(디딤대)
+        for (const sz of [-1, 1]) P.rod([ex, yb, (sz * d) / 2], [ex, yt, (sz * d) / 2], T, F);
+        P.rod([ex, yt - 0.04, -d / 2], [ex, yt - 0.04, d / 2], T, F); P.rod([ex, yb + 0.04, -d / 2], [ex, yb + 0.04, d / 2], T, F);
+        for (let k = 1; k < 5; k++) P.rod([ex, yb + (th * k) / 5, -d / 2], [ex, yb + (th * k) / 5, d / 2], 0.014, F);
+        P.rod([ex, yt - 0.3, -d / 2], [ex, yt - 0.04, -d / 2 + 0.25], 0.016, F); P.rod([ex, yt - 0.3, d / 2], [ex, yt - 0.04, d / 2 - 0.25], 0.016, F); } // 끝틀 어깨 보강
+      for (const sz of [-1, 1]) { const ez = (sz * d) / 2; P.rod([-w / 2, yb + 0.1, ez], [w / 2, yt - 0.1, ez], 0.013, F); P.rod([-w / 2, yt - 0.1, ez], [w / 2, yb + 0.1, ez], 0.013, F); } } // 교차가새(X)
+    for (const sz of [-1, 1]) P.rod([-w / 2, y0 + 0.02, (sz * d) / 2], [w / 2, y0 + 0.02, (sz * d) / 2], T, F); // 밑 수평재
+    const top = y0 + tiers * th;
+    for (const k of [-1, 1]) { P.box(w - 0.04, 0.045, d / 2 - 0.03, 'paint:--pbr-yellow', 0, top, (k * d) / 4); for (let q = -w / 2 + 0.15; q < w / 2 - 0.1; q += 0.12) P.box(0.04, 0.05, 0.04, 'paint:--art-dark', q, top + 0.001, (k * d) / 4); } // 구멍 뚫린 노란 발판 2장
+    guardrail(P, [-w / 2, -d / 2], [w / 2, -d / 2], { post: w }, top); guardrail(P, [-w / 2, d / 2], [w / 2, d / 2], { post: w }, top);
+    guardrail(P, [-w / 2, -d / 2], [-w / 2, d / 2], { post: d }, top); guardrail(P, [w / 2, -d / 2], [w / 2, d / 2], { post: d }, top);
+  }, x, 0, z, o.ry || 0);
 }
 
 // 파이프 서포트 동바리 한 개 (높이 h). o.bent 휨 / o.spliced 이어 세움(2단)

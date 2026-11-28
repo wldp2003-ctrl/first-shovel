@@ -3,7 +3,7 @@
 // 색은 css/tokens.css 토큰만. 글자 크기 설정은 #app 의 zoom, 움직임 줄이기는 html.rm 클래스.
 
 import { LANGS, langOf } from './langs.js';
-export const APP_VERSION = 'v22.1';
+export const APP_VERSION = 'v22.2';
 
 export function makeTitle(ctx) {
   const { h, t, ic, icon, sapi, logoMark, renderMascot } = ctx;
